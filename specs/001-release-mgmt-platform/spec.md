@@ -5,6 +5,16 @@
 **Status**: Draft
 **Input**: User description: "Build a Repository Release Management Platform that helps engineering teams track changes across logical projects spanning multiple Git repositories, reconcile what shipped against what was planned in Jira, generate release notes, and publish them to Confluence."
 
+## Clarifications
+
+### Session 2026-05-12
+
+- Q: Does the platform require automatic background sync, or is sync on-demand only? → A: On-demand only — Admins manually trigger "Sync now"; SC-003 means data is current as of the last Admin-triggered sync.
+- Q: How is the version number determined when creating a release? → A: Auto-suggested from commit analysis (breaking → major, feat → minor, fix/other → patch), manually overridable by the user.
+- Q: Does the platform push version tags to Git repositories after a release is published? → A: No — the platform never creates or pushes tags; version tags are managed entirely by users outside the platform.
+- Q: Can a user edit release notes and re-publish to Confluence after a release is already published? → A: No — once published, release notes and the Confluence page are locked; further edits must be made directly in Confluence.
+- Q: Should non-conventional ("unscoped") commits be included in generated release notes? → A: No — unscoped commits appear in the change view only and are excluded from generated release notes entirely.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Admin Configures Integrations and Creates a Project (Priority: P1)
@@ -54,10 +64,10 @@ A tech lead initiates a release for a project, reviews auto-generated release no
 
 **Acceptance Scenarios**:
 
-1. **Given** a project with pending changes, **When** a tech lead clicks "Create release" and selects a version, **Then** a step-by-step wizard opens confirming the change range for each repository.
+1. **Given** a project with pending changes, **When** a tech lead clicks "Create release", **Then** a step-by-step wizard opens with a version number field pre-populated with a semver suggestion derived from the parsed commit types (breaking → major bump, feat → minor bump, fix/other → patch bump), which the tech lead may edit before proceeding to confirm the change range for each repository.
 2. **Given** the release wizard, **When** the tech lead selects a template and proceeds, **Then** release notes are generated with tickets grouped into Breaking Changes, Features, Fixes, and Other sections; a ticket with any breaking change appears in Breaking Changes regardless of other commit types.
 3. **Given** generated release notes, **When** the tech lead edits them in the markdown editor and clicks "Preview", **Then** a rendered preview of the Confluence page output is displayed before publishing.
-4. **Given** the preview, **When** the tech lead clicks "Publish", **Then** a Confluence page is created (or updated if one already exists for this release) in the configured space, and the release record stores the resulting Confluence page URL.
+4. **Given** the preview, **When** the tech lead clicks "Publish", **Then** a Confluence page is created in the configured space, the release record stores the resulting Confluence page URL, and the release is marked as published and locked for further editing within the platform.
 5. **Given** the release wizard, **When** the tech lead optionally runs Jira reconciliation, **Then** the reconciliation report categorises tickets into: matched (present in both the Jira fix version and Git commits), Jira-only, and Git-only, with a match-rate percentage.
 6. **Given** the reconciliation report showing a Git-only ticket, **When** an Admin clicks "Add to Jira fix version", **Then** the ticket is added to the Jira fix version; Viewers cannot perform this action.
 
@@ -103,6 +113,7 @@ An Admin creates user accounts with username, password, and a role (Admin or Vie
 - What happens when a Jira ticket is referenced in commits across multiple repositories within one project? The ticket is deduplicated and shown once at the project level, with all contributing repositories listed.
 - What happens when a Viewer attempts the "Add to Jira fix version" action in the reconciliation view? The action is hidden or disabled for Viewers; only Admins can mutate Jira data.
 - What happens when two repositories within a project have different last release tags? The change range is computed independently per repository using each repo's own latest version tag.
+- What happens when a user tries to edit a published release's notes within the platform? The markdown editor is disabled (read-only) for published releases; the platform displays the Confluence page URL for users who need to make further changes directly in Confluence.
 
 ## Requirements *(mandatory)*
 
@@ -125,9 +136,9 @@ An Admin creates user accounts with username, password, and a role (Admin or Vie
 - **FR-015**: System MUST allow Admins to link each logical project to one or more Jira project keys and configure a fix-version name pattern using a version placeholder (e.g., "Apply {version}").
 - **FR-016**: System MUST provide an optional "auto-create fix version in Jira" setting per project, which creates the Jira fix version when a release is published if one does not already exist.
 - **FR-017**: System MUST provide an optional subtask-handling setting per project (off by default) that, when enabled, counts a subtask commit as matching the parent ticket if the parent is in the Jira fix version.
-- **FR-018**: System MUST provide a release creation wizard guiding users through: confirming the change range, selecting a template, editing generated notes in a markdown editor, previewing the rendered output, optionally running Jira reconciliation, and publishing to Confluence.
-- **FR-019**: System MUST generate release notes grouping tickets into sections by priority: Breaking Changes, Features, Fixes, Other; a ticket with any breaking-change commit appears in Breaking Changes regardless of other commit types.
-- **FR-020**: System MUST create or update a Confluence page with the release notes upon publishing and store the resulting Confluence page URL on the release record.
+- **FR-018**: System MUST provide a release creation wizard guiding users through: entering a version number (auto-suggested from parsed commit types using semver bump rules — breaking → major, feat → minor, fix/other → patch — and manually overridable), confirming the change range, selecting a template, editing generated notes in a markdown editor, previewing the rendered output, optionally running Jira reconciliation, and publishing to Confluence.
+- **FR-019**: System MUST generate release notes grouping tickets into sections by priority: Breaking Changes, Features, Fixes, Other; a ticket with any breaking-change commit appears in Breaking Changes regardless of other commit types. Non-conventional commits (those in the "Unscoped" bucket) are excluded from generated release notes.
+- **FR-020**: System MUST create a Confluence page with the release notes upon publishing and store the resulting Confluence page URL on the release record. If an idempotent retry of a failed publish finds the page already exists, it updates the page content rather than creating a duplicate. Once a release is marked as published, its notes and Confluence page are locked; further edits must be made directly in Confluence.
 - **FR-021**: System MUST produce a Jira reconciliation report categorising tickets into matched (present in both Jira fix version and Git commits), Jira-only, and Git-only buckets, with a match-rate percentage and summary counts.
 - **FR-022**: System MUST persist the reconciliation snapshot on the release record so it can be reviewed at any time without re-querying Jira.
 - **FR-023**: System MUST allow Admins to add a Git-only ticket to the Jira fix version directly from the reconciliation view; Viewers cannot perform this action.
@@ -155,7 +166,7 @@ An Admin creates user accounts with username, password, and a role (Admin or Vie
 
 - **SC-001**: An Admin can complete the full initial setup — connecting Azure DevOps, Jira, and Confluence; syncing repositories; defining a project; assigning repositories; and configuring all integration settings — in under 15 minutes from a fresh installation.
 - **SC-002**: A tech lead can create a release for a project spanning three or more repositories, run Jira reconciliation, and publish release notes to Confluence in under 5 minutes.
-- **SC-003**: Viewers can see current "changes since last release" data for any project at any time without any Admin action or manual data refresh being required.
+- **SC-003**: Viewers can see "changes since last release" data for any project at any time without any additional Admin action; data freshness reflects the most recent Admin-triggered "Sync now" operation.
 - **SC-004**: Reconciliation of a sprint containing 20–50 Jira tickets completes and displays results in under 10 seconds.
 - **SC-005**: All configuration and write actions are inaccessible to Viewer-role users, with 100% enforcement — no write action succeeds from a Viewer account under any circumstances.
 - **SC-006**: Release notes generated from a project with multiple repositories accurately place each ticket in exactly one section (the highest-priority section it qualifies for) with no ticket appearing in more than one section.
@@ -174,3 +185,4 @@ An Admin creates user accounts with username, password, and a role (Admin or Vie
 - Only Jira Cloud is supported; Jira Data Center and Jira Server are out of scope for this version.
 - All external access credentials (personal access tokens, API tokens) are stored encrypted at rest.
 - Cross-project Jira tickets (whose key prefix does not match any configured Jira project key for the logical project) are ignored during reconciliation in this version.
+- The platform never creates, pushes, or modifies Git tags; version tags are managed entirely by developers outside the platform. The "changes since last release" view therefore reflects the most recently pushed semver tag in each repository.
