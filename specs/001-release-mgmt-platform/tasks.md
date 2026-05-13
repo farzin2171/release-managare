@@ -109,10 +109,10 @@
 
 ### Milestone 9: Jira Integration Foundation
 
-- [ ] T037 [P] [US1] Define `IJiraService` interface (4 methods: `TestConnectionAsync`, `ListProjectsAsync`, `SyncFixVersionAsync`, `AddTicketToFixVersionAsync`) and Jira DTOs (`JiraConnectionDto`, `JiraProjectDto`, `JiraReleaseDto`, `JiraTicketDto`) in `backend/src/RepoManager.Application/Jira/IJiraService.cs`
-- [ ] T038 [US1] Implement `JiraService` with typed `HttpClient` calling Jira Cloud REST v3; attach Polly retry policy (3 retries, exponential backoff `2^attempt` seconds, triggered on HTTP 429 and 5xx) via `AddPolicyHandler` in `backend/src/RepoManager.Infrastructure/Jira/JiraService.cs`
-- [ ] T039 [P] [US1] Implement `IJiraConnectionService` interface and `JiraConnectionService` (get single active connection, upsert with API token encryption via `IDataProtectionProvider`, test by calling `IJiraService.TestConnectionAsync`, list projects) in `backend/src/RepoManager.Infrastructure/Jira/JiraConnectionService.cs`
-- [ ] T040 [P] [US1] Create `JiraController` with `POST /api/v1/integrations/jira/test`, `GET /api/v1/integrations/jira`, `PUT /api/v1/integrations/jira`, and `GET /api/v1/integrations/jira/projects` endpoints in `backend/src/RepoManager.Api/Controllers/JiraController.cs`
+- [X] T037 [P] [US1] Define `IJiraService` interface (4 methods: `TestConnectionAsync`, `ListProjectsAsync`, `SyncFixVersionAsync`, `AddTicketToFixVersionAsync`) and Jira DTOs (`JiraConnectionDto`, `JiraProjectDto`, `JiraReleaseDto`, `JiraTicketDto`) in `backend/src/RepoManager.Application/Jira/IJiraService.cs`
+- [X] T038 [US1] Implement `JiraService` with typed `HttpClient` calling Jira Cloud REST v3; attach Polly retry policy (3 retries, exponential backoff `2^attempt` seconds, triggered on HTTP 429 and 5xx) via `AddPolicyHandler` in `backend/src/RepoManager.Infrastructure/Jira/JiraService.cs`
+- [X] T039 [P] [US1] Implement `IJiraConnectionService` interface and `JiraConnectionService` (get single active connection, upsert with API token encryption via `IDataProtectionProvider`, test by calling `IJiraService.TestConnectionAsync`, list projects) in `backend/src/RepoManager.Infrastructure/Jira/JiraConnectionService.cs`
+- [X] T040 [P] [US1] Create `JiraController` with `POST /api/v1/integrations/jira/test`, `GET /api/v1/integrations/jira`, `PUT /api/v1/integrations/jira`, and `GET /api/v1/integrations/jira/projects` endpoints in `backend/src/RepoManager.Api/Controllers/JiraController.cs`
 
 ### Confluence Connection Setup
 
