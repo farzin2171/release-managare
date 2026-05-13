@@ -41,40 +41,40 @@
 
 ### Domain Layer
 
-- [ ] T006 Create all 14 Domain entity classes (`User`, `GitProviderConnection`, `Repository`, `Project`, `ProjectRepository`, `Commit`, `Ticket`, `Release`, `ReleaseRepositoryTag`, `ReleaseNoteTemplate`, `ConfluenceConnection`, `JiraConnection`, `JiraRelease`, `JiraTicket`, `ReleaseReconciliation`) with all columns from data-model.md in `backend/src/RepoManager.Domain/Entities/`
-- [ ] T007 [P] Create all Domain enums (`Role`, `ProviderType`, `ReleaseStatus`, `ChangeType`, `JiraStatusCategory`) in `backend/src/RepoManager.Domain/Enums/`
+- [X] T006 Create all 14 Domain entity classes (`User`, `GitProviderConnection`, `Repository`, `Project`, `ProjectRepository`, `Commit`, `Ticket`, `Release`, `ReleaseRepositoryTag`, `ReleaseNoteTemplate`, `ConfluenceConnection`, `JiraConnection`, `JiraRelease`, `JiraTicket`, `ReleaseReconciliation`) with all columns from data-model.md in `backend/src/RepoManager.Domain/Entities/`
+- [X] T007 [P] Create all Domain enums (`Role`, `ProviderType`, `ReleaseStatus`, `ChangeType`, `JiraStatusCategory`) in `backend/src/RepoManager.Domain/Enums/`
 
 ### Application Layer
 
-- [ ] T008 [P] Create custom exception classes (`NotFoundException`, `ConflictException`, `ValidationException`, `ExternalServiceException`) with constructors matching the service-interfaces contract in `backend/src/RepoManager.Application/Common/Exceptions/`
-- [ ] T009 [P] Create `IAuthService` interface and all auth DTOs (`LoginDto`, `SetupDto`, `TokenResponseDto`, `CreateUserDto`, `UpdateUserDto`, `UserDto`) in `backend/src/RepoManager.Application/Auth/`
+- [X] T008 [P] Create custom exception classes (`NotFoundException`, `ConflictException`, `ValidationException`, `ExternalServiceException`) with constructors matching the service-interfaces contract in `backend/src/RepoManager.Application/Common/Exceptions/`
+- [X] T009 [P] Create `IAuthService` interface and all auth DTOs (`LoginDto`, `SetupDto`, `TokenResponseDto`, `CreateUserDto`, `UpdateUserDto`, `UserDto`) in `backend/src/RepoManager.Application/Auth/`
 
 ### Infrastructure — Persistence
 
-- [ ] T010 Implement `AppDbContext` with all 14 `DbSet<>` properties, EF Core Fluent API configurations for PK/FK/unique indexes/JSON columns (`JiraProjectKeys`, `Snapshot` via `HasConversion`)/cascade deletes as specified in data-model.md in `backend/src/RepoManager.Infrastructure/Persistence/AppDbContext.cs`
-- [ ] T011 Add the initial EF Core migration (`dotnet ef migrations add InitialCreate`); add WAL and foreign-key pragmas (`PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON;`) executed on `DbContext` after first open in `backend/src/RepoManager.Infrastructure/Persistence/`
+- [X] T010 Implement `AppDbContext` with all 14 `DbSet<>` properties, EF Core Fluent API configurations for PK/FK/unique indexes/JSON columns (`JiraProjectKeys`, `Snapshot` via `HasConversion`)/cascade deletes as specified in data-model.md in `backend/src/RepoManager.Infrastructure/Persistence/AppDbContext.cs`
+- [X] T011 Add the initial EF Core migration (`dotnet ef migrations add InitialCreate`); add WAL and foreign-key pragmas (`PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON;`) executed on `DbContext` after first open in `backend/src/RepoManager.Infrastructure/Persistence/`
 
 ### Infrastructure — Auth
 
-- [ ] T012 Implement `AuthService`: BCrypt password hashing (work factor 12), JWT access token issuance (8-hour HS256 with `sub` and `role` claims), refresh token generation (256-bit random, SHA-256 hashed before storage, 30-day expiry), and token rotation on each `/auth/refresh` call in `backend/src/RepoManager.Infrastructure/Auth/AuthService.cs`
+- [X] T012 Implement `AuthService`: BCrypt password hashing (work factor 12), JWT access token issuance (8-hour HS256 with `sub` and `role` claims), refresh token generation (256-bit random, SHA-256 hashed before storage, 30-day expiry), and token rotation on each `/auth/refresh` call in `backend/src/RepoManager.Infrastructure/Auth/AuthService.cs`
 
 ### API Layer — Middleware and Infrastructure
 
-- [ ] T013 [P] Implement `CorrelationIdMiddleware` that reads `X-Correlation-Id` request header (or generates a new GUID) and adds it to response headers and Serilog's `LogContext` in `backend/src/RepoManager.Api/Middleware/CorrelationIdMiddleware.cs`
-- [ ] T014 [P] Implement `GlobalExceptionHandler` (`IExceptionHandler`) mapping `NotFoundException→404`, `ConflictException→409`, `ValidationException→400`, `ExternalServiceException→502` to RFC 7807 ProblemDetails with `traceId` field in `backend/src/RepoManager.Api/Middleware/GlobalExceptionHandler.cs`
-- [ ] T015 [P] Configure Serilog structured request logging with correlation ID and user ID enrichers; wire into `Program.cs` before all middleware in `backend/src/RepoManager.Api/Program.cs`
-- [ ] T016 [P] Configure OpenAPI/Swagger with JWT Bearer security definition (`securitySchemes` + `security` at operation level) in `backend/src/RepoManager.Api/Program.cs`
-- [ ] T017 [P] Implement health endpoints `GET /health/live` (process alive, 200 OK) and `GET /health/ready` (DB ping via `CanConnectAsync`, 200/503) with no JWT requirement in `backend/src/RepoManager.Api/Program.cs` (using `MapHealthChecks`)
-- [ ] T018 Implement `AuthController` with `POST /api/v1/auth/setup` (checks `Users.AnyAsync(u => u.Role == Admin)` and returns 410 Gone if true before processing), `POST /api/v1/auth/login`, and `POST /api/v1/auth/refresh` endpoints in `backend/src/RepoManager.Api/Controllers/AuthController.cs`
-- [ ] T019 [P] Configure JWT Bearer authentication middleware with `ValidateIssuer`, `ValidateAudience`, `ValidateLifetime`, `ValidateIssuerSigningKey`; register `[Authorize]` as default policy on all controllers; register `[Authorize(Roles = "Admin")]` named policy in `backend/src/RepoManager.Api/Program.cs`
-- [ ] T020 [P] Register all services, FluentValidation validators, Mapster profiles, EF Core (`UseSqlite`), `IDataProtectionProvider`, and Polly-wrapped `HttpClient`s in `backend/src/RepoManager.Infrastructure/DependencyInjection.cs`
+- [X] T013 [P] Implement `CorrelationIdMiddleware` that reads `X-Correlation-Id` request header (or generates a new GUID) and adds it to response headers and Serilog's `LogContext` in `backend/src/RepoManager.Api/Middleware/CorrelationIdMiddleware.cs`
+- [X] T014 [P] Implement `GlobalExceptionHandler` (`IExceptionHandler`) mapping `NotFoundException→404`, `ConflictException→409`, `ValidationException→400`, `ExternalServiceException→502` to RFC 7807 ProblemDetails with `traceId` field in `backend/src/RepoManager.Api/Middleware/GlobalExceptionHandler.cs`
+- [X] T015 [P] Configure Serilog structured request logging with correlation ID and user ID enrichers; wire into `Program.cs` before all middleware in `backend/src/RepoManager.Api/Program.cs`
+- [X] T016 [P] Configure OpenAPI/Swagger with JWT Bearer security definition (`securitySchemes` + `security` at operation level) in `backend/src/RepoManager.Api/Program.cs`
+- [X] T017 [P] Implement health endpoints `GET /health/live` (process alive, 200 OK) and `GET /health/ready` (DB ping via `CanConnectAsync`, 200/503) with no JWT requirement in `backend/src/RepoManager.Api/Program.cs` (using `MapHealthChecks`)
+- [X] T018 Implement `AuthController` with `POST /api/v1/auth/setup` (checks `Users.AnyAsync(u => u.Role == Admin)` and returns 410 Gone if true before processing), `POST /api/v1/auth/login`, and `POST /api/v1/auth/refresh` endpoints in `backend/src/RepoManager.Api/Controllers/AuthController.cs`
+- [X] T019 [P] Configure JWT Bearer authentication middleware with `ValidateIssuer`, `ValidateAudience`, `ValidateLifetime`, `ValidateIssuerSigningKey`; register `[Authorize]` as default policy on all controllers; register `[Authorize(Roles = "Admin")]` named policy in `backend/src/RepoManager.Api/Program.cs`
+- [X] T020 [P] Register all services, FluentValidation validators, Mapster profiles, EF Core (`UseSqlite`), `IDataProtectionProvider`, and Polly-wrapped `HttpClient`s in `backend/src/RepoManager.Infrastructure/DependencyInjection.cs`
 
 ### Frontend — Auth Shell
 
-- [ ] T021 Implement login page with email + password form using React Hook Form + Zod (`z.string().email()`, min 8 password), calling `POST /api/v1/auth/login`, storing tokens in Zustand auth store on success in `frontend/src/features/auth/LoginPage.tsx`
-- [ ] T022 [P] Configure Zustand auth store storing JWT access token, refresh token, decoded role claim, and `isAuthenticated` flag; implement `useAuthStore` hook in `frontend/src/lib/authStore.ts`
-- [ ] T023 [P] Configure React Router v6 route tree with `<ProtectedRoute>` (redirects to `/login` if unauthenticated) and `<AdminRoute>` (shows 403 if Viewer role) wrapper components in `frontend/src/routes/`
-- [ ] T024 [P] Implement first-run setup page at `/setup` with Admin email + password + confirm-password form calling `POST /api/v1/auth/setup`; redirect to `/login` on 201; show informational page if 410 Gone in `frontend/src/features/auth/SetupPage.tsx`
+- [X] T021 Implement login page with email + password form using React Hook Form + Zod (`z.string().email()`, min 8 password), calling `POST /api/v1/auth/login`, storing tokens in Zustand auth store on success in `frontend/src/features/auth/LoginPage.tsx`
+- [X] T022 [P] Configure Zustand auth store storing JWT access token, refresh token, decoded role claim, and `isAuthenticated` flag; implement `useAuthStore` hook in `frontend/src/lib/authStore.ts`
+- [X] T023 [P] Configure React Router v6 route tree with `<ProtectedRoute>` (redirects to `/login` if unauthenticated) and `<AdminRoute>` (shows 403 if Viewer role) wrapper components in `frontend/src/routes/`
+- [X] T024 [P] Implement first-run setup page at `/setup` with Admin email + password + confirm-password form calling `POST /api/v1/auth/setup`; redirect to `/login` on 201; show informational page if 410 Gone in `frontend/src/features/auth/SetupPage.tsx`
 
 **Checkpoint**: Foundation ready — admin can log in and reach a placeholder dashboard. User story implementation can begin.
 
