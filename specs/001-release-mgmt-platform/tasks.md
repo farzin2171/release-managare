@@ -104,8 +104,8 @@
 
 ### Milestone 4: Logical Projects
 
-- [ ] T035 [US1] Implement `IProjectService` interface and `ProjectService` with `CreateAsync`, `ListAsync`, `GetAsync`, `UpdateAsync`, `DeleteAsync`, `AssignRepositoryAsync` (enforce at-most-one `IsPrimary` per project in a transaction), `RemoveRepositoryAsync`, and `ConfigureJiraAsync` in `backend/src/RepoManager.Infrastructure/Projects/ProjectService.cs`
-- [ ] T036 [P] [US1] Create `ProjectsController` with `GET /projects`, `POST /projects`, `GET /projects/{id}`, `PUT /projects/{id}`, `DELETE /projects/{id}`, `POST /projects/{id}/repositories/{repoId}`, `DELETE /projects/{id}/repositories/{repoId}`, and `PUT /projects/{id}/jira` endpoints (all under `/api/v1`) in `backend/src/RepoManager.Api/Controllers/ProjectsController.cs`
+- [X] T035 [US1] Implement `IProjectService` interface and `ProjectService` with `CreateAsync`, `ListAsync`, `GetAsync`, `UpdateAsync`, `DeleteAsync`, `AssignRepositoryAsync` (enforce at-most-one `IsPrimary` per project in a transaction), `RemoveRepositoryAsync`, and `ConfigureJiraAsync` in `backend/src/RepoManager.Infrastructure/Projects/ProjectService.cs`
+- [X] T036 [P] [US1] Create `ProjectsController` with `GET /projects`, `POST /projects`, `GET /projects/{id}`, `PUT /projects/{id}`, `DELETE /projects/{id}`, `POST /projects/{id}/repositories/{repoId}`, `DELETE /projects/{id}/repositories/{repoId}`, and `PUT /projects/{id}/jira` endpoints (all under `/api/v1`) in `backend/src/RepoManager.Api/Controllers/ProjectsController.cs`
 
 ### Milestone 9: Jira Integration Foundation
 

@@ -3,10 +3,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RepoManager.Application.Auth;
 using RepoManager.Application.GitProviders;
+using RepoManager.Application.Projects;
 using RepoManager.Application.Repositories;
 using RepoManager.Infrastructure.Auth;
 using RepoManager.Infrastructure.GitProviders;
 using RepoManager.Infrastructure.Persistence;
+using RepoManager.Infrastructure.Projects;
 using RepoManager.Infrastructure.Repositories;
 
 namespace RepoManager.Infrastructure;
@@ -32,6 +34,7 @@ public static class DependencyInjection
         services.AddSingleton<IGitProviderFactory, GitProviderFactory>();
         services.AddScoped<IGitProviderConnectionService, GitProviderConnectionService>();
         services.AddScoped<IRepositoryService, RepositoryService>();
+        services.AddScoped<IProjectService, ProjectService>();
 
         return services;
     }

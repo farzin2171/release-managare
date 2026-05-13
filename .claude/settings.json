@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(cd c:\\\\MyWork\\\\release-managare && dotnet build backend\\\\src\\\\RepoManager.Api\\\\RepoManager.Api.csproj 2>&1 | Where-Object { $_ -match \"error|FAILED\" } | Where-Object { $_ -notmatch \"MSB3026\" })",
+      "PowerShell(cd c:\\\\MyWork\\\\release-managare && dotnet build backend\\\\src\\\\RepoManager.Api\\\\RepoManager.Api.csproj -c Release -o \"$env:TEMP\\\\rmapi-check\" 2>&1 | Where-Object { $_ -match \"error CS|error NU|Build succeeded|Build FAILED|Warning\" } | Select-Object -Last 20)"
+    ]
+  }
+}
