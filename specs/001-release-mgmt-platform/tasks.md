@@ -88,12 +88,12 @@
 
 ### Milestone 2: Git Provider Integration
 
-- [ ] T025 [P] [US1] Define `IGitProvider` interface (5 methods: `TestConnectionAsync`, `ListRepositoriesAsync`, `ListTagsAsync`, `GetCommitsBetweenAsync`, `GetMergedPullRequestsAsync`) and provider DTOs (`ProviderConnection`, `RepoSummary`, `TagInfo`, `CommitInfo`, `PullRequestInfo`) in `backend/src/RepoManager.Application/GitProviders/IGitProvider.cs`
-- [ ] T026 [P] [US1] Define `IGitProviderFactory` interface (`GetProvider(ProviderType)`) in `backend/src/RepoManager.Application/GitProviders/IGitProviderFactory.cs`
-- [ ] T027 [US1] Implement `AzureDevOpsGitProvider` using `VssBasicCredential` + `VssConnection` + `GitHttpClient` for all 5 `IGitProvider` methods; handle pagination for large repo/commit lists in `backend/src/RepoManager.Infrastructure/GitProviders/AzureDevOpsGitProvider.cs`
-- [ ] T028 [P] [US1] Implement `GitProviderFactory` returning `AzureDevOpsGitProvider` for `ProviderType.AzureDevOps` (throw `NotSupportedException` for unknown types) in `backend/src/RepoManager.Infrastructure/GitProviders/GitProviderFactory.cs`
-- [ ] T029 [US1] Implement `IGitProviderConnectionService` interface and `GitProviderConnectionService` with `CreateAsync` (encrypt PAT via `IDataProtectionProvider`), `ListAsync`, `UpdateAsync`, and `TestAsync` (decrypt PAT, call `IGitProvider.TestConnectionAsync`, persist `LastTestStatus`) in `backend/src/RepoManager.Infrastructure/GitProviders/GitProviderConnectionService.cs`
-- [ ] T030 [P] [US1] Create `GitProviderConnectionsController` with `POST /api/v1/integrations/git/test`, `GET /api/v1/integrations/git`, `POST /api/v1/integrations/git`, and `PUT /api/v1/integrations/git/{id}` endpoints in `backend/src/RepoManager.Api/Controllers/GitProviderConnectionsController.cs`
+- [X] T025 [P] [US1] Define `IGitProvider` interface (5 methods: `TestConnectionAsync`, `ListRepositoriesAsync`, `ListTagsAsync`, `GetCommitsBetweenAsync`, `GetMergedPullRequestsAsync`) and provider DTOs (`ProviderConnection`, `RepoSummary`, `TagInfo`, `CommitInfo`, `PullRequestInfo`) in `backend/src/RepoManager.Application/GitProviders/IGitProvider.cs`
+- [X] T026 [P] [US1] Define `IGitProviderFactory` interface (`GetProvider(ProviderType)`) in `backend/src/RepoManager.Application/GitProviders/IGitProviderFactory.cs`
+- [X] T027 [US1] Implement `AzureDevOpsGitProvider` using `VssBasicCredential` + `VssConnection` + `GitHttpClient` for all 5 `IGitProvider` methods; handle pagination for large repo/commit lists in `backend/src/RepoManager.Infrastructure/GitProviders/AzureDevOpsGitProvider.cs`
+- [X] T028 [P] [US1] Implement `GitProviderFactory` returning `AzureDevOpsGitProvider` for `ProviderType.AzureDevOps` (throw `NotSupportedException` for unknown types) in `backend/src/RepoManager.Infrastructure/GitProviders/GitProviderFactory.cs`
+- [X] T029 [US1] Implement `IGitProviderConnectionService` interface and `GitProviderConnectionService` with `CreateAsync` (encrypt PAT via `IDataProtectionProvider`), `ListAsync`, `UpdateAsync`, and `TestAsync` (decrypt PAT, call `IGitProvider.TestConnectionAsync`, persist `LastTestStatus`) in `backend/src/RepoManager.Infrastructure/GitProviders/GitProviderConnectionService.cs`
+- [X] T030 [P] [US1] Create `GitProviderConnectionsController` with `POST /api/v1/integrations/git/test`, `GET /api/v1/integrations/git`, `POST /api/v1/integrations/git`, and `PUT /api/v1/integrations/git/{id}` endpoints in `backend/src/RepoManager.Api/Controllers/GitProviderConnectionsController.cs`
 
 ### Milestone 3: Repository Sync
 

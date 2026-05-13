@@ -2,7 +2,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RepoManager.Application.Auth;
+using RepoManager.Application.GitProviders;
 using RepoManager.Infrastructure.Auth;
+using RepoManager.Infrastructure.GitProviders;
 using RepoManager.Infrastructure.Persistence;
 
 namespace RepoManager.Infrastructure;
@@ -14,7 +16,7 @@ public static class DependencyInjection
         IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection")
-            ?? "Data Source=./backend/data/repomanager.db";
+            ?? "Data Source=../../data/repomanager.db";
 
         services.AddDbContext<AppDbContext>(options =>
             options.UseSqlite(connectionString)
@@ -23,6 +25,10 @@ public static class DependencyInjection
         services.AddDataProtection();
 
         services.AddScoped<IAuthService, AuthService>();
+
+        services.AddSingleton<AzureDevOpsGitProvider>();
+        services.AddSingleton<IGitProviderFactory, GitProviderFactory>();
+        services.AddScoped<IGitProviderConnectionService, GitProviderConnectionService>();
 
         return services;
     }
