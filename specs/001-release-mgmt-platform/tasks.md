@@ -121,12 +121,12 @@
 
 ### US1 Frontend Settings UI
 
-- [ ] T043 [US1] Add `"codegen": "npx openapi-typescript http://localhost:5000/swagger/v1/swagger.json -o src/lib/api.d.ts"` script to `frontend/package.json`; run `npm run codegen` with backend running to generate initial `frontend/src/lib/api.d.ts`
-- [ ] T044 [US1] Implement Settings → Integrations page with Azure DevOps connection form (name, org URL, PAT fields), "Test Connection" button showing success/failure badge, and "Sync now" button in `frontend/src/features/settings/integrations/GitSettings.tsx`
-- [ ] T045 [P] [US1] Implement Settings → Repositories page: paginated repository list table (name, default branch, web URL, tracked toggle), search input, and Azure DevOps project filter dropdown in `frontend/src/features/settings/repositories/RepositoriesPage.tsx`
-- [ ] T046 [P] [US1] Implement Settings → Jira integration form (base URL, email, API token) with "Test Connection" action in `frontend/src/features/settings/integrations/JiraSettings.tsx`
-- [ ] T047 [P] [US1] Implement Settings → Confluence integration form (base URL, email, API token) with "Test Connection" action in `frontend/src/features/settings/integrations/ConfluenceSettings.tsx`
-- [ ] T048 [US1] Implement Settings → Projects page: project list sidebar, project detail panel (name/description/color editor, Jira project keys + fix-version pattern + auto-create toggle, Confluence space key + parent page ID), and assigned repositories table with assign/unassign/set-primary actions in `frontend/src/features/settings/projects/`
+- [X] T043 [US1] Add `"codegen": "npx openapi-typescript http://localhost:5000/swagger/v1/swagger.json -o src/lib/api.d.ts"` script to `frontend/package.json`; run `npm run codegen` with backend running to generate initial `frontend/src/lib/api.d.ts`
+- [X] T044 [US1] Implement Settings → Integrations page with Azure DevOps connection form (name, org URL, PAT fields), "Test Connection" button showing success/failure badge, and "Sync now" button in `frontend/src/features/settings/integrations/GitSettings.tsx`
+- [X] T045 [P] [US1] Implement Settings → Repositories page: paginated repository list table (name, default branch, web URL, tracked toggle), search input, and Azure DevOps project filter dropdown in `frontend/src/features/settings/repositories/RepositoriesPage.tsx`
+- [X] T046 [P] [US1] Implement Settings → Jira integration form (base URL, email, API token) with "Test Connection" action in `frontend/src/features/settings/integrations/JiraSettings.tsx`
+- [X] T047 [P] [US1] Implement Settings → Confluence integration form (base URL, email, API token) with "Test Connection" action in `frontend/src/features/settings/integrations/ConfluenceSettings.tsx`
+- [X] T048 [US1] Implement Settings → Projects page: project list sidebar, project detail panel (name/description/color editor, Jira project keys + fix-version pattern + auto-create toggle, Confluence space key + parent page ID), and assigned repositories table with assign/unassign/set-primary actions in `frontend/src/features/settings/projects/`
 
 **Checkpoint**: US1 smoke test — admin connects to Azure DevOps, sees "test connection succeeded", syncs repos, marks some as tracked, creates project "Apply", assigns 3 repos (one as primary), and configures Jira + Confluence connections.
 

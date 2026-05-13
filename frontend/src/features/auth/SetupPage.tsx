@@ -2,7 +2,8 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useNavigate } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { apiFetch } from '../../lib/apiClient'
 
 const schema = z.object({
   email: z.string().email('Invalid email'),
@@ -26,9 +27,8 @@ export function SetupPage() {
   } = useForm<FormData>({ resolver: zodResolver(schema) })
 
   const onSubmit = async (data: FormData) => {
-    const res = await fetch('/api/v1/auth/setup', {
+    const res = await apiFetch('/api/v1/auth/setup', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: data.email, password: data.password }),
     })
 
