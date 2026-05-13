@@ -1,0 +1,23 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend/data:/app/data
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:5000
+      - ConnectionStrings__DefaultConnection=Data Source=/app/data/repomanager.db
+      - Jwt__Secret=${JWT_SECRET}
+      - Jwt__Issuer=${JWT_ISSUER:-repomanager}
+      - Jwt__Audience=${JWT_AUDIENCE:-repomanager}
+      - DataProtection__Key=${DATA_PROTECTION_KEY}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s

@@ -25,11 +25,11 @@
 
 **Purpose**: Create the project skeleton — backend .NET 10 solution, frontend Vite+React+TS scaffold, and Docker skeleton. No domain logic yet.
 
-- [ ] T001 Create .NET 10 solution `RepoManager.sln` with four projects (`RepoManager.Domain`, `RepoManager.Application`, `RepoManager.Infrastructure`, `RepoManager.Api`) under `backend/src/` using `dotnet new sln` and `dotnet new classlib`/`webapi`; establish project-to-project references enforcing Domain ← Application ← Infrastructure ← Api
-- [ ] T002 [P] Add all required NuGet packages to the correct projects: EF Core 10 + SQLite and Mapster to Infrastructure; FluentValidation.AspNetCore, Serilog.AspNetCore, Swashbuckle.AspNetCore, HandlebarsDotNet, Markdig, BCrypt.Net-Next, Microsoft.AspNetCore.Authentication.JwtBearer, Microsoft.AspNetCore.DataProtection, Polly, Microsoft.TeamFoundationServer.Client to Infrastructure/Api as appropriate in `backend/src/`
-- [ ] T003 [P] Create frontend project with `npm create vite@latest frontend -- --template react-ts`; install Tailwind CSS, shadcn/ui, TanStack Query, Zustand, React Router v6, React Hook Form, Zod, and openapi-typescript in `frontend/`
-- [ ] T004 [P] Create `backend/tests/RepoManager.UnitTests/` and `backend/tests/RepoManager.IntegrationTests/` test projects with xunit, FluentAssertions, Moq, and Microsoft.AspNetCore.Mvc.Testing packages; add to solution
-- [ ] T005 [P] Create skeleton `docker-compose.yml` at repo root with backend service stub and `./backend/data` SQLite volume mount; create `backend/data/.gitkeep`
+- [X] T001 Create .NET 10 solution `RepoManager.sln` with four projects (`RepoManager.Domain`, `RepoManager.Application`, `RepoManager.Infrastructure`, `RepoManager.Api`) under `backend/src/` using `dotnet new sln` and `dotnet new classlib`/`webapi`; establish project-to-project references enforcing Domain ← Application ← Infrastructure ← Api
+- [X] T002 [P] Add all required NuGet packages to the correct projects: EF Core 10 + SQLite and Mapster to Infrastructure; FluentValidation.AspNetCore, Serilog.AspNetCore, Swashbuckle.AspNetCore, HandlebarsDotNet, Markdig, BCrypt.Net-Next, Microsoft.AspNetCore.Authentication.JwtBearer, Microsoft.AspNetCore.DataProtection, Polly, Microsoft.TeamFoundationServer.Client to Infrastructure/Api as appropriate in `backend/src/`
+- [X] T003 [P] Create frontend project with `npm create vite@latest frontend -- --template react-ts`; install Tailwind CSS, shadcn/ui, TanStack Query, Zustand, React Router v6, React Hook Form, Zod, and openapi-typescript in `frontend/`
+- [X] T004 [P] Create `backend/tests/RepoManager.UnitTests/` and `backend/tests/RepoManager.IntegrationTests/` test projects with xunit, FluentAssertions, Moq, and Microsoft.AspNetCore.Mvc.Testing packages; add to solution
+- [X] T005 [P] Create skeleton `docker-compose.yml` at repo root with backend service stub and `./backend/data` SQLite volume mount; create `backend/data/.gitkeep`
 
 ---
 
