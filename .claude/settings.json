@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "PowerShell(cd c:\\\\MyWork\\\\release-managare && dotnet build backend\\\\src\\\\RepoManager.Api\\\\RepoManager.Api.csproj 2>&1 | Where-Object { $_ -match \"error|FAILED\" } | Where-Object { $_ -notmatch \"MSB3026\" })",
-      "PowerShell(cd c:\\\\MyWork\\\\release-managare && dotnet build backend\\\\src\\\\RepoManager.Api\\\\RepoManager.Api.csproj -c Release -o \"$env:TEMP\\\\rmapi-check\" 2>&1 | Where-Object { $_ -match \"error CS|error NU|Build succeeded|Build FAILED|Warning\" } | Select-Object -Last 20)"
+      "PowerShell(cd c:\\\\MyWork\\\\release-managare && dotnet build backend\\\\src\\\\RepoManager.Api\\\\RepoManager.Api.csproj -c Release -o \"$env:TEMP\\\\rmapi-check\" 2>&1 | Where-Object { $_ -match \"error CS|error NU|Build succeeded|Build FAILED|Warning\" } | Select-Object -Last 20)",
+      "PowerShell(.specify/scripts/powershell/check-prerequisites.ps1 -Json -RequireTasks -IncludeTasks)",
+      "PowerShell(dotnet build backend/RepoManager.sln -c Release --nologo -v q 2>&1 | Where-Object { $_ -notmatch \"MSB3026|MSB3027|retry\" } | Select-Object -Last 20)"
     ]
   }
 }

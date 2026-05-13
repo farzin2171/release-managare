@@ -116,8 +116,8 @@
 
 ### Confluence Connection Setup
 
-- [ ] T041 [P] [US1] Implement `IConfluenceConnectionService` interface and `ConfluenceConnectionService` (get single active connection, upsert with API token encryption, test via `IConfluencePublisher.TestConnectionAsync`) in `backend/src/RepoManager.Infrastructure/Confluence/ConfluenceConnectionService.cs`
-- [ ] T042 [P] [US1] Create `ConfluenceController` with `POST /api/v1/integrations/confluence/test`, `GET /api/v1/integrations/confluence`, and `PUT /api/v1/integrations/confluence` endpoints in `backend/src/RepoManager.Api/Controllers/ConfluenceController.cs`
+- [X] T041 [P] [US1] Implement `IConfluenceConnectionService` interface and `ConfluenceConnectionService` (get single active connection, upsert with API token encryption, test via `IConfluencePublisher.TestConnectionAsync`) in `backend/src/RepoManager.Infrastructure/Confluence/ConfluenceConnectionService.cs`
+- [X] T042 [P] [US1] Create `ConfluenceController` with `POST /api/v1/integrations/confluence/test`, `GET /api/v1/integrations/confluence`, and `PUT /api/v1/integrations/confluence` endpoints in `backend/src/RepoManager.Api/Controllers/ConfluenceController.cs`
 
 ### US1 Frontend Settings UI
 

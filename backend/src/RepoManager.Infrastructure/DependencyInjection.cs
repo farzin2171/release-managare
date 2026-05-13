@@ -2,11 +2,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RepoManager.Application.Auth;
+using RepoManager.Application.Confluence;
 using RepoManager.Application.GitProviders;
 using RepoManager.Application.Jira;
 using RepoManager.Application.Projects;
 using RepoManager.Application.Repositories;
 using RepoManager.Infrastructure.Auth;
+using RepoManager.Infrastructure.Confluence;
 using RepoManager.Infrastructure.GitProviders;
 using RepoManager.Infrastructure.Jira;
 using RepoManager.Infrastructure.Persistence;
@@ -42,6 +44,9 @@ public static class DependencyInjection
         services.AddHttpClient<IJiraService, JiraService>()
             .AddHttpMessageHandler<JiraResilienceHandler>();
         services.AddScoped<IJiraConnectionService, JiraConnectionService>();
+
+        services.AddHttpClient<IConfluencePublisher, ConfluencePublisher>();
+        services.AddScoped<IConfluenceConnectionService, ConfluenceConnectionService>();
 
         return services;
     }
