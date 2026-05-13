@@ -35,7 +35,7 @@ public class JiraConnectionService : IJiraConnectionService
             _db.JiraConnections.Add(entity);
         }
         entity.BaseUrl = dto.BaseUrl.TrimEnd('/');
-        entity.Username = dto.Username;
+        entity.Username = dto.Email;
         entity.EncryptedApiToken = _protector.Protect(dto.ApiToken);
         await _db.SaveChangesAsync(ct);
         return ToDto(entity);
@@ -43,7 +43,7 @@ public class JiraConnectionService : IJiraConnectionService
 
     public async Task<TestJiraConnectionResultDto> TestAsync(UpsertJiraConnectionDto dto, CancellationToken ct = default)
     {
-        var conn = new JiraConnectionDto(dto.BaseUrl.TrimEnd('/'), dto.Username, dto.ApiToken);
+        var conn = new JiraConnectionDto(dto.BaseUrl.TrimEnd('/'), dto.Email, dto.ApiToken);
         var success = await _jiraService.TestConnectionAsync(conn, ct);
         return new TestJiraConnectionResultDto(success, success ? "Connection successful." : "Connection failed.");
     }

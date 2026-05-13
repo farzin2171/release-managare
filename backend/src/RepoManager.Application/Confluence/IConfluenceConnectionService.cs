@@ -7,6 +7,6 @@ public interface IConfluenceConnectionService
     Task<TestConfluenceConnectionResultDto> TestAsync(UpsertConfluenceConnectionDto dto, CancellationToken ct = default);
 }
 
-public record UpsertConfluenceConnectionDto(string BaseUrl, string Username, string ApiToken);
-public record ConfluenceConnectionDetailDto(Guid Id, string BaseUrl, string Username, bool IsActive, DateTimeOffset? LastTestedAt, string? LastTestStatus);
+public record UpsertConfluenceConnectionDto(string BaseUrl, string Email, string ApiToken);
+public record ConfluenceConnectionDetailDto(Guid Id, string BaseUrl, string Email, bool IsActive, DateTimeOffset? LastTestedAt, string? LastTestStatus);
 public record TestConfluenceConnectionResultDto(bool Success, string Message);

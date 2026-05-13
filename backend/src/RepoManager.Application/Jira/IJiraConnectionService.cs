@@ -8,12 +8,12 @@ public interface IJiraConnectionService
     Task<IReadOnlyList<JiraProjectDto>> ListProjectsAsync(CancellationToken ct = default);
 }
 
-public record UpsertJiraConnectionDto(string BaseUrl, string Username, string ApiToken);
+public record UpsertJiraConnectionDto(string BaseUrl, string Email, string ApiToken);
 
 public record JiraConnectionDetailDto(
     Guid Id,
     string BaseUrl,
-    string Username,
+    string Email,
     bool IsActive,
     DateTimeOffset? LastTestedAt,
     string? TestStatus);

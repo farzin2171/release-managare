@@ -34,7 +34,7 @@ public class ConfluenceConnectionService : IConfluenceConnectionService
             _db.ConfluenceConnections.Add(entity);
         }
         entity.BaseUrl = dto.BaseUrl.TrimEnd('/');
-        entity.Username = dto.Username;
+        entity.Username = dto.Email;
         entity.EncryptedApiToken = _protector.Protect(dto.ApiToken);
         await _db.SaveChangesAsync(ct);
         return ToDto(entity);
@@ -42,7 +42,7 @@ public class ConfluenceConnectionService : IConfluenceConnectionService
 
     public async Task<TestConfluenceConnectionResultDto> TestAsync(UpsertConfluenceConnectionDto dto, CancellationToken ct = default)
     {
-        var conn = new ConfluenceConnectionDto(dto.BaseUrl.TrimEnd('/'), dto.Username, dto.ApiToken);
+        var conn = new ConfluenceConnectionDto(dto.BaseUrl.TrimEnd('/'), dto.Email, dto.ApiToken);
         var success = await _publisher.TestConnectionAsync(conn, ct);
         return new TestConfluenceConnectionResultDto(success, success ? "Connection successful." : "Connection failed.");
     }
