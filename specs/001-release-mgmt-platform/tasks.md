@@ -97,10 +97,10 @@
 
 ### Milestone 3: Repository Sync
 
-- [ ] T031 [US1] Implement `GitProviderConnectionService.SyncAsync`: decrypt PAT, call `IGitProvider.ListRepositoriesAsync`, upsert each repo to `Repositories` table on `(GitProviderConnectionId, ExternalId)` unique key, update `LastSyncedAt`; method is idempotent — re-running updates existing rows in `backend/src/RepoManager.Infrastructure/GitProviders/GitProviderConnectionService.cs`
-- [ ] T032 [P] [US1] Add `POST /api/v1/integrations/git/{id}/sync` endpoint returning `202 Accepted` to `GitProviderConnectionsController` in `backend/src/RepoManager.Api/Controllers/GitProviderConnectionsController.cs`
-- [ ] T033 [US1] Implement `IRepositoryService` interface and `RepositoryService` with `ListAsync` (query params: `connectionId`, `isTracked`, `search` against Name) and `SetTrackedAsync` in `backend/src/RepoManager.Infrastructure/Repositories/RepositoryService.cs`
-- [ ] T034 [P] [US1] Create `RepositoriesController` with `GET /api/v1/repositories` (query params) and `PATCH /api/v1/repositories/{id}` (`{ "isTracked": true }`) endpoints in `backend/src/RepoManager.Api/Controllers/RepositoriesController.cs`
+- [X] T031 [US1] Implement `GitProviderConnectionService.SyncAsync`: decrypt PAT, call `IGitProvider.ListRepositoriesAsync`, upsert each repo to `Repositories` table on `(GitProviderConnectionId, ExternalId)` unique key, update `LastSyncedAt`; method is idempotent — re-running updates existing rows in `backend/src/RepoManager.Infrastructure/GitProviders/GitProviderConnectionService.cs`
+- [X] T032 [P] [US1] Add `POST /api/v1/integrations/git/{id}/sync` endpoint returning `202 Accepted` to `GitProviderConnectionsController` in `backend/src/RepoManager.Api/Controllers/GitProviderConnectionsController.cs`
+- [X] T033 [US1] Implement `IRepositoryService` interface and `RepositoryService` with `ListAsync` (query params: `connectionId`, `isTracked`, `search` against Name) and `SetTrackedAsync` in `backend/src/RepoManager.Infrastructure/Repositories/RepositoryService.cs`
+- [X] T034 [P] [US1] Create `RepositoriesController` with `GET /api/v1/repositories` (query params) and `PATCH /api/v1/repositories/{id}` (`{ "isTracked": true }`) endpoints in `backend/src/RepoManager.Api/Controllers/RepositoriesController.cs`
 
 ### Milestone 4: Logical Projects
 
