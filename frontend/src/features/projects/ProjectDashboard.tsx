@@ -125,17 +125,25 @@ export function ProjectDashboard() {
       </nav>
 
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <span
-          className="inline-block w-3.5 h-3.5 rounded-full shrink-0"
-          style={{ backgroundColor: projectColor }}
-        />
-        <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-          {changes.projectName}
-        </h1>
-        {project?.description && (
-          <span className="text-sm text-gray-400">— {project.description}</span>
-        )}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-3">
+          <span
+            className="inline-block w-3.5 h-3.5 rounded-full shrink-0"
+            style={{ backgroundColor: projectColor }}
+          />
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
+            {changes.projectName}
+          </h1>
+          {project?.description && (
+            <span className="text-sm text-gray-400">— {project.description}</span>
+          )}
+        </div>
+        <Link
+          to={`/projects/${id}/releases/new`}
+          className="px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors shrink-0"
+        >
+          New release
+        </Link>
       </div>
 
       {/* Aggregate metrics */}

@@ -202,12 +202,12 @@
 
 ### US3 Frontend Release Wizard
 
-- [ ] T077 [US3] Implement release wizard step 1: version number input pre-populated with semver suggestion, editable, plus per-repository change range summary table (fromTag, toTag, commit count) in `frontend/src/features/releases/wizard/StepConfirmRange.tsx`
-- [ ] T078 [P] [US3] Implement release wizard step 2: template selector showing all templates with the project's default template pre-selected in `frontend/src/features/releases/wizard/StepSelectTemplate.tsx`
-- [ ] T079 [P] [US3] Implement release wizard step 3: markdown editor (left pane) with live Confluence-format preview (right pane) rendered client-side in `frontend/src/features/releases/wizard/StepEditNotes.tsx`
-- [ ] T080 [P] [US3] Implement release wizard step 4: optional Jira reconciliation panel with matched/Jira-only/Git-only bucket lists, match-rate percentage badge, and "Add to Jira fix version" button visible only to Admin role in `frontend/src/features/reconciliation/ReconciliationPanel.tsx`
-- [ ] T081 [P] [US3] Implement release wizard step 5: publish confirmation dialog; on success display Confluence page URL as a clickable link and transition release to read-only state in `frontend/src/features/releases/wizard/StepPublish.tsx`
-- [ ] T082 [P] [US3] Enforce read-only mode for published releases: disable markdown editor, hide "Publish"/"Edit" buttons, display Confluence page URL link prominently in `frontend/src/features/releases/ReleaseDetail.tsx`
+- [X] T077 [US3] Implement release wizard step 1: version number input pre-populated with semver suggestion, editable, plus per-repository change range summary table (fromTag, toTag, commit count) in `frontend/src/features/releases/wizard/StepConfirmRange.tsx`
+- [X] T078 [P] [US3] Implement release wizard step 2: template selector showing all templates with the project's default template pre-selected in `frontend/src/features/releases/wizard/StepSelectTemplate.tsx`
+- [X] T079 [P] [US3] Implement release wizard step 3: markdown editor (left pane) with live Confluence-format preview (right pane) rendered client-side in `frontend/src/features/releases/wizard/StepEditNotes.tsx`
+- [X] T080 [P] [US3] Implement release wizard step 4: optional Jira reconciliation panel with matched/Jira-only/Git-only bucket lists, match-rate percentage badge, and "Add to Jira fix version" button visible only to Admin role in `frontend/src/features/reconciliation/ReconciliationPanel.tsx`
+- [X] T081 [P] [US3] Implement release wizard step 5: publish confirmation dialog; on success display Confluence page URL as a clickable link and transition release to read-only state in `frontend/src/features/releases/wizard/StepPublish.tsx`
+- [X] T082 [P] [US3] Enforce read-only mode for published releases: disable markdown editor, hide "Publish"/"Edit" buttons, display Confluence page URL link prominently in `frontend/src/features/releases/ReleaseDetail.tsx`
 
 **Checkpoint**: US3 smoke test — tech lead generates release notes for a project; notes are correctly grouped (Breaking → Features → Fixes → Other); Confluence page is created at the configured space and URL is stored on the release record.
 

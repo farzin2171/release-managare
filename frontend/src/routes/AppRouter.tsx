@@ -11,6 +11,8 @@ import { ProjectsPage } from '../features/settings/projects/ProjectsPage'
 import { ProjectsListPage } from '../features/projects/ProjectsListPage'
 import { ProjectDashboard } from '../features/projects/ProjectDashboard'
 import { RepositoryDetail } from '../features/repositories/RepositoryDetail'
+import { ReleaseWizard } from '../features/releases/wizard/ReleaseWizard'
+import { ReleaseDetail } from '../features/releases/ReleaseDetail'
 import { ProtectedRoute } from './ProtectedRoute'
 import { AdminRoute } from './AdminRoute'
 
@@ -32,6 +34,10 @@ export function AppRouter() {
 
             {/* Repository detail */}
             <Route path="/repositories/:id" element={<RepositoryDetail />} />
+
+            {/* Releases */}
+            <Route path="/projects/:id/releases/new" element={<ReleaseWizard />} />
+            <Route path="/releases/:id" element={<ReleaseDetail />} />
 
             {/* Settings — all sub-routes require authentication; write actions require Admin */}
             <Route path="/settings" element={<SettingsLayout />}>
