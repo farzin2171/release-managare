@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiFetch } from '../../lib/apiClient'
+import { useAuthStore } from '../../lib/authStore'
 import type { components } from '../../lib/api'
 
 type ReleaseDetailDto = components['schemas']['ReleaseDetailDto']
@@ -41,6 +42,7 @@ export function ReleaseDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const qc = useQueryClient()
+  const isAdmin = useAuthStore((s) => s.role === 'Admin')
 
   const [editing, setEditing] = useState(false)
   const [editedNotes, setEditedNotes] = useState('')
@@ -109,8 +111,8 @@ export function ReleaseDetail() {
           </p>
         </div>
 
-        {/* Actions — hidden when published */}
-        {!isPublished && !editing && (
+        {/* Actions — hidden when published; write actions hidden for Viewers */}
+        {!isPublished && !editing && isAdmin && (
           <div className="flex gap-2 shrink-0">
             <button
               onClick={startEditing}

@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { apiFetch } from '../../lib/apiClient'
+import { useAuthStore } from '../../lib/authStore'
 import type { components } from '../../lib/api'
 
 type ProjectDetailDto = components['schemas']['ProjectDetailDto']
@@ -81,6 +82,7 @@ function RepoCard({
 
 export function ProjectDashboard() {
   const { id } = useParams<{ id: string }>()
+  const isAdmin = useAuthStore((s) => s.role === 'Admin')
 
   const { data: project } = useQuery<ProjectDetailDto>({
     queryKey: ['project', id],
@@ -138,12 +140,21 @@ export function ProjectDashboard() {
             <span className="text-sm text-gray-400">— {project.description}</span>
           )}
         </div>
-        <Link
-          to={`/projects/${id}/releases/new`}
-          className="px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors shrink-0"
-        >
-          New release
-        </Link>
+        {isAdmin ? (
+          <Link
+            to={`/projects/${id}/releases/new`}
+            className="px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors shrink-0"
+          >
+            New release
+          </Link>
+        ) : (
+          <span
+            title="Admin access required"
+            className="px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium opacity-40 cursor-not-allowed shrink-0 select-none"
+          >
+            New release
+          </span>
+        )}
       </div>
 
       {/* Aggregate metrics */}

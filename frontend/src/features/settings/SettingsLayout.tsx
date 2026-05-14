@@ -14,6 +14,8 @@ const navGroups = [
     items: [
       { label: 'Repositories', path: '/settings/repositories' },
       { label: 'Projects', path: '/settings/projects' },
+      { label: 'Templates', path: '/settings/templates' },
+      { label: 'Users', path: '/settings/users' },
     ],
   },
 ]

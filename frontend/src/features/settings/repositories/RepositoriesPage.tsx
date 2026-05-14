@@ -1,6 +1,7 @@
 import { useState, useDeferredValue } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiFetch } from '../../../lib/apiClient'
+import { useAuthStore } from '../../../lib/authStore'
 import type { components } from '../../../lib/api'
 
 type RepositoryDto = components['schemas']['RepositoryDto']
@@ -8,6 +9,7 @@ type GitConnectionDto = components['schemas']['GitConnectionDto']
 
 export function RepositoriesPage() {
   const qc = useQueryClient()
+  const isAdmin = useAuthStore((s) => s.role === 'Admin')
   const [search, setSearch] = useState('')
   const [connectionId, setConnectionId] = useState('')
   const [togglingId, setTogglingId] = useState<string | null>(null)
@@ -132,9 +134,12 @@ export function RepositoriesPage() {
                       role="switch"
                       aria-checked={repo.isTracked}
                       aria-label={`${repo.isTracked ? 'Untrack' : 'Track'} ${repo.name}`}
-                      disabled={togglingId === repo.id}
-                      onClick={() => handleToggleTracked(repo)}
-                      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 ${
+                      disabled={!isAdmin || togglingId === repo.id}
+                      title={!isAdmin ? 'Admin access required' : undefined}
+                      onClick={() => isAdmin && handleToggleTracked(repo)}
+                      className={`relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 ${
+                        isAdmin ? 'cursor-pointer' : 'cursor-not-allowed'
+                      } ${
                         repo.isTracked
                           ? 'bg-blue-600'
                           : 'bg-gray-200 dark:bg-gray-600'

@@ -219,9 +219,9 @@
 
 **Independent Test**: Admin creates a template using `{{project.name}}`, `{{#each sections.breaking}}`, and `{{contributors}}` placeholders; live preview updates in real time; template is available and pre-selected during release creation for the configured project.
 
-- [ ] T083 [US4] Implement Templates settings page: template list table (name, default badge, edit/delete actions), "New Template" button opening a slide-over form with name field and `ContentTemplate` textarea, available variable reference table (project.name, version, sections.*, contributors, repositories) in `frontend/src/features/settings/templates/TemplatesPage.tsx`
-- [ ] T084 [P] [US4] Implement live preview pane in the template editor that renders the Handlebars template against a static sample data object on every keystroke using `handlebars` npm package client-side in `frontend/src/features/settings/templates/TemplateEditor.tsx`
-- [ ] T085 [P] [US4] Add default-template selector to the project settings detail panel (dropdown of all templates); saving calls `PUT /api/v1/projects/{id}` with `releaseNoteTemplateId`; selected template is pre-filled in release wizard step 2 in `frontend/src/features/settings/projects/ProjectDetail.tsx`
+- [X] T083 [US4] Implement Templates settings page: template list table (name, default badge, edit/delete actions), "New Template" button opening a slide-over form with name field and `ContentTemplate` textarea, available variable reference table (project.name, version, sections.*, contributors, repositories) in `frontend/src/features/settings/templates/TemplatesPage.tsx`
+- [X] T084 [P] [US4] Implement live preview pane in the template editor that renders the Handlebars template against a static sample data object on every keystroke using `handlebars` npm package client-side in `frontend/src/features/settings/templates/TemplateEditor.tsx`
+- [X] T085 [P] [US4] Add default-template selector to the project settings detail panel (dropdown of all templates); saving calls `PUT /api/v1/projects/{id}` with `releaseNoteTemplateId`; selected template is pre-filled in release wizard step 2 in `frontend/src/features/settings/projects/ProjectDetail.tsx`
 
 **Checkpoint**: US4 smoke test — Admin creates a template, sees live preview update, marks it as project default, and confirms it is pre-selected in the release wizard.
 
@@ -233,9 +233,9 @@
 
 **Independent Test**: Admin creates a Viewer account; Viewer logs in and can view project dashboards and change views; all create/edit/delete/publish/config/add-to-jira actions are hidden or disabled with an appropriate message; no write endpoint accepts requests from the Viewer JWT.
 
-- [ ] T086 [US5] Create `UsersController` with `GET /api/v1/users`, `POST /api/v1/users`, `PUT /api/v1/users/{id}` (role, isActive, password), and `DELETE /api/v1/users/{id}` endpoints — all require `[Authorize(Roles = "Admin")]` in `backend/src/RepoManager.Api/Controllers/UsersController.cs`
-- [ ] T087 [US5] Implement Users settings page: user list table (email, role chip, isActive, last login), "New User" form (email + password + role select), "Deactivate" confirmation action in `frontend/src/features/settings/users/UsersPage.tsx`
-- [ ] T088 [P] [US5] Enforce UI role-gating throughout all feature pages: any button, action, or form that calls a write endpoint must check `authStore.role === "Admin"` and render as hidden or disabled with tooltip for Viewers in `frontend/src/routes/` and all feature components
+- [X] T086 [US5] Create `UsersController` with `GET /api/v1/users`, `POST /api/v1/users`, `PUT /api/v1/users/{id}` (role, isActive, password), and `DELETE /api/v1/users/{id}` endpoints — all require `[Authorize(Roles = "Admin")]` in `backend/src/RepoManager.Api/Controllers/UsersController.cs`
+- [X] T087 [US5] Implement Users settings page: user list table (email, role chip, isActive, last login), "New User" form (email + password + role select), "Deactivate" confirmation action in `frontend/src/features/settings/users/UsersPage.tsx`
+- [X] T088 [P] [US5] Enforce UI role-gating throughout all feature pages: any button, action, or form that calls a write endpoint must check `authStore.role === "Admin"` and render as hidden or disabled with tooltip for Viewers in `frontend/src/routes/` and all feature components
 
 **Checkpoint**: US5 smoke test — Admin creates a Viewer; Viewer logs in and sees all read data; zero write actions appear or succeed anywhere in the UI.
 

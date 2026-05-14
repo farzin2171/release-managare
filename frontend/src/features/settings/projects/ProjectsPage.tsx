@@ -4,12 +4,14 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { apiFetch } from '../../../lib/apiClient'
+import { useAuthStore } from '../../../lib/authStore'
 import type { components } from '../../../lib/api'
 
 type ProjectDto = components['schemas']['ProjectDto']
 type ProjectDetailDto = components['schemas']['ProjectDetailDto']
 type RepositoryDto = components['schemas']['RepositoryDto']
 type JiraConnectionDto = components['schemas']['JiraConnectionResponseDto']
+type TemplateDto = components['schemas']['TemplateDto']
 
 // ─── Schemas ──────────────────────────────────────────────────────────────────
 
@@ -158,6 +160,34 @@ function ProjectDetail({ projectId }: { projectId: string }) {
       apiFetch('/api/v1/integrations/jira').then((r) => (r.status === 404 ? null : r.json())),
   })
 
+  const { data: templates = [] } = useQuery<TemplateDto[]>({
+    queryKey: ['templates'],
+    queryFn: () => apiFetch('/api/v1/templates').then((r) => r.json()),
+  })
+
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('')
+
+  const saveTemplate = useMutation({
+    mutationFn: async (templateId: string | null) => {
+      if (!project) return
+      const res = await apiFetch(`/api/v1/projects/${projectId}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          name: project.name,
+          description: project.description,
+          color: project.color,
+          releaseNoteTemplateId: templateId || null,
+        }),
+      })
+      if (!res.ok) throw new Error('Failed to save template')
+      return res.json()
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['project', projectId] })
+      qc.invalidateQueries({ queryKey: ['projects'] })
+    },
+  })
+
   // ── Project meta form
   const {
     register: regMeta,
@@ -286,6 +316,8 @@ function ProjectDetail({ projectId }: { projectId: string }) {
     return <p className="text-sm text-gray-500">Loading…</p>
   }
 
+  const currentTemplateId = selectedTemplateId || project.releaseNoteTemplateId || ''
+
   const assignedRepoIds = new Set(project.repositories.map((r) => r.repositoryId))
   const unassignedRepos = allRepos.filter((r) => !assignedRepoIds.has(r.id))
 
@@ -342,6 +374,54 @@ function ProjectDetail({ projectId }: { projectId: string }) {
             </button>
           </div>
         </form>
+      </section>
+
+      {/* ── Default release note template ─────────────────────────────────── */}
+      <section className="rounded-lg border border-gray-200 dark:border-gray-700 p-6 space-y-4">
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Default release note template</h3>
+        {templates.length === 0 ? (
+          <p className="text-sm text-gray-400">
+            No templates available.{' '}
+            <a href="/settings/templates" className="text-blue-600 hover:underline dark:text-blue-400">
+              Create a template
+            </a>{' '}
+            first.
+          </p>
+        ) : (
+          <div className="flex items-center gap-3">
+            <select
+              value={currentTemplateId}
+              onChange={(e) => setSelectedTemplateId(e.target.value)}
+              className="flex-1 max-w-sm rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">— No default —</option>
+              {templates.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={() => saveTemplate.mutate(currentTemplateId || null)}
+              disabled={saveTemplate.isPending}
+              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            >
+              {saveTemplate.isPending ? 'Saving…' : 'Save'}
+            </button>
+          </div>
+        )}
+        {saveTemplate.isError && (
+          <p className="text-sm text-red-500">{(saveTemplate.error as Error).message}</p>
+        )}
+        {project.releaseNoteTemplateId && !saveTemplate.isPending && (
+          <p className="text-xs text-gray-400">
+            Currently:{' '}
+            <span className="font-medium text-gray-600 dark:text-gray-300">
+              {templates.find((t) => t.id === project.releaseNoteTemplateId)?.name ?? 'Unknown template'}
+            </span>
+            {' '}— pre-selected in the release wizard.
+          </p>
+        )}
       </section>
 
       {/* ── Jira settings ─────────────────────────────────────────────────── */}
@@ -553,6 +633,7 @@ function ProjectDetail({ projectId }: { projectId: string }) {
 
 export function ProjectsPage() {
   const qc = useQueryClient()
+  const isAdmin = useAuthStore((s) => s.role === 'Admin')
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [showCreate, setShowCreate] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -586,12 +667,14 @@ export function ProjectsPage() {
       <aside className="w-56 shrink-0 space-y-1">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Projects</h2>
-          <button
-            onClick={() => setShowCreate(true)}
-            className="text-xs font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400"
-          >
-            + New
-          </button>
+          {isAdmin && (
+            <button
+              onClick={() => setShowCreate(true)}
+              className="text-xs font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400"
+            >
+              + New
+            </button>
+          )}
         </div>
 
         {isLoading ? (
@@ -613,17 +696,19 @@ export function ProjectsPage() {
                 <ColorSwatch color={p.color} />
                 <span className="truncate">{p.name}</span>
               </span>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleDelete(p.id)
-                }}
-                disabled={deletingId === p.id}
-                className="hidden group-hover:block text-gray-400 hover:text-red-500 disabled:opacity-50 ml-1 shrink-0"
-                aria-label={`Delete ${p.name}`}
-              >
-                ×
-              </button>
+              {isAdmin && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleDelete(p.id)
+                  }}
+                  disabled={deletingId === p.id}
+                  className="hidden group-hover:block text-gray-400 hover:text-red-500 disabled:opacity-50 ml-1 shrink-0"
+                  aria-label={`Delete ${p.name}`}
+                >
+                  ×
+                </button>
+              )}
             </div>
           ))
         )}
@@ -641,7 +726,7 @@ export function ProjectsPage() {
                   ? 'Create your first project to get started.'
                   : 'Select a project from the sidebar to configure it.'}
               </p>
-              {projects.length === 0 && (
+              {projects.length === 0 && isAdmin && (
                 <button
                   onClick={() => setShowCreate(true)}
                   className="mt-4 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"

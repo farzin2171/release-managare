@@ -8,6 +8,8 @@ import { JiraSettings } from '../features/settings/integrations/JiraSettings'
 import { ConfluenceSettings } from '../features/settings/integrations/ConfluenceSettings'
 import { RepositoriesPage } from '../features/settings/repositories/RepositoriesPage'
 import { ProjectsPage } from '../features/settings/projects/ProjectsPage'
+import { TemplatesPage } from '../features/settings/templates/TemplatesPage'
+import { UsersPage } from '../features/settings/users/UsersPage'
 import { ProjectsListPage } from '../features/projects/ProjectsListPage'
 import { ProjectDashboard } from '../features/projects/ProjectDashboard'
 import { RepositoryDetail } from '../features/repositories/RepositoryDetail'
@@ -50,6 +52,8 @@ export function AppRouter() {
                 <Route path="integrations/git" element={<GitSettings />} />
                 <Route path="integrations/jira" element={<JiraSettings />} />
                 <Route path="integrations/confluence" element={<ConfluenceSettings />} />
+                <Route path="templates" element={<TemplatesPage />} />
+                <Route path="users" element={<UsersPage />} />
               </Route>
             </Route>
 
