@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RepoManager.Domain.Entities;
 using RepoManager.Domain.Enums;
 
@@ -23,6 +24,16 @@ public class AppDbContext : DbContext
     public DbSet<JiraRelease> JiraReleases => Set<JiraRelease>();
     public DbSet<JiraTicket> JiraTickets => Set<JiraTicket>();
     public DbSet<ReleaseReconciliation> ReleaseReconciliations => Set<ReleaseReconciliation>();
+
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        // SQLite cannot ORDER BY DateTimeOffset columns — store as long (UTC ms since epoch) instead.
+        configurationBuilder.Properties<DateTimeOffset>()
+            .HaveConversion<DateTimeOffsetToLongConverter>();
+
+        configurationBuilder.Properties<DateTimeOffset?>()
+            .HaveConversion<NullableDateTimeOffsetToLongConverter>();
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -283,3 +294,13 @@ public class AppDbContext : DbContext
         });
     }
 }
+
+internal sealed class DateTimeOffsetToLongConverter()
+    : ValueConverter<DateTimeOffset, long>(
+        v => v.ToUnixTimeMilliseconds(),
+        v => DateTimeOffset.FromUnixTimeMilliseconds(v));
+
+internal sealed class NullableDateTimeOffsetToLongConverter()
+    : ValueConverter<DateTimeOffset?, long?>(
+        v => v.HasValue ? (long?)v.Value.ToUnixTimeMilliseconds() : null,
+        v => v.HasValue ? (DateTimeOffset?)DateTimeOffset.FromUnixTimeMilliseconds(v.Value) : null);

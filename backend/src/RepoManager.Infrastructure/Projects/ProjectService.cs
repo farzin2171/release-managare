@@ -182,7 +182,7 @@ public class ProjectService : IProjectService
 
         var repoIds = project.ProjectRepositories.Select(pr => pr.RepositoryId).ToList();
         if (repoIds.Count == 0)
-            return new ProjectChangesDto(id, project.Name, new ChangeSummaryDto(0, 0, 0, 0), [], []);
+            return new ProjectChangesDto(id, project.Name, new ChangeSummaryDto(0, 0, 0, 0), [], [], []);
 
         var repoNames = await _db.Repositories
             .Where(r => repoIds.Contains(r.Id))
@@ -191,12 +191,13 @@ public class ProjectService : IProjectService
         var results = await Task.WhenAll(
             repoIds.Select(repoId => _repositoryService.GetChangesAsync(repoId, query, ct)));
 
-        return query.GroupBy.ToLowerInvariant() switch
+        var dto = query.GroupBy.ToLowerInvariant() switch
         {
             "contributor" => AggregateByContributor(id, project.Name, results, repoNames),
             "commit"      => AggregateFlat(id, project.Name, results),
             _             => AggregateByTicket(id, project.Name, results, repoNames)
         };
+        return dto with { Repositories = results };
     }
 
     private static ProjectChangesDto AggregateByTicket(

@@ -8,17 +8,11 @@ import { JiraSettings } from '../features/settings/integrations/JiraSettings'
 import { ConfluenceSettings } from '../features/settings/integrations/ConfluenceSettings'
 import { RepositoriesPage } from '../features/settings/repositories/RepositoriesPage'
 import { ProjectsPage } from '../features/settings/projects/ProjectsPage'
+import { ProjectsListPage } from '../features/projects/ProjectsListPage'
+import { ProjectDashboard } from '../features/projects/ProjectDashboard'
+import { RepositoryDetail } from '../features/repositories/RepositoryDetail'
 import { ProtectedRoute } from './ProtectedRoute'
 import { AdminRoute } from './AdminRoute'
-
-function Dashboard() {
-  return (
-    <div className="p-8">
-      <h1 className="text-2xl font-semibold">Dashboard</h1>
-      <p className="text-gray-500 mt-2">Welcome to Repository Release Manager.</p>
-    </div>
-  )
-}
 
 export function AppRouter() {
   return (
@@ -29,8 +23,15 @@ export function AppRouter() {
 
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/" element={<Navigate to="/projects" replace />} />
+            <Route path="/dashboard" element={<Navigate to="/projects" replace />} />
+
+            {/* Projects (viewer + admin) */}
+            <Route path="/projects" element={<ProjectsListPage />} />
+            <Route path="/projects/:id" element={<ProjectDashboard />} />
+
+            {/* Repository detail */}
+            <Route path="/repositories/:id" element={<RepositoryDetail />} />
 
             {/* Settings — all sub-routes require authentication; write actions require Admin */}
             <Route path="/settings" element={<SettingsLayout />}>

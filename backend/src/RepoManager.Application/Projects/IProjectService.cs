@@ -65,7 +65,8 @@ public record ProjectChangesDto(
     string ProjectName,
     ChangeSummaryDto Summary,
     IReadOnlyList<ProjectChangeGroupDto> Groups,
-    IReadOnlyList<CommitItemDto> Unscoped);
+    IReadOnlyList<CommitItemDto> Unscoped,
+    IReadOnlyList<RepositoryChangesDto>? Repositories = null);
 
 public record ProjectChangeGroupDto(
     string Key,

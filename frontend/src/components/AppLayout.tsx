@@ -27,8 +27,8 @@ export function AppLayout() {
           Release Manager
         </NavLink>
         <nav className="flex items-center gap-1">
-          <NavLink to="/dashboard" className={linkClass}>
-            Dashboard
+          <NavLink to="/projects" className={linkClass}>
+            Projects
           </NavLink>
           <NavLink to="/settings" className={linkClass}>
             Settings

@@ -157,12 +157,12 @@
 
 ### US2 Frontend Change Views
 
-- [ ] T057 [US2] Implement per-repository detail screen with summary cards (commit count, ticket count, breaking changes, contributor count) and view-mode tab bar (Tickets / Commits / Contributors) in `frontend/src/features/repositories/RepositoryDetail.tsx`
-- [ ] T058 [P] [US2] Implement Tickets view tab: grouped-ticket list rows (ticket ID linked to Jira, representative title, type badge, commit count, contributor count) with expandable individual commit rows (shortSha, message, author, date) in `frontend/src/features/repositories/TicketGroupList.tsx`
-- [ ] T059 [P] [US2] Implement "Unscoped" section below the ticket list showing non-conventional commits with a visual warning indicator (distinct background/icon from grouped entries) in `frontend/src/features/repositories/UnscopedBucket.tsx`
-- [ ] T060 [P] [US2] Implement Commits view tab (flat chronological list) and Contributors view tab (commits grouped by author with per-author commit count) in `frontend/src/features/repositories/`
-- [ ] T061 [P] [US2] Implement change-type filter dropdown and ticket-ID search input that filter the active view; clear-filters action in `frontend/src/features/repositories/ChangeFilters.tsx`
-- [ ] T062 [US2] Implement project dashboard page with per-repository summary cards and aggregate project-level metrics row (total commits, unique tickets, breaking changes, unique contributors) in `frontend/src/features/projects/ProjectDashboard.tsx`
+- [X] T057 [US2] Implement per-repository detail screen with summary cards (commit count, ticket count, breaking changes, contributor count) and view-mode tab bar (Tickets / Commits / Contributors) in `frontend/src/features/repositories/RepositoryDetail.tsx`
+- [X] T058 [P] [US2] Implement Tickets view tab: grouped-ticket list rows (ticket ID linked to Jira, representative title, type badge, commit count, contributor count) with expandable individual commit rows (shortSha, message, author, date) in `frontend/src/features/repositories/TicketGroupList.tsx`
+- [X] T059 [P] [US2] Implement "Unscoped" section below the ticket list showing non-conventional commits with a visual warning indicator (distinct background/icon from grouped entries) in `frontend/src/features/repositories/UnscopedBucket.tsx`
+- [X] T060 [P] [US2] Implement Commits view tab (flat chronological list) and Contributors view tab (commits grouped by author with per-author commit count) in `frontend/src/features/repositories/`
+- [X] T061 [P] [US2] Implement change-type filter dropdown and ticket-ID search input that filter the active view; clear-filters action in `frontend/src/features/repositories/ChangeFilters.tsx`
+- [X] T062 [US2] Implement project dashboard page with per-repository summary cards and aggregate project-level metrics row (total commits, unique tickets, breaking changes, unique contributors) in `frontend/src/features/projects/ProjectDashboard.tsx`
 
 **Checkpoint**: US2 smoke test — Viewer sees "23 commits, 7 tickets, 1 breaking" rolled up across project repos; ticket grouping, unscoped bucket, and all view modes work correctly.
 
