@@ -196,9 +196,9 @@
 
 ### Milestone 10: Jira Reconciliation
 
-- [ ] T074 [US3] Implement `IReleaseReconciliationService` interface and `ReleaseReconciliationService.ReconcileAsync`: call `IJiraService.SyncFixVersionAsync` (auto-create fix version if `Project.AutoCreateFixVersion = true`), load Git ticket IDs from `Commits` for the release range, compute matched/Jira-only/Git-only set diff; when `Project.MatchSubtasksToParents = true` resolve subtask parent keys via `JiraTickets.ParentKey`; calculate `MatchRatePercent = matched / (matched + jiraOnly + gitOnly) * 100` in `backend/src/RepoManager.Infrastructure/Reconciliation/ReleaseReconciliationService.cs`
-- [ ] T075 [P] [US3] Persist reconciliation result to `ReleaseReconciliations` table as an upsert (one row per release on `ReleaseId` unique key; re-running replaces the snapshot JSON) in `backend/src/RepoManager.Infrastructure/Reconciliation/ReleaseReconciliationService.cs`
-- [ ] T076 [P] [US3] Add `POST /api/v1/releases/{id}/reconcile`, `GET /api/v1/releases/{id}/reconciliation`, and `POST /api/v1/releases/{id}/reconciliation/jira-tickets` (Admin only — `[Authorize(Roles = "Admin")]`) endpoints to `ReleasesController` in `backend/src/RepoManager.Api/Controllers/ReleasesController.cs`
+- [X] T074 [US3] Implement `IReleaseReconciliationService` interface and `ReleaseReconciliationService.ReconcileAsync`: call `IJiraService.SyncFixVersionAsync` (auto-create fix version if `Project.AutoCreateFixVersion = true`), load Git ticket IDs from `Commits` for the release range, compute matched/Jira-only/Git-only set diff; when `Project.MatchSubtasksToParents = true` resolve subtask parent keys via `JiraTickets.ParentKey`; calculate `MatchRatePercent = matched / (matched + jiraOnly + gitOnly) * 100` in `backend/src/RepoManager.Infrastructure/Reconciliation/ReleaseReconciliationService.cs`
+- [X] T075 [P] [US3] Persist reconciliation result to `ReleaseReconciliations` table as an upsert (one row per release on `ReleaseId` unique key; re-running replaces the snapshot JSON) in `backend/src/RepoManager.Infrastructure/Reconciliation/ReleaseReconciliationService.cs`
+- [X] T076 [P] [US3] Add `POST /api/v1/releases/{id}/reconcile`, `GET /api/v1/releases/{id}/reconciliation`, and `POST /api/v1/releases/{id}/reconciliation/jira-tickets` (Admin only — `[Authorize(Roles = "Admin")]`) endpoints to `ReleasesController` in `backend/src/RepoManager.Api/Controllers/ReleasesController.cs`
 
 ### US3 Frontend Release Wizard
 

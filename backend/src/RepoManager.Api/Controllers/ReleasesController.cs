@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RepoManager.Application.Reconciliation;
 using RepoManager.Application.Releases;
 
 namespace RepoManager.Api.Controllers;
@@ -10,8 +11,13 @@ namespace RepoManager.Api.Controllers;
 public class ReleasesController : ControllerBase
 {
     private readonly IReleaseService _service;
+    private readonly IReleaseReconciliationService _reconciliation;
 
-    public ReleasesController(IReleaseService service) => _service = service;
+    public ReleasesController(IReleaseService service, IReleaseReconciliationService reconciliation)
+    {
+        _service = service;
+        _reconciliation = reconciliation;
+    }
 
     [HttpPost("projects/{id:guid}/releases")]
     public async Task<IActionResult> Create(Guid id, [FromBody] CreateReleaseDto dto, CancellationToken ct)
@@ -44,4 +50,29 @@ public class ReleasesController : ControllerBase
         var release = await _service.PublishAsync(id, ct);
         return Ok(release);
     }
+
+    [HttpPost("releases/{id:guid}/reconcile")]
+    public async Task<IActionResult> Reconcile(Guid id, CancellationToken ct)
+    {
+        var result = await _reconciliation.ReconcileAsync(id, ct);
+        return Ok(result);
+    }
+
+    [HttpGet("releases/{id:guid}/reconciliation")]
+    public async Task<IActionResult> GetReconciliation(Guid id, CancellationToken ct)
+    {
+        var result = await _reconciliation.GetLatestAsync(id, ct);
+        if (result is null) return NotFound();
+        return Ok(result);
+    }
+
+    [HttpPost("releases/{id:guid}/reconciliation/jira-tickets")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> AddJiraTickets(Guid id, [FromBody] AddJiraTicketsDto dto, CancellationToken ct)
+    {
+        await _reconciliation.AddGitTicketsToJiraAsync(id, dto.TicketKeys, ct);
+        return NoContent();
+    }
 }
+
+public record AddJiraTicketsDto(IReadOnlyList<string> TicketKeys);
