@@ -176,15 +176,15 @@
 
 ### Milestone 7: Release Note Templates Backend
 
-- [ ] T063 [P] [US3] Define `IReleaseNoteTemplateService` interface and DTOs (`CreateTemplateDto`, `UpdateTemplateDto`, `TemplateDto`) in `backend/src/RepoManager.Application/Templates/`
-- [ ] T064 [P] [US3] Implement `ReleaseNoteTemplateService` (CRUD; validate Handlebars compiles without error via `Handlebars.Compile(template)` on create/update; enforce name uniqueness) in `backend/src/RepoManager.Infrastructure/Templates/ReleaseNoteTemplateService.cs`
-- [ ] T065 [P] [US3] Create `TemplatesController` with `GET /api/v1/templates`, `POST /api/v1/templates`, `PUT /api/v1/templates/{id}`, and `DELETE /api/v1/templates/{id}` endpoints in `backend/src/RepoManager.Api/Controllers/TemplatesController.cs`
+- [X] T063 [P] [US3] Define `IReleaseNoteTemplateService` interface and DTOs (`CreateTemplateDto`, `UpdateTemplateDto`, `TemplateDto`) in `backend/src/RepoManager.Application/Templates/`
+- [X] T064 [P] [US3] Implement `ReleaseNoteTemplateService` (CRUD; validate Handlebars compiles without error via `Handlebars.Compile(template)` on create/update; enforce name uniqueness) in `backend/src/RepoManager.Infrastructure/Templates/ReleaseNoteTemplateService.cs`
+- [X] T065 [P] [US3] Create `TemplatesController` with `GET /api/v1/templates`, `POST /api/v1/templates`, `PUT /api/v1/templates/{id}`, and `DELETE /api/v1/templates/{id}` endpoints in `backend/src/RepoManager.Api/Controllers/TemplatesController.cs`
 
 ### Milestone 7: Release Creation and Notes Generation
 
-- [ ] T066 [US3] Implement `IReleaseService` interface and `ReleaseService.CreateAsync`: compute semver suggestion (any breaking commit → major bump, else any feat → minor bump, else patch bump), gather ticket groups from `Tickets` table, render Handlebars template passing `{ project, sections: { breaking, features, fixes, other }, contributors, repositories }` model with section priority enforced (ticket with any `IsBreaking = true` commit goes to Breaking regardless of other types); exclude unscoped commits from notes in `backend/src/RepoManager.Infrastructure/Releases/ReleaseService.cs`
-- [ ] T067 [P] [US3] Implement `ReleaseService.UpdateNotesAsync`: update `EditedNotesMarkdown` only when `Status == Draft`; throw `ConflictException("Release is published and locked")` if `Status == Published` in `backend/src/RepoManager.Infrastructure/Releases/ReleaseService.cs`
-- [ ] T068 [P] [US3] Create `ReleasesController` with `POST /api/v1/projects/{id}/releases`, `GET /api/v1/releases/{id}`, and `PUT /api/v1/releases/{id}` (update edited notes, Draft only) endpoints in `backend/src/RepoManager.Api/Controllers/ReleasesController.cs`
+- [X] T066 [US3] Implement `IReleaseService` interface and `ReleaseService.CreateAsync`: compute semver suggestion (any breaking commit → major bump, else any feat → minor bump, else patch bump), gather ticket groups from `Tickets` table, render Handlebars template passing `{ project, sections: { breaking, features, fixes, other }, contributors, repositories }` model with section priority enforced (ticket with any `IsBreaking = true` commit goes to Breaking regardless of other types); exclude unscoped commits from notes in `backend/src/RepoManager.Infrastructure/Releases/ReleaseService.cs`
+- [X] T067 [P] [US3] Implement `ReleaseService.UpdateNotesAsync`: update `EditedNotesMarkdown` only when `Status == Draft`; throw `ConflictException("Release is published and locked")` if `Status == Published` in `backend/src/RepoManager.Infrastructure/Releases/ReleaseService.cs`
+- [X] T068 [P] [US3] Create `ReleasesController` with `POST /api/v1/projects/{id}/releases`, `GET /api/v1/releases/{id}`, and `PUT /api/v1/releases/{id}` (update edited notes, Draft only) endpoints in `backend/src/RepoManager.Api/Controllers/ReleasesController.cs`
 
 ### Milestone 8: Confluence Publishing
 

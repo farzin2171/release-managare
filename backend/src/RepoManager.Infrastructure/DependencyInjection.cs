@@ -7,7 +7,9 @@ using RepoManager.Application.Confluence;
 using RepoManager.Application.GitProviders;
 using RepoManager.Application.Jira;
 using RepoManager.Application.Projects;
+using RepoManager.Application.Releases;
 using RepoManager.Application.Repositories;
+using RepoManager.Application.Templates;
 using RepoManager.Infrastructure.Auth;
 using RepoManager.Infrastructure.Commits;
 using RepoManager.Infrastructure.Confluence;
@@ -15,7 +17,9 @@ using RepoManager.Infrastructure.GitProviders;
 using RepoManager.Infrastructure.Jira;
 using RepoManager.Infrastructure.Persistence;
 using RepoManager.Infrastructure.Projects;
+using RepoManager.Infrastructure.Releases;
 using RepoManager.Infrastructure.Repositories;
+using RepoManager.Infrastructure.Templates;
 
 namespace RepoManager.Infrastructure;
 
@@ -51,6 +55,9 @@ public static class DependencyInjection
 
         services.AddHttpClient<IConfluencePublisher, ConfluencePublisher>();
         services.AddScoped<IConfluenceConnectionService, ConfluenceConnectionService>();
+
+        services.AddScoped<IReleaseService, ReleaseService>();
+        services.AddScoped<IReleaseNoteTemplateService, ReleaseNoteTemplateService>();
 
         return services;
     }
