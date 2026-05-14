@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -sf http://localhost:5000/health/ready)",
+      "Bash(curl -sf http://localhost:5000/health/live)",
+      "Bash(curl -sf http://localhost:5001/health/live)",
+      "Bash(curl -sf https://localhost:5001/health/live -k)",
+      "Bash(curl -sf \"http://localhost:5000/swagger/index.html\")"
+    ]
+  }
+}

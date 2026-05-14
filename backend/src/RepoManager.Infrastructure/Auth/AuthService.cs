@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using RepoManager.Application.Auth;
 using RepoManager.Application.Common.Exceptions;
@@ -17,11 +18,13 @@ public class AuthService : IAuthService
 {
     private readonly AppDbContext _db;
     private readonly IConfiguration _config;
+    private readonly ILogger<AuthService> _logger;
 
-    public AuthService(AppDbContext db, IConfiguration config)
+    public AuthService(AppDbContext db, IConfiguration config, ILogger<AuthService> logger)
     {
         _db = db;
         _config = config;
+        _logger = logger;
     }
 
     public async Task<TokenResponseDto> LoginAsync(LoginDto dto, CancellationToken ct = default)
@@ -38,6 +41,7 @@ public class AuthService : IAuthService
         user.LastLoginAt = DateTimeOffset.UtcNow;
         await _db.SaveChangesAsync(ct);
 
+        _logger.LogInformation("User {UserId} logged in", user.Id);
         return new TokenResponseDto(accessToken, refreshToken);
     }
 
@@ -56,6 +60,7 @@ public class AuthService : IAuthService
         user.RefreshTokenExpiresAt = DateTimeOffset.UtcNow.AddDays(30);
         await _db.SaveChangesAsync(ct);
 
+        _logger.LogInformation("Refresh token rotated for user {UserId}", user.Id);
         return new TokenResponseDto(accessToken, newRefreshToken);
     }
 
@@ -75,6 +80,7 @@ public class AuthService : IAuthService
         };
         _db.Users.Add(user);
         await _db.SaveChangesAsync(ct);
+        _logger.LogInformation("Initial Admin account created for {Email}", dto.Email);
         return ToDto(user);
     }
 
@@ -94,6 +100,7 @@ public class AuthService : IAuthService
         };
         _db.Users.Add(user);
         await _db.SaveChangesAsync(ct);
+        _logger.LogInformation("User {NewUserId} created with role {Role}", user.Id, user.Role);
         return ToDto(user);
     }
 
@@ -108,6 +115,7 @@ public class AuthService : IAuthService
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password, 12);
 
         await _db.SaveChangesAsync(ct);
+        _logger.LogInformation("User {TargetUserId} updated", userId);
         return ToDto(user);
     }
 
@@ -117,6 +125,7 @@ public class AuthService : IAuthService
             ?? throw new NotFoundException("User", userId);
         _db.Users.Remove(user);
         await _db.SaveChangesAsync(ct);
+        _logger.LogInformation("User {TargetUserId} deleted", userId);
     }
 
     public async Task<IReadOnlyList<UserDto>> ListUsersAsync(CancellationToken ct = default) =>

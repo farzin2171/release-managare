@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using RepoManager.Application.Common.Exceptions;
 using RepoManager.Application.Projects;
 using RepoManager.Application.Repositories;
@@ -12,11 +13,13 @@ public class ProjectService : IProjectService
 {
     private readonly AppDbContext _db;
     private readonly IRepositoryService _repositoryService;
+    private readonly ILogger<ProjectService> _logger;
 
-    public ProjectService(AppDbContext db, IRepositoryService repositoryService)
+    public ProjectService(AppDbContext db, IRepositoryService repositoryService, ILogger<ProjectService> logger)
     {
         _db = db;
         _repositoryService = repositoryService;
+        _logger = logger;
     }
 
     public async Task<ProjectDto> CreateAsync(CreateProjectDto dto, CancellationToken ct = default)
@@ -37,6 +40,7 @@ public class ProjectService : IProjectService
         };
         _db.Projects.Add(project);
         await _db.SaveChangesAsync(ct);
+        _logger.LogInformation("Project {ProjectId} created with name '{Name}'", project.Id, project.Name);
         return ToDto(project, []);
     }
 
@@ -83,6 +87,7 @@ public class ProjectService : IProjectService
 
         project.UpdatedAt = DateTimeOffset.UtcNow;
         await _db.SaveChangesAsync(ct);
+        _logger.LogInformation("Project {ProjectId} updated", id);
         return ToDto(project, project.ProjectRepositories);
     }
 
@@ -92,6 +97,7 @@ public class ProjectService : IProjectService
             ?? throw new NotFoundException("Project", id);
         _db.Projects.Remove(project);
         await _db.SaveChangesAsync(ct);
+        _logger.LogInformation("Project {ProjectId} deleted", id);
     }
 
     public async Task<ProjectDto> AssignRepositoryAsync(Guid id, Guid repoId, AssignRepositoryDto dto, CancellationToken ct = default)
@@ -129,6 +135,7 @@ public class ProjectService : IProjectService
 
         await _db.SaveChangesAsync(ct);
         await tx.CommitAsync(ct);
+        _logger.LogInformation("Repository {RepoId} assigned to project {ProjectId} (isPrimary={IsPrimary})", repoId, id, dto.IsPrimary);
         return await LoadProjectDtoAsync(id, ct);
     }
 
@@ -144,6 +151,7 @@ public class ProjectService : IProjectService
 
         _db.ProjectRepositories.Remove(link);
         await _db.SaveChangesAsync(ct);
+        _logger.LogInformation("Repository {RepoId} removed from project {ProjectId}", repoId, id);
         return await LoadProjectDtoAsync(id, ct);
     }
 
@@ -170,6 +178,7 @@ public class ProjectService : IProjectService
         project.UpdatedAt = DateTimeOffset.UtcNow;
 
         await _db.SaveChangesAsync(ct);
+        _logger.LogInformation("Jira configured for project {ProjectId}", id);
         return ToDto(project, project.ProjectRepositories);
     }
 

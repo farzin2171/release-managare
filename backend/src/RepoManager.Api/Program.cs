@@ -125,6 +125,21 @@ try
     app.UseHttpsRedirection();
     app.UseCors("Frontend");
     app.UseAuthentication();
+
+    app.Use(async (context, next) =>
+    {
+        var userId = context.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (userId is not null)
+        {
+            using (LogContext.PushProperty("UserId", userId))
+                await next(context);
+        }
+        else
+        {
+            await next(context);
+        }
+    });
+
     app.UseAuthorization();
 
     app.MapControllers();
@@ -138,6 +153,11 @@ try
         Predicate = check => check.Name == "database"
     });
 
+    // Serve the React SPA static files — in production the frontend build is copied to wwwroot/
+    app.UseDefaultFiles();
+    app.UseStaticFiles();
+    app.MapFallbackToFile("index.html");
+
     app.Run();
 }
 catch (Exception ex) when (ex is not HostAbortedException)
@@ -148,3 +168,5 @@ finally
 {
     Log.CloseAndFlush();
 }
+
+public partial class Program { }

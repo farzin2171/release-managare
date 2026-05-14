@@ -1,6 +1,7 @@
 using FluentValidation.Results;
 using HandlebarsDotNet;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using RepoManager.Application.Common.Exceptions;
 using RepoManager.Application.Templates;
 using RepoManager.Domain.Entities;
@@ -11,8 +12,13 @@ namespace RepoManager.Infrastructure.Templates;
 public class ReleaseNoteTemplateService : IReleaseNoteTemplateService
 {
     private readonly AppDbContext _db;
+    private readonly ILogger<ReleaseNoteTemplateService> _logger;
 
-    public ReleaseNoteTemplateService(AppDbContext db) => _db = db;
+    public ReleaseNoteTemplateService(AppDbContext db, ILogger<ReleaseNoteTemplateService> logger)
+    {
+        _db = db;
+        _logger = logger;
+    }
 
     public async Task<TemplateDto> CreateAsync(CreateTemplateDto dto, CancellationToken ct = default)
     {
@@ -37,6 +43,7 @@ public class ReleaseNoteTemplateService : IReleaseNoteTemplateService
         };
         _db.ReleaseNoteTemplates.Add(template);
         await _db.SaveChangesAsync(ct);
+        _logger.LogInformation("Release note template {TemplateId} created with name '{Name}'", template.Id, template.Name);
         return ToDto(template);
     }
 
@@ -75,6 +82,7 @@ public class ReleaseNoteTemplateService : IReleaseNoteTemplateService
         }
 
         await _db.SaveChangesAsync(ct);
+        _logger.LogInformation("Release note template {TemplateId} updated", id);
         return ToDto(template);
     }
 
@@ -84,6 +92,7 @@ public class ReleaseNoteTemplateService : IReleaseNoteTemplateService
             ?? throw new NotFoundException("Template", id);
         _db.ReleaseNoteTemplates.Remove(template);
         await _db.SaveChangesAsync(ct);
+        _logger.LogInformation("Release note template {TemplateId} deleted", id);
     }
 
     private static void ValidateHandlebars(string content)

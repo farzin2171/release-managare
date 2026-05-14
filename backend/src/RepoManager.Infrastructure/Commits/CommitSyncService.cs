@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using RepoManager.Application.Commits;
 using RepoManager.Application.Common.Exceptions;
 using RepoManager.Application.GitProviders;
@@ -14,17 +15,20 @@ public class CommitSyncService
     private readonly IGitProviderFactory _providerFactory;
     private readonly IDataProtector _protector;
     private readonly IConventionalCommitParser _parser;
+    private readonly ILogger<CommitSyncService> _logger;
 
     public CommitSyncService(
         AppDbContext db,
         IGitProviderFactory providerFactory,
         IDataProtectionProvider dataProtection,
-        IConventionalCommitParser parser)
+        IConventionalCommitParser parser,
+        ILogger<CommitSyncService> logger)
     {
         _db = db;
         _providerFactory = providerFactory;
         _protector = dataProtection.CreateProtector("GitProviderConnection.Pat");
         _parser = parser;
+        _logger = logger;
     }
 
     public async Task SyncAsync(Guid repositoryId, CancellationToken ct = default)
@@ -50,6 +54,7 @@ public class CommitSyncService
 
         repo.LastSyncedAt = DateTimeOffset.UtcNow;
         await _db.SaveChangesAsync(ct);
+        _logger.LogInformation("Commit sync completed for repository {RepositoryId}: {Count} commits processed from '{FromRef}'", repositoryId, commits.Count(), fromRef);
 
         await AggregateTicketsAsync(repositoryId, fromRef, toRef, ct);
     }

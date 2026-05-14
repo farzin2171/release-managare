@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using RepoManager.Application.Common.Exceptions;
 using RepoManager.Application.Jira;
 using RepoManager.Application.Reconciliation;
@@ -12,13 +13,15 @@ public class ReleaseReconciliationService : IReleaseReconciliationService
 {
     private readonly AppDbContext _db;
     private readonly IJiraService _jira;
+    private readonly ILogger<ReleaseReconciliationService> _logger;
 
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
-    public ReleaseReconciliationService(AppDbContext db, IJiraService jira)
+    public ReleaseReconciliationService(AppDbContext db, IJiraService jira, ILogger<ReleaseReconciliationService> logger)
     {
         _db = db;
         _jira = jira;
+        _logger = logger;
     }
 
     public async Task<ReconciliationResultDto> ReconcileAsync(Guid releaseId, CancellationToken ct = default)
@@ -112,6 +115,10 @@ public class ReleaseReconciliationService : IReleaseReconciliationService
 
         await PersistAsync(release.Id, primaryJiraReleaseEntity.Id, result, ct);
 
+        _logger.LogInformation(
+            "Reconciliation for release {ReleaseId}: matched={Matched}, jiraOnly={JiraOnly}, gitOnly={GitOnly}, matchRate={MatchRate}%",
+            releaseId, result.MatchedCount, result.JiraOnlyCount, result.GitOnlyCount, result.MatchRatePercent);
+
         return result;
     }
 
@@ -136,6 +143,8 @@ public class ReleaseReconciliationService : IReleaseReconciliationService
 
         foreach (var key in ticketKeys)
             await _jira.AddTicketToFixVersionAsync(jiraRelease.JiraConnectionId, key, jiraRelease.JiraVersionId, ct);
+
+        _logger.LogInformation("Added {Count} Git tickets to Jira fix version for release {ReleaseId}", ticketKeys.Count, releaseId);
     }
 
     private async Task<JiraRelease> UpsertJiraReleaseAsync(

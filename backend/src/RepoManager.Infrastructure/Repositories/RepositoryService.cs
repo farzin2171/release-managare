@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using RepoManager.Application.Common.Exceptions;
 using RepoManager.Application.Repositories;
 using RepoManager.Domain.Entities;
@@ -9,8 +10,13 @@ namespace RepoManager.Infrastructure.Repositories;
 public class RepositoryService : IRepositoryService
 {
     private readonly AppDbContext _db;
+    private readonly ILogger<RepositoryService> _logger;
 
-    public RepositoryService(AppDbContext db) => _db = db;
+    public RepositoryService(AppDbContext db, ILogger<RepositoryService> logger)
+    {
+        _db = db;
+        _logger = logger;
+    }
 
     public async Task<IReadOnlyList<RepositoryDto>> ListAsync(ListRepositoriesQuery query, CancellationToken ct = default)
     {
@@ -36,6 +42,7 @@ public class RepositoryService : IRepositoryService
 
         repo.IsTracked = dto.IsTracked;
         await _db.SaveChangesAsync(ct);
+        _logger.LogInformation("Repository {RepositoryId} tracked status set to {IsTracked}", id, dto.IsTracked);
         return ToDto(repo);
     }
 

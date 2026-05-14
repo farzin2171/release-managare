@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using RepoManager.Application.Common.Exceptions;
 using RepoManager.Application.Jira;
 using RepoManager.Domain.Entities;
@@ -12,12 +13,14 @@ public class JiraConnectionService : IJiraConnectionService
     private readonly AppDbContext _db;
     private readonly IJiraService _jiraService;
     private readonly IDataProtector _protector;
+    private readonly ILogger<JiraConnectionService> _logger;
 
-    public JiraConnectionService(AppDbContext db, IJiraService jiraService, IDataProtectionProvider dataProtection)
+    public JiraConnectionService(AppDbContext db, IJiraService jiraService, IDataProtectionProvider dataProtection, ILogger<JiraConnectionService> logger)
     {
         _db = db;
         _jiraService = jiraService;
         _protector = dataProtection.CreateProtector("JiraConnection.ApiToken");
+        _logger = logger;
     }
 
     public async Task<JiraConnectionDetailDto?> GetAsync(CancellationToken ct = default)
@@ -38,6 +41,7 @@ public class JiraConnectionService : IJiraConnectionService
         entity.Username = dto.Email;
         entity.EncryptedApiToken = _protector.Protect(dto.ApiToken);
         await _db.SaveChangesAsync(ct);
+        _logger.LogInformation("Jira connection {ConnectionId} upserted for {BaseUrl}", entity.Id, entity.BaseUrl);
         return ToDto(entity);
     }
 

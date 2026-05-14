@@ -1,6 +1,7 @@
 using HandlebarsDotNet;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using RepoManager.Application.Common.Exceptions;
 using RepoManager.Application.Confluence;
 using RepoManager.Application.Releases;
@@ -16,12 +17,14 @@ public class ReleaseService : IReleaseService
     private readonly AppDbContext _db;
     private readonly IConfluencePublisher _publisher;
     private readonly IDataProtector _protector;
+    private readonly ILogger<ReleaseService> _logger;
 
-    public ReleaseService(AppDbContext db, IConfluencePublisher publisher, IDataProtectionProvider dataProtection)
+    public ReleaseService(AppDbContext db, IConfluencePublisher publisher, IDataProtectionProvider dataProtection, ILogger<ReleaseService> logger)
     {
         _db = db;
         _publisher = publisher;
         _protector = dataProtection.CreateProtector("ConfluenceConnection.ApiToken");
+        _logger = logger;
     }
 
     public async Task<ReleaseDto> CreateAsync(Guid projectId, CreateReleaseDto dto, Guid createdByUserId, CancellationToken ct = default)
@@ -123,6 +126,8 @@ public class ReleaseService : IReleaseService
 
         await _db.SaveChangesAsync(ct);
 
+        _logger.LogInformation("Release {ReleaseId} created for project {ProjectId} version {Version}", release.Id, projectId, dto.Version);
+
         release = await _db.Releases
             .Include(r => r.RepositoryTags).ThenInclude(rt => rt.Repository)
             .FirstAsync(r => r.Id == release.Id, ct);
@@ -152,6 +157,7 @@ public class ReleaseService : IReleaseService
 
         release.EditedNotesMarkdown = dto.EditedNotesMarkdown;
         await _db.SaveChangesAsync(ct);
+        _logger.LogInformation("Release {ReleaseId} notes updated", id);
         return ToDto(release, string.Empty);
     }
 
@@ -199,6 +205,8 @@ public class ReleaseService : IReleaseService
 
         await _db.SaveChangesAsync(ct);
         await tx.CommitAsync(ct);
+
+        _logger.LogInformation("Release {ReleaseId} published to Confluence page {PageId} ({PageUrl})", id, result.PageId, result.PageUrl);
 
         release = await _db.Releases
             .Include(r => r.RepositoryTags).ThenInclude(rt => rt.Repository)

@@ -245,11 +245,11 @@
 
 **Purpose**: Production readiness — observability completeness, integration test coverage, and Docker packaging.
 
-- [ ] T089 [P] Add structured Serilog log statements at `Information` level (including `UserId` from JWT `sub` claim and `CorrelationId` from `LogContext`) to every state-changing method in all `backend/src/RepoManager.Infrastructure/` service implementations
-- [ ] T090 [P] Write integration tests for the auth flow using `WebApplicationFactory<Program>` against a real in-memory SQLite DB: setup endpoint creates Admin and returns 410 on second call; login with correct credentials returns tokens; login with wrong password returns 401; refresh token rotation issues new pair and invalidates old token in `backend/tests/RepoManager.IntegrationTests/AuthTests.cs`
-- [ ] T091 [P] Implement multi-stage `Dockerfile`: stage 1 `dotnet publish` backend; stage 2 `npm run build` frontend; stage 3 ASP.NET Core runtime image copying both artifacts; backend serves compiled frontend static files from `wwwroot/` in `Dockerfile`
-- [ ] T092 [P] Finalize `docker-compose.yml`: backend service with `Dockerfile` build context, `./backend/data:/app/data` volume, all required env vars (`Jwt__Secret`, `DataProtection__Key`, `ConnectionStrings__DefaultConnection`, `Jwt__Issuer`, `Jwt__Audience`), and `/health/ready` health check in `docker-compose.yml`
-- [ ] T093 Validate the full `quickstart.md` developer flow end-to-end: `dotnet ef database update` applies migration, `dotnet run` starts backend on `:5000`, Swagger UI loads at `/swagger`, `npm run codegen` generates `api.d.ts`, `npm run dev` starts frontend on `:5173`, and the first-run bootstrap creates an Admin account at `/setup`
+- [X] T089 [P] Add structured Serilog log statements at `Information` level (including `UserId` from JWT `sub` claim and `CorrelationId` from `LogContext`) to every state-changing method in all `backend/src/RepoManager.Infrastructure/` service implementations
+- [X] T090 [P] Write integration tests for the auth flow using `WebApplicationFactory<Program>` against a real in-memory SQLite DB: setup endpoint creates Admin and returns 410 on second call; login with correct credentials returns tokens; login with wrong password returns 401; refresh token rotation issues new pair and invalidates old token in `backend/tests/RepoManager.IntegrationTests/AuthTests.cs`
+- [X] T091 [P] Implement multi-stage `Dockerfile`: stage 1 `dotnet publish` backend; stage 2 `npm run build` frontend; stage 3 ASP.NET Core runtime image copying both artifacts; backend serves compiled frontend static files from `wwwroot/` in `Dockerfile`
+- [X] T092 [P] Finalize `docker-compose.yml`: backend service with `Dockerfile` build context, `./backend/data:/app/data` volume, all required env vars (`Jwt__Secret`, `DataProtection__Key`, `ConnectionStrings__DefaultConnection`, `Jwt__Issuer`, `Jwt__Audience`), and `/health/ready` health check in `docker-compose.yml`
+- [X] T093 Validate the full `quickstart.md` developer flow end-to-end: `dotnet ef database update` applies migration, `dotnet run` starts backend on `:5000`, Swagger UI loads at `/swagger`, `npm run codegen` generates `api.d.ts`, `npm run dev` starts frontend on `:5173`, and the first-run bootstrap creates an Admin account at `/setup`
 
 ---
 

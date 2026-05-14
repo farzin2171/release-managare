@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using RepoManager.Application.Common.Exceptions;
 using RepoManager.Application.GitProviders;
 using RepoManager.Domain.Entities;
@@ -12,15 +13,18 @@ public class GitProviderConnectionService : IGitProviderConnectionService
     private readonly AppDbContext _db;
     private readonly IGitProviderFactory _providerFactory;
     private readonly IDataProtector _protector;
+    private readonly ILogger<GitProviderConnectionService> _logger;
 
     public GitProviderConnectionService(
         AppDbContext db,
         IGitProviderFactory providerFactory,
-        IDataProtectionProvider dataProtection)
+        IDataProtectionProvider dataProtection,
+        ILogger<GitProviderConnectionService> logger)
     {
         _db = db;
         _providerFactory = providerFactory;
         _protector = dataProtection.CreateProtector("GitProviderConnection.Pat");
+        _logger = logger;
     }
 
     public async Task<GitProviderConnectionDto> CreateAsync(CreateGitConnectionDto dto, CancellationToken ct = default)
@@ -36,6 +40,7 @@ public class GitProviderConnectionService : IGitProviderConnectionService
         };
         _db.GitProviderConnections.Add(connection);
         await _db.SaveChangesAsync(ct);
+        _logger.LogInformation("Git provider connection {ConnectionId} created for {OrganizationUrl}", connection.Id, connection.OrganizationUrl);
         return ToDto(connection);
     }
 
@@ -57,6 +62,7 @@ public class GitProviderConnectionService : IGitProviderConnectionService
         if (dto.Pat is not null) connection.EncryptedPat = _protector.Protect(dto.Pat);
 
         await _db.SaveChangesAsync(ct);
+        _logger.LogInformation("Git provider connection {ConnectionId} updated", id);
         return ToDto(connection);
     }
 
@@ -80,7 +86,7 @@ public class GitProviderConnectionService : IGitProviderConnectionService
 
         connection.LastTestStatus = success ? "Success" : "Failed";
         await _db.SaveChangesAsync(ct);
-
+        _logger.LogInformation("Git provider connection {ConnectionId} test result: {Status}", id, connection.LastTestStatus);
         return new TestConnectionResultDto(success, success ? "Connection successful." : "Connection failed.");
     }
 
@@ -128,6 +134,7 @@ public class GitProviderConnectionService : IGitProviderConnectionService
 
         connection.LastSyncedAt = DateTimeOffset.UtcNow;
         await _db.SaveChangesAsync(ct);
+        _logger.LogInformation("Git provider connection {ConnectionId} synced {Count} repositories", id, remoteRepos.Count());
     }
 
     private static GitProviderConnectionDto ToDto(GitProviderConnection c) =>

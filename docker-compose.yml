@@ -11,12 +11,13 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:5000
       - ConnectionStrings__DefaultConnection=Data Source=/app/data/repomanager.db
-      - Jwt__Secret=${JWT_SECRET}
+      - Jwt__Secret=${JWT_SECRET:?JWT_SECRET is required}
       - Jwt__Issuer=${JWT_ISSUER:-repomanager}
       - Jwt__Audience=${JWT_AUDIENCE:-repomanager}
-      - DataProtection__Key=${DATA_PROTECTION_KEY}
+      - DataProtection__Key=${DATA_PROTECTION_KEY:?DATA_PROTECTION_KEY is required}
+      - Serilog__MinimumLevel__Default=${SERILOG_MIN_LEVEL:-Information}
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health/ready"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:5000/health/ready || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
