@@ -14,6 +14,10 @@ Full specifications are in [docs/](docs/):
 
 **Status**: Spec-complete, implementation not yet started. Source directories (`backend/`, `frontend/`) do not exist yet.
 
+<!-- SPECKIT START -->
+**Active feature plan**: [specs/001-release-mgmt-platform/plan.md](specs/001-release-mgmt-platform/plan.md)
+<!-- SPECKIT END -->
+
 ## Tech Stack
 
 **Backend**: .NET 10, ASP.NET Core Web API, EF Core 10 + SQLite (WAL), Serilog, FluentValidation, Mapster, Polly, HandlebarsDotNet, BCrypt.Net-Next, Swashbuckle, Markdig

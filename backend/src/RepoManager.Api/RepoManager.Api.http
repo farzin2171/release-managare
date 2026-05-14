@@ -1,0 +1,432 @@
+@host = http://localhost:5115
+@baseUrl = {{host}}/api/v1
+
+# After login, paste your access token here:
+@token = YOUR_ACCESS_TOKEN_HERE
+
+# IDs — fill in after creating resources:
+@gitConnectionId = 00000000-0000-0000-0000-000000000001
+@repositoryId    = 00000000-0000-0000-0000-000000000002
+@projectId       = 00000000-0000-0000-0000-000000000003
+@releaseId       = 00000000-0000-0000-0000-000000000004
+@templateId      = 00000000-0000-0000-0000-000000000005
+@userId          = 00000000-0000-0000-0000-000000000006
+
+
+### ─── HEALTH ────────────────────────────────────────────────────────────────
+
+GET {{host}}/health/live
+
+###
+
+GET {{host}}/health/ready
+
+###
+
+### ─── AUTH ───────────────────────────────────────────────────────────────────
+
+# One-time admin bootstrap (returns 410 after first use)
+POST {{baseUrl}}/auth/setup
+Content-Type: application/json
+
+{
+  "email": "admin@example.com",
+  "password": "Admin1234!"
+}
+
+###
+
+# Login — copy accessToken into @token above
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@example.com",
+  "password": "Admin1234!"
+}
+
+###
+
+POST {{baseUrl}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "PASTE_REFRESH_TOKEN_HERE"
+}
+
+###
+
+### ─── USERS (Admin only) ──────────────────────────────────────────────────────
+
+GET {{baseUrl}}/users
+Authorization: Bearer {{token}}
+
+###
+
+POST {{baseUrl}}/users
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "email": "viewer@example.com",
+  "password": "Viewer1234!",
+  "role": "Viewer"
+}
+
+###
+
+PUT {{baseUrl}}/users/{{userId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "role": "Admin",
+  "isActive": true,
+  "password": "NewPassword1!"
+}
+
+###
+
+DELETE {{baseUrl}}/users/{{userId}}
+Authorization: Bearer {{token}}
+
+###
+
+### ─── GIT PROVIDER INTEGRATIONS ──────────────────────────────────────────────
+
+# Test connection without saving
+POST {{baseUrl}}/integrations/git/test
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "organizationUrl": "https://dev.azure.com/my-org",
+  "pat": "YOUR_AZURE_DEVOPS_PAT",
+  "providerType": "AzureDevOps"
+}
+
+###
+
+GET {{baseUrl}}/integrations/git
+Authorization: Bearer {{token}}
+
+###
+
+POST {{baseUrl}}/integrations/git
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "My Azure DevOps Org",
+  "providerType": "AzureDevOps",
+  "organizationUrl": "https://dev.azure.com/my-org",
+  "pat": "YOUR_AZURE_DEVOPS_PAT"
+}
+
+###
+
+PUT {{baseUrl}}/integrations/git/{{gitConnectionId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "My Azure DevOps Org (updated)",
+  "organizationUrl": "https://dev.azure.com/my-org",
+  "pat": "NEW_PAT_HERE"
+}
+
+###
+
+# Trigger repository sync (returns 202 Accepted)
+POST {{baseUrl}}/integrations/git/{{gitConnectionId}}/sync
+Authorization: Bearer {{token}}
+
+###
+
+### ─── CONFLUENCE INTEGRATION ─────────────────────────────────────────────────
+
+# Test connection without saving
+POST {{baseUrl}}/integrations/confluence/test
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "baseUrl": "https://my-org.atlassian.net/wiki",
+  "username": "user@example.com",
+  "apiToken": "YOUR_CONFLUENCE_API_TOKEN"
+}
+
+###
+
+GET {{baseUrl}}/integrations/confluence
+Authorization: Bearer {{token}}
+
+###
+
+PUT {{baseUrl}}/integrations/confluence
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "baseUrl": "https://my-org.atlassian.net/wiki",
+  "username": "user@example.com",
+  "apiToken": "YOUR_CONFLUENCE_API_TOKEN"
+}
+
+###
+
+### ─── JIRA INTEGRATION ───────────────────────────────────────────────────────
+
+# Test connection without saving
+POST {{baseUrl}}/integrations/jira/test
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "baseUrl": "https://my-org.atlassian.net",
+  "username": "user@example.com",
+  "apiToken": "YOUR_JIRA_API_TOKEN"
+}
+
+###
+
+GET {{baseUrl}}/integrations/jira
+Authorization: Bearer {{token}}
+
+###
+
+PUT {{baseUrl}}/integrations/jira
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "baseUrl": "https://my-org.atlassian.net",
+  "username": "user@example.com",
+  "apiToken": "YOUR_JIRA_API_TOKEN"
+}
+
+###
+
+GET {{baseUrl}}/integrations/jira/projects
+Authorization: Bearer {{token}}
+
+###
+
+### ─── REPOSITORIES ───────────────────────────────────────────────────────────
+
+# List all repositories (optional query params: connectionId, isTracked, search)
+GET {{baseUrl}}/repositories
+Authorization: Bearer {{token}}
+
+###
+
+GET {{baseUrl}}/repositories?isTracked=true
+Authorization: Bearer {{token}}
+
+###
+
+GET {{baseUrl}}/repositories?connectionId={{gitConnectionId}}&search=api
+Authorization: Bearer {{token}}
+
+###
+
+# Toggle isTracked
+PATCH {{baseUrl}}/repositories/{{repositoryId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "isTracked": true
+}
+
+###
+
+# Changes since last tag (groupBy: ticket | commit | contributor)
+GET {{baseUrl}}/repositories/{{repositoryId}}/changes
+Authorization: Bearer {{token}}
+
+###
+
+GET {{baseUrl}}/repositories/{{repositoryId}}/changes?groupBy=ticket&type=feat&search=APPLY
+Authorization: Bearer {{token}}
+
+###
+
+### ─── PROJECTS ───────────────────────────────────────────────────────────────
+
+GET {{baseUrl}}/projects
+Authorization: Bearer {{token}}
+
+###
+
+POST {{baseUrl}}/projects
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Apply",
+  "description": "Core Apply application",
+  "color": "#3B82F6"
+}
+
+###
+
+GET {{baseUrl}}/projects/{{projectId}}
+Authorization: Bearer {{token}}
+
+###
+
+PUT {{baseUrl}}/projects/{{projectId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Apply",
+  "description": "Updated description",
+  "color": "#10B981"
+}
+
+###
+
+DELETE {{baseUrl}}/projects/{{projectId}}
+Authorization: Bearer {{token}}
+
+###
+
+# Assign repository to project
+POST {{baseUrl}}/projects/{{projectId}}/repositories/{{repositoryId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "isPrimary": true
+}
+
+###
+
+# Remove repository from project
+DELETE {{baseUrl}}/projects/{{projectId}}/repositories/{{repositoryId}}
+Authorization: Bearer {{token}}
+
+###
+
+# Configure Jira mapping for project
+PUT {{baseUrl}}/projects/{{projectId}}/jira
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "jiraConnectionId": "00000000-0000-0000-0000-000000000010",
+  "jiraProjectKeys": ["APPLY", "CORE"],
+  "fixVersionPattern": "Apply {version}",
+  "autoCreateFixVersion": true,
+  "matchSubtasksToParents": false
+}
+
+###
+
+# Aggregated changes across all project repos
+GET {{baseUrl}}/projects/{{projectId}}/changes
+Authorization: Bearer {{token}}
+
+###
+
+### ─── RELEASE NOTE TEMPLATES ─────────────────────────────────────────────────
+
+GET {{baseUrl}}/templates
+Authorization: Bearer {{token}}
+
+###
+
+POST {{baseUrl}}/templates
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Standard Release",
+  "contentTemplate": "# {{project.name}} — v{{version}}\n\n{{#if sections.breaking}}\n## Breaking Changes\n{{#each sections.breaking}}\n- **{{this.ticketId}}**: {{this.title}}\n{{/each}}\n{{/if}}\n\n## Features\n{{#each sections.features}}\n- **{{this.ticketId}}**: {{this.title}}\n{{/each}}\n\n## Fixes\n{{#each sections.fixes}}\n- **{{this.ticketId}}**: {{this.title}}\n{{/each}}"
+}
+
+###
+
+PUT {{baseUrl}}/templates/{{templateId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Standard Release (updated)",
+  "contentTemplate": "# {{project.name}} — v{{version}}\n\nUpdated template content."
+}
+
+###
+
+DELETE {{baseUrl}}/templates/{{templateId}}
+Authorization: Bearer {{token}}
+
+###
+
+### ─── RELEASES ────────────────────────────────────────────────────────────────
+
+# Create a draft release for a project
+POST {{baseUrl}}/projects/{{projectId}}/releases
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "version": "1.3.0",
+  "templateId": "{{templateId}}",
+  "repositoryTags": [
+    {
+      "repositoryId": "{{repositoryId}}",
+      "fromTag": "v1.2.0",
+      "toTag": "HEAD"
+    }
+  ]
+}
+
+###
+
+GET {{baseUrl}}/releases/{{releaseId}}
+Authorization: Bearer {{token}}
+
+###
+
+# Update edited notes (Draft only)
+PUT {{baseUrl}}/releases/{{releaseId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "editedNotesMarkdown": "# My Release\n\n## Breaking Changes\n- APPLY-42: Updated auth flow\n\n## Features\n- APPLY-99: Dark mode support"
+}
+
+###
+
+# Publish to Confluence
+POST {{baseUrl}}/releases/{{releaseId}}/publish
+Authorization: Bearer {{token}}
+
+###
+
+# Run Jira reconciliation
+POST {{baseUrl}}/releases/{{releaseId}}/reconcile
+Authorization: Bearer {{token}}
+
+###
+
+# Get latest reconciliation snapshot
+GET {{baseUrl}}/releases/{{releaseId}}/reconciliation
+Authorization: Bearer {{token}}
+
+###
+
+# Add Git-only tickets to Jira fix version (Admin only)
+POST {{baseUrl}}/releases/{{releaseId}}/reconciliation/jira-tickets
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "ticketKeys": ["APPLY-102", "APPLY-103"]
+}
+
+###
