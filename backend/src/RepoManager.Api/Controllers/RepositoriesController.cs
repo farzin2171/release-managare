@@ -31,4 +31,18 @@ public class RepositoriesController : ControllerBase
         var repo = await _service.SetTrackedAsync(id, dto, ct);
         return Ok(repo);
     }
+
+    [HttpGet("{id:guid}/changes")]
+    public async Task<IActionResult> GetChanges(
+        Guid id,
+        [FromQuery] string groupBy = "ticket",
+        [FromQuery] string? type = null,
+        [FromQuery] string? contributor = null,
+        [FromQuery] string? search = null,
+        CancellationToken ct = default)
+    {
+        var query = new GetChangesQuery(groupBy, type, contributor, search);
+        var changes = await _service.GetChangesAsync(id, query, ct);
+        return Ok(changes);
+    }
 }

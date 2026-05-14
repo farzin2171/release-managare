@@ -4,6 +4,7 @@ public interface IRepositoryService
 {
     Task<IReadOnlyList<RepositoryDto>> ListAsync(ListRepositoriesQuery query, CancellationToken ct = default);
     Task<RepositoryDto> SetTrackedAsync(Guid id, SetTrackedDto dto, CancellationToken ct = default);
+    Task<RepositoryChangesDto> GetChangesAsync(Guid repositoryId, GetChangesQuery query, CancellationToken ct = default);
 }
 
 public record ListRepositoriesQuery(
@@ -23,3 +24,40 @@ public record RepositoryDto(
     string AzureProjectName,
     bool IsTracked,
     DateTimeOffset? LastSyncedAt);
+
+public record GetChangesQuery(
+    string GroupBy = "ticket",
+    string? Type = null,
+    string? Contributor = null,
+    string? Search = null);
+
+public record RepositoryChangesDto(
+    Guid RepositoryId,
+    string RepositoryName,
+    string FromTag,
+    string ToTag,
+    ChangeSummaryDto Summary,
+    IReadOnlyList<ChangeGroupDto> Groups,
+    IReadOnlyList<CommitItemDto> Unscoped);
+
+public record ChangeSummaryDto(
+    int CommitCount,
+    int TicketCount,
+    int BreakingCount,
+    int ContributorCount);
+
+public record ChangeGroupDto(
+    string Key,
+    string? Title,
+    string? Type,
+    bool IsBreaking,
+    int CommitCount,
+    int ContributorCount,
+    IReadOnlyList<CommitItemDto> Commits);
+
+public record CommitItemDto(
+    string Sha,
+    string ShortSha,
+    string Message,
+    string Author,
+    DateTimeOffset CommittedAt);

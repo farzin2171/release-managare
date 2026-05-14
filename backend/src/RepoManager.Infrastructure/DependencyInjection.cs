@@ -2,12 +2,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RepoManager.Application.Auth;
+using RepoManager.Application.Commits;
 using RepoManager.Application.Confluence;
 using RepoManager.Application.GitProviders;
 using RepoManager.Application.Jira;
 using RepoManager.Application.Projects;
 using RepoManager.Application.Repositories;
 using RepoManager.Infrastructure.Auth;
+using RepoManager.Infrastructure.Commits;
 using RepoManager.Infrastructure.Confluence;
 using RepoManager.Infrastructure.GitProviders;
 using RepoManager.Infrastructure.Jira;
@@ -39,6 +41,8 @@ public static class DependencyInjection
         services.AddScoped<IGitProviderConnectionService, GitProviderConnectionService>();
         services.AddScoped<IRepositoryService, RepositoryService>();
         services.AddScoped<IProjectService, ProjectService>();
+        services.AddSingleton<IConventionalCommitParser, ConventionalCommitParser>();
+        services.AddScoped<CommitSyncService>();
 
         services.AddTransient<JiraResilienceHandler>();
         services.AddHttpClient<IJiraService, JiraService>()
