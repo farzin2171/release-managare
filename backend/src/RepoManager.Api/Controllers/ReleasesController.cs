@@ -37,4 +37,11 @@ public class ReleasesController : ControllerBase
         var release = await _service.UpdateNotesAsync(id, dto, ct);
         return Ok(release);
     }
+
+    [HttpPost("releases/{id:guid}/publish")]
+    public async Task<IActionResult> Publish(Guid id, CancellationToken ct)
+    {
+        var release = await _service.PublishAsync(id, ct);
+        return Ok(release);
+    }
 }

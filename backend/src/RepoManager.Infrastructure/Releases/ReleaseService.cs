@@ -1,9 +1,12 @@
 using HandlebarsDotNet;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using RepoManager.Application.Common.Exceptions;
+using RepoManager.Application.Confluence;
 using RepoManager.Application.Releases;
 using RepoManager.Domain.Entities;
 using RepoManager.Domain.Enums;
+using RepoManager.Infrastructure.Confluence;
 using RepoManager.Infrastructure.Persistence;
 
 namespace RepoManager.Infrastructure.Releases;
@@ -11,8 +14,15 @@ namespace RepoManager.Infrastructure.Releases;
 public class ReleaseService : IReleaseService
 {
     private readonly AppDbContext _db;
+    private readonly IConfluencePublisher _publisher;
+    private readonly IDataProtector _protector;
 
-    public ReleaseService(AppDbContext db) => _db = db;
+    public ReleaseService(AppDbContext db, IConfluencePublisher publisher, IDataProtectionProvider dataProtection)
+    {
+        _db = db;
+        _publisher = publisher;
+        _protector = dataProtection.CreateProtector("ConfluenceConnection.ApiToken");
+    }
 
     public async Task<ReleaseDto> CreateAsync(Guid projectId, CreateReleaseDto dto, Guid createdByUserId, CancellationToken ct = default)
     {
@@ -145,8 +155,57 @@ public class ReleaseService : IReleaseService
         return ToDto(release, string.Empty);
     }
 
-    public Task<ReleaseDto> PublishAsync(Guid id, CancellationToken ct = default) =>
-        throw new NotImplementedException("PublishAsync is implemented in T072.");
+    public async Task<ReleaseDto> PublishAsync(Guid id, CancellationToken ct = default)
+    {
+        var release = await _db.Releases
+            .Include(r => r.RepositoryTags)
+            .FirstOrDefaultAsync(r => r.Id == id, ct)
+            ?? throw new NotFoundException("Release", id);
+
+        if (release.Status == ReleaseStatus.Published)
+            throw new ConflictException("Release is published and locked");
+
+        var project = await _db.Projects.FindAsync([release.ProjectId], ct)
+            ?? throw new NotFoundException("Project", release.ProjectId);
+
+        if (string.IsNullOrEmpty(project.ConfluenceSpaceKey))
+            throw new ConflictException("Confluence is not configured for this project");
+
+        var connection = await _db.ConfluenceConnections.FirstOrDefaultAsync(c => c.IsActive, ct)
+            ?? throw new NotFoundException("ConfluenceConnection", "active");
+
+        var conn = new ConfluenceConnectionDto(
+            connection.BaseUrl,
+            connection.Username,
+            _protector.Unprotect(connection.EncryptedApiToken));
+
+        var markdown = release.EditedNotesMarkdown ?? release.GeneratedNotesMarkdown;
+        var title = $"{project.Name} - Release {release.Version}";
+
+        await using var tx = await _db.Database.BeginTransactionAsync(ct);
+
+        var result = await _publisher.CreateOrUpdatePageAsync(
+            conn, project.ConfluenceSpaceKey,
+            project.ConfluenceParentPageId ?? string.Empty,
+            title, markdown, release.ConfluencePageId, ct);
+
+        if (!result.Success)
+            throw new ExternalServiceException("Confluence", result.ErrorMessage ?? "Publish failed", null);
+
+        release.ConfluencePageId = result.PageId;
+        release.ConfluencePageUrl = result.PageUrl;
+        release.Status = ReleaseStatus.Published;
+        release.PublishedAt = DateTimeOffset.UtcNow;
+
+        await _db.SaveChangesAsync(ct);
+        await tx.CommitAsync(ct);
+
+        release = await _db.Releases
+            .Include(r => r.RepositoryTags).ThenInclude(rt => rt.Repository)
+            .FirstAsync(r => r.Id == id, ct);
+
+        return ToDto(release, string.Empty);
+    }
 
     public async Task<IReadOnlyList<ReleaseDto>> ListByProjectAsync(Guid projectId, CancellationToken ct = default)
     {
