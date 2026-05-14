@@ -12,7 +12,7 @@ public interface IGitProvider
 }
 
 public record ProviderConnection(string OrganizationUrl, string DecryptedPat, ProviderType Type);
-public record RepoSummary(string ExternalId, string Name, string DefaultBranch, string WebUrl, string AzureProjectName);
+public record RepoSummary(string ExternalId, string Name, string DefaultBranch, string WebUrl, string AzureProjectName , Guid AzureProjectId);
 public record TagInfo(string Name, string CommitSha, DateTimeOffset? TaggerDate);
 public record CommitInfo(string Sha, string Message, string AuthorName, string AuthorEmail, DateTimeOffset CommittedAt);
 public record PullRequestInfo(int Id, string Title, string SourceBranch, string TargetBranch, DateTimeOffset MergedAt);

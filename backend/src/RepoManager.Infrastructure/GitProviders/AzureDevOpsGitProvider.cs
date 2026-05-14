@@ -35,12 +35,19 @@ public class AzureDevOpsGitProvider : IGitProvider
         {
             var client = CreateGitClient(conn);
             var repos = await client.GetRepositoriesAsync(cancellationToken: ct);
-            return repos.Select(r => new RepoSummary(
+            var repoSummaries = repos.Select(r => new RepoSummary(
                 r.Id.ToString(),
                 r.Name,
                 r.DefaultBranch?.Replace("refs/heads/", "") ?? "main",
                 r.RemoteUrl ?? string.Empty,
-                r.ProjectReference?.Name ?? string.Empty));
+                r.ProjectReference?.Name ?? string.Empty,
+                r.ProjectReference?.Id ?? Guid.Empty));
+
+            // Filter to only include repos from the specified Azure DevOps project
+            // Todo: will need to add configuration to specify which project(s) to include, rather than hardcoding the project ID
+            var filteredRepos = repoSummaries.Where(r => r.AzureProjectId == Guid.Parse("7b9dd9ad-2823-4d24-b1e5-6d0b0f3c4601"));
+
+            return filteredRepos;
         }
         catch (Exception ex)
         {

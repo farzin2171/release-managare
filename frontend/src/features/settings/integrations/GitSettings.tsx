@@ -143,7 +143,7 @@ export function GitSettings() {
   if (isLoading) return <p className="text-sm text-gray-500">Loading…</p>
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="max-w-5xl space-y-6">
       <div>
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Azure DevOps</h2>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -152,7 +152,7 @@ export function GitSettings() {
       </div>
 
       {connections.length > 0 && (
-        <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
             <thead className="bg-gray-50 dark:bg-gray-800">
               <tr>

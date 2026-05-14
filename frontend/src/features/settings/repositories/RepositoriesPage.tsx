@@ -42,7 +42,7 @@ export function RepositoriesPage() {
   }
 
   return (
-    <div className="max-w-4xl space-y-6">
+    <div className="max-w-6xl space-y-6">
       <div>
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Repositories</h2>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -89,7 +89,7 @@ export function RepositoriesPage() {
           </p>
         </div>
       ) : (
-        <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
             <thead className="bg-gray-50 dark:bg-gray-800">
               <tr>
