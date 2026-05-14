@@ -1,3 +1,5 @@
+using RepoManager.Application.Repositories;
+
 namespace RepoManager.Application.Projects;
 
 public interface IProjectService
@@ -10,6 +12,7 @@ public interface IProjectService
     Task<ProjectDto> AssignRepositoryAsync(Guid id, Guid repoId, AssignRepositoryDto dto, CancellationToken ct = default);
     Task<ProjectDto> RemoveRepositoryAsync(Guid id, Guid repoId, CancellationToken ct = default);
     Task<ProjectDto> ConfigureJiraAsync(Guid id, ConfigureJiraDto dto, CancellationToken ct = default);
+    Task<ProjectChangesDto> GetChangesAsync(Guid id, GetChangesQuery query, CancellationToken ct = default);
 }
 
 public record CreateProjectDto(
@@ -56,3 +59,20 @@ public record ProjectDto(
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
     IReadOnlyList<ProjectRepositoryDto> Repositories);
+
+public record ProjectChangesDto(
+    Guid ProjectId,
+    string ProjectName,
+    ChangeSummaryDto Summary,
+    IReadOnlyList<ProjectChangeGroupDto> Groups,
+    IReadOnlyList<CommitItemDto> Unscoped);
+
+public record ProjectChangeGroupDto(
+    string Key,
+    string? Title,
+    string? Type,
+    bool IsBreaking,
+    int CommitCount,
+    int ContributorCount,
+    IReadOnlyList<string> ContributingRepos,
+    IReadOnlyList<CommitItemDto> Commits);

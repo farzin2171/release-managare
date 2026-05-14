@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RepoManager.Application.Projects;
+using RepoManager.Application.Repositories;
 
 namespace RepoManager.Api.Controllers;
 
@@ -72,5 +73,18 @@ public class ProjectsController : ControllerBase
     {
         var project = await _service.ConfigureJiraAsync(id, dto, ct);
         return Ok(project);
+    }
+
+    [HttpGet("{id:guid}/changes")]
+    public async Task<IActionResult> GetChanges(
+        Guid id,
+        [FromQuery] string groupBy = "ticket",
+        [FromQuery] string? type = null,
+        [FromQuery] string? contributor = null,
+        [FromQuery] string? search = null,
+        CancellationToken ct = default)
+    {
+        var result = await _service.GetChangesAsync(id, new GetChangesQuery(groupBy, type, contributor, search), ct);
+        return Ok(result);
     }
 }

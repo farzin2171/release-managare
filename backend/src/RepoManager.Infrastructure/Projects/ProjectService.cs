@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using RepoManager.Application.Common.Exceptions;
 using RepoManager.Application.Projects;
+using RepoManager.Application.Repositories;
 using RepoManager.Domain.Entities;
 using RepoManager.Infrastructure.Persistence;
 
@@ -10,8 +11,13 @@ namespace RepoManager.Infrastructure.Projects;
 public class ProjectService : IProjectService
 {
     private readonly AppDbContext _db;
+    private readonly IRepositoryService _repositoryService;
 
-    public ProjectService(AppDbContext db) => _db = db;
+    public ProjectService(AppDbContext db, IRepositoryService repositoryService)
+    {
+        _db = db;
+        _repositoryService = repositoryService;
+    }
 
     public async Task<ProjectDto> CreateAsync(CreateProjectDto dto, CancellationToken ct = default)
     {
@@ -165,6 +171,101 @@ public class ProjectService : IProjectService
 
         await _db.SaveChangesAsync(ct);
         return ToDto(project, project.ProjectRepositories);
+    }
+
+    public async Task<ProjectChangesDto> GetChangesAsync(Guid id, GetChangesQuery query, CancellationToken ct = default)
+    {
+        var project = await _db.Projects
+            .Include(p => p.ProjectRepositories)
+            .FirstOrDefaultAsync(p => p.Id == id, ct)
+            ?? throw new NotFoundException("Project", id);
+
+        var repoIds = project.ProjectRepositories.Select(pr => pr.RepositoryId).ToList();
+        if (repoIds.Count == 0)
+            return new ProjectChangesDto(id, project.Name, new ChangeSummaryDto(0, 0, 0, 0), [], []);
+
+        var repoNames = await _db.Repositories
+            .Where(r => repoIds.Contains(r.Id))
+            .ToDictionaryAsync(r => r.Id, r => r.Name, ct);
+
+        var results = await Task.WhenAll(
+            repoIds.Select(repoId => _repositoryService.GetChangesAsync(repoId, query, ct)));
+
+        return query.GroupBy.ToLowerInvariant() switch
+        {
+            "contributor" => AggregateByContributor(id, project.Name, results, repoNames),
+            "commit"      => AggregateFlat(id, project.Name, results),
+            _             => AggregateByTicket(id, project.Name, results, repoNames)
+        };
+    }
+
+    private static ProjectChangesDto AggregateByTicket(
+        Guid pid, string pname, RepositoryChangesDto[] results, Dictionary<Guid, string> repoNames)
+    {
+        var merged = MergeGroups(results, repoNames);
+        var groups = merged.Select(kv =>
+        {
+            var (title, type, breaking, commits, repos) = kv.Value;
+            return new ProjectChangeGroupDto(kv.Key, title, type, breaking,
+                commits.Count,
+                commits.Select(c => c.Author).Distinct(StringComparer.OrdinalIgnoreCase).Count(),
+                repos, commits);
+        }).ToList();
+        var unscoped = results.SelectMany(r => r.Unscoped).ToList();
+        return new ProjectChangesDto(pid, pname,
+            new ChangeSummaryDto(results.Sum(r => r.Summary.CommitCount), groups.Count,
+                results.Sum(r => r.Summary.BreakingCount), results.Sum(r => r.Summary.ContributorCount)),
+            groups, unscoped);
+    }
+
+    private static ProjectChangesDto AggregateByContributor(
+        Guid pid, string pname, RepositoryChangesDto[] results, Dictionary<Guid, string> repoNames)
+    {
+        var merged = MergeGroups(results, repoNames);
+        var groups = merged
+            .OrderByDescending(kv => kv.Value.Commits.Count)
+            .Select(kv =>
+            {
+                var (title, _, breaking, commits, repos) = kv.Value;
+                return new ProjectChangeGroupDto(kv.Key, title, null, breaking,
+                    commits.Count, 1, repos, commits);
+            }).ToList();
+        return new ProjectChangesDto(pid, pname,
+            new ChangeSummaryDto(results.Sum(r => r.Summary.CommitCount), 0,
+                results.Sum(r => r.Summary.BreakingCount), groups.Count),
+            groups, []);
+    }
+
+    private static ProjectChangesDto AggregateFlat(
+        Guid pid, string pname, RepositoryChangesDto[] results)
+    {
+        var commits = results.SelectMany(r => r.Unscoped).ToList();
+        return new ProjectChangesDto(pid, pname,
+            new ChangeSummaryDto(commits.Count, 0, 0,
+                commits.Select(c => c.Author).Distinct(StringComparer.OrdinalIgnoreCase).Count()),
+            [], commits);
+    }
+
+    private static Dictionary<string, (string? Title, string? Type, bool IsBreaking, List<CommitItemDto> Commits, List<string> Repos)>
+        MergeGroups(RepositoryChangesDto[] results, Dictionary<Guid, string> repoNames)
+    {
+        var dict = new Dictionary<string, (string? Title, string? Type, bool IsBreaking, List<CommitItemDto> Commits, List<string> Repos)>(StringComparer.OrdinalIgnoreCase);
+        foreach (var r in results)
+        {
+            var name = repoNames.GetValueOrDefault(r.RepositoryId, r.RepositoryName);
+            foreach (var g in r.Groups)
+            {
+                if (dict.TryGetValue(g.Key, out var e))
+                {
+                    e.Commits.AddRange(g.Commits);
+                    if (!e.Repos.Contains(name)) e.Repos.Add(name);
+                    dict[g.Key] = (e.Title ?? g.Title, e.Type ?? g.Type, e.IsBreaking || g.IsBreaking, e.Commits, e.Repos);
+                }
+                else
+                    dict[g.Key] = (g.Title, g.Type, g.IsBreaking, [.. g.Commits], [name]);
+            }
+        }
+        return dict;
     }
 
     private async Task<ProjectDto> LoadProjectDtoAsync(Guid id, CancellationToken ct)

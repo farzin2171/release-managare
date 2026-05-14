@@ -152,8 +152,8 @@
 
 ### Milestone 6: Project Change Visibility
 
-- [ ] T055 [US2] Implement `IProjectService.GetChangesAsync`: fan out `GetChangesAsync` across all project repositories, aggregate summary counts, deduplicate Jira ticket IDs (ticket in multiple repos appears once with contributing repos listed) in `backend/src/RepoManager.Infrastructure/Projects/ProjectService.cs`
-- [ ] T056 [P] [US2] Add `GET /api/v1/projects/{id}/changes` endpoint to `ProjectsController` in `backend/src/RepoManager.Api/Controllers/ProjectsController.cs`
+- [X] T055 [US2] Implement `IProjectService.GetChangesAsync`: fan out `GetChangesAsync` across all project repositories, aggregate summary counts, deduplicate Jira ticket IDs (ticket in multiple repos appears once with contributing repos listed) in `backend/src/RepoManager.Infrastructure/Projects/ProjectService.cs`
+- [X] T056 [P] [US2] Add `GET /api/v1/projects/{id}/changes` endpoint to `ProjectsController` in `backend/src/RepoManager.Api/Controllers/ProjectsController.cs`
 
 ### US2 Frontend Change Views
 
