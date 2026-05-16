@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getRepositoryTags, setLatestTag } from '../api/repositoriesApi'
 import type { components } from '../../../lib/api'
@@ -21,7 +21,6 @@ export function TagPickerDialog({ repositoryId, projectId, onClose, onSuccess }:
   const qc = useQueryClient()
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<RepositoryTagDto | null>(null)
-  const [errorToast, setErrorToast] = useState<string | null>(null)
 
   const { data: tags = [], isLoading, isError, error, refetch } = useQuery<RepositoryTagDto[]>({
     queryKey: ['repository', repositoryId, 'tags'],
@@ -29,13 +28,9 @@ export function TagPickerDialog({ repositoryId, projectId, onClose, onSuccess }:
     staleTime: 0,
   })
 
-  useEffect(() => {
-    if (isError && error) {
-      setErrorToast(error instanceof Error ? error.message : 'Failed to load tags from provider.')
-    } else if (!isError) {
-      setErrorToast(null)
-    }
-  }, [isError, error])
+  const errorMessage = isError && error
+    ? (error instanceof Error ? error.message : 'Failed to load tags from provider.')
+    : null
 
   const { mutate: pinTag, isPending } = useMutation({
     mutationFn: () => setLatestTag(repositoryId, selected!.name),
@@ -85,11 +80,11 @@ export function TagPickerDialog({ repositoryId, projectId, onClose, onSuccess }:
         </div>
 
         {/* Error toast */}
-        {errorToast && (
+        {errorMessage && (
           <div className="mx-6 mt-3 shrink-0 flex items-start gap-3 rounded-md border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/30 px-4 py-3 text-sm text-red-800 dark:text-red-300">
-            <span className="flex-1">{errorToast}</span>
+            <span className="flex-1">{errorMessage}</span>
             <button
-              onClick={() => { setErrorToast(null); refetch() }}
+              onClick={() => refetch()}
               className="font-medium underline underline-offset-2 hover:no-underline shrink-0"
             >
               Retry

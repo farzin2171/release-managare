@@ -120,9 +120,9 @@ frontend/tests/                              ← Vitest unit + Playwright E2E
 
 **Purpose**: Observability, build validation, and final smoke test.
 
-- [ ] T030 [P] Add `repository.latest_tag.changed` structured log entry (old value → new value, `repositoryId`, `actingUserId`) to `RepositoryService.SetLatestTagAsync` and `RepositoryService.ClearLatestTagAsync` in `backend/src/RepoManager.Infrastructure/Repositories/RepositoryService.cs` — confirm `repository.tags.fetched` log (duration, tag count, outcome) is already emitted in T009's `AzureDevOpsGitProvider.ListTagsAsync`
-- [ ] T031 Run full build validation — `dotnet build backend/src` (zero warnings as errors) + `npm run lint && npm run build` from `frontend/` — confirm no compile errors introduced by this feature
-- [ ] T032 Execute quickstart.md smoke test end-to-end: apply migration → start backend → start frontend → complete all 8 steps in `quickstart.md §Step 6: Verify End-to-End` → confirm Admin and Viewer flows both work as specified
+- [X] T030 [P] Add `repository.latest_tag.changed` structured log entry (old value → new value, `repositoryId`, `actingUserId`) to `RepositoryService.SetLatestTagAsync` and `RepositoryService.ClearLatestTagAsync` in `backend/src/RepoManager.Infrastructure/Repositories/RepositoryService.cs` — confirm `repository.tags.fetched` log (duration, tag count, outcome) is already emitted in T009's `AzureDevOpsGitProvider.ListTagsAsync`
+- [X] T031 Run full build validation — `dotnet build backend/src` (zero warnings as errors) + `npm run lint && npm run build` from `frontend/` — confirm no compile errors introduced by this feature
+- [ ] T032 Execute quickstart.md smoke test end-to-end: apply migration → start backend → start frontend → complete all 8 steps in `quickstart.md §Step 6: Verify End-to-End` → confirm Admin and Viewer flows both work as specified  *(infrastructure ready: backend running on :5000, frontend on :5173, migration applied — requires manual execution with real ADO credentials)*
 
 ---
 
