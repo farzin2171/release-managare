@@ -1,20 +1,26 @@
+using FluentValidation.Results;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RepoManager.Application.Common.Exceptions;
+using RepoManager.Application.GitProviders;
 using RepoManager.Application.Repositories;
 using RepoManager.Domain.Entities;
+using RepoManager.Domain.ValueObjects;
 using RepoManager.Infrastructure.Persistence;
+using ValidationException = RepoManager.Application.Common.Exceptions.ValidationException;
 
 namespace RepoManager.Infrastructure.Repositories;
 
 public class RepositoryService : IRepositoryService
 {
     private readonly AppDbContext _db;
+    private readonly IGitProviderService _gitProviderService;
     private readonly ILogger<RepositoryService> _logger;
 
-    public RepositoryService(AppDbContext db, ILogger<RepositoryService> logger)
+    public RepositoryService(AppDbContext db, IGitProviderService gitProviderService, ILogger<RepositoryService> logger)
     {
         _db = db;
+        _gitProviderService = gitProviderService;
         _logger = logger;
     }
 
@@ -31,13 +37,15 @@ public class RepositoryService : IRepositoryService
         if (!string.IsNullOrWhiteSpace(query.Search))
             q = q.Where(r => r.Name.Contains(query.Search));
 
-        var repos = await q.OrderBy(r => r.Name).ToListAsync(ct);
+        var repos = await q.Include(r => r.LatestTagSetBy).OrderBy(r => r.Name).ToListAsync(ct);
         return repos.Select(ToDto).ToList();
     }
 
     public async Task<RepositoryDto> SetTrackedAsync(Guid id, SetTrackedDto dto, CancellationToken ct = default)
     {
-        var repo = await _db.Repositories.FindAsync([id], ct)
+        var repo = await _db.Repositories
+            .Include(r => r.LatestTagSetBy)
+            .FirstOrDefaultAsync(r => r.Id == id, ct)
             ?? throw new NotFoundException("Repository", id);
 
         repo.IsTracked = dto.IsTracked;
@@ -157,10 +165,61 @@ public class RepositoryService : IRepositoryService
             ContributorCount: commits.Select(c => c.AuthorEmail).Distinct().Count());
     }
 
+    public async Task<IReadOnlyList<RepositoryTag>> GetTagsAsync(Guid repositoryId, CancellationToken ct = default)
+    {
+        var repo = await _db.Repositories.FindAsync([repositoryId], ct)
+            ?? throw new NotFoundException("Repository", repositoryId);
+
+        if (!repo.IsTracked)
+            throw new ValidationException([new ValidationFailure("", "Repository must be tracked to list tags.")]);
+
+        return await _gitProviderService.ListTagsAsync(repositoryId, ct);
+    }
+
+    public async Task<RepositoryDto> SetLatestTagAsync(Guid repositoryId, string tagName, Guid actingUserId, CancellationToken ct = default)
+    {
+        var repo = await _db.Repositories.FindAsync([repositoryId], ct)
+            ?? throw new NotFoundException("Repository", repositoryId);
+
+        if (!repo.IsTracked)
+            throw new ValidationException([new ValidationFailure("", "Repository must be tracked to pin a tag.")]);
+
+        var liveTags = await _gitProviderService.ListTagsAsync(repositoryId, ct);
+        var tag = liveTags.FirstOrDefault(t => t.Name == tagName)
+            ?? throw new ValidationException([new ValidationFailure("tagName", $"Tag '{tagName}' does not exist in the remote repository.")]);
+
+        var oldTag = repo.LatestTag;
+        repo.PinLatestTag(tagName, tag.CommitSha, actingUserId, DateTime.UtcNow);
+        await _db.SaveChangesAsync(ct);
+
+        _logger.LogInformation(
+            "repository.latest_tag.changed repositoryId={RepositoryId} oldTag={OldTag} newTag={NewTag} actingUserId={ActingUserId}",
+            repositoryId, oldTag, tagName, actingUserId);
+
+        await _db.Entry(repo).Reference(r => r.LatestTagSetBy).LoadAsync(ct);
+        return ToDto(repo);
+    }
+
+    public async Task ClearLatestTagAsync(Guid repositoryId, Guid actingUserId, CancellationToken ct = default)
+    {
+        var repo = await _db.Repositories.FindAsync([repositoryId], ct)
+            ?? throw new NotFoundException("Repository", repositoryId);
+
+        var oldTag = repo.LatestTag;
+        repo.ClearLatestTag(actingUserId, DateTime.UtcNow);
+        await _db.SaveChangesAsync(ct);
+
+        _logger.LogInformation(
+            "repository.latest_tag.changed repositoryId={RepositoryId} oldTag={OldTag} newTag=null actingUserId={ActingUserId}",
+            repositoryId, oldTag, actingUserId);
+    }
+
     private static CommitItemDto ToCommitItemDto(Commit c) =>
         new(c.Sha, c.ShortSha, c.Message, c.AuthorName, c.CommittedAt);
 
     private static RepositoryDto ToDto(Repository r) =>
         new(r.Id, r.GitProviderConnectionId, r.ExternalId, r.Name,
-            r.DefaultBranch, r.WebUrl, r.AzureProjectName, r.IsTracked, r.LastSyncedAt);
+            r.DefaultBranch, r.WebUrl, r.AzureProjectName, r.IsTracked, r.LastSyncedAt,
+            r.LatestTag, r.LatestTagCommitSha, r.LatestTagSetAt,
+            r.LatestTagSetBy is { } u ? new UserSummaryDto(u.Id, u.Email) : null);
 }

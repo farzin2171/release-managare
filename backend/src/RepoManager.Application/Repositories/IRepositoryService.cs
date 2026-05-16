@@ -1,3 +1,5 @@
+using RepoManager.Domain.ValueObjects;
+
 namespace RepoManager.Application.Repositories;
 
 public interface IRepositoryService
@@ -5,6 +7,9 @@ public interface IRepositoryService
     Task<IReadOnlyList<RepositoryDto>> ListAsync(ListRepositoriesQuery query, CancellationToken ct = default);
     Task<RepositoryDto> SetTrackedAsync(Guid id, SetTrackedDto dto, CancellationToken ct = default);
     Task<RepositoryChangesDto> GetChangesAsync(Guid repositoryId, GetChangesQuery query, CancellationToken ct = default);
+    Task<IReadOnlyList<RepositoryTag>> GetTagsAsync(Guid repositoryId, CancellationToken ct = default);
+    Task<RepositoryDto> SetLatestTagAsync(Guid repositoryId, string tagName, Guid actingUserId, CancellationToken ct = default);
+    Task ClearLatestTagAsync(Guid repositoryId, Guid actingUserId, CancellationToken ct = default);
 }
 
 public record ListRepositoriesQuery(
@@ -13,6 +18,8 @@ public record ListRepositoriesQuery(
     string? Search);
 
 public record SetTrackedDto(bool IsTracked);
+
+public record UserSummaryDto(Guid Id, string Email);
 
 public record RepositoryDto(
     Guid Id,
@@ -23,7 +30,11 @@ public record RepositoryDto(
     string WebUrl,
     string AzureProjectName,
     bool IsTracked,
-    DateTimeOffset? LastSyncedAt);
+    DateTimeOffset? LastSyncedAt,
+    string? LatestTag,
+    string? LatestTagCommitSha,
+    DateTime? LatestTagSetAt,
+    UserSummaryDto? LatestTagSetBy);
 
 public record GetChangesQuery(
     string GroupBy = "ticket",

@@ -2,6 +2,8 @@ import { useState, useDeferredValue } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiFetch } from '../../../lib/apiClient'
 import { useAuthStore } from '../../../lib/authStore'
+import { RepositoryDetailSheet } from '../../repositories/components/RepositoryDetailSheet'
+import { LatestTagCell } from '../../repositories/components/LatestTagCell'
 import type { components } from '../../../lib/api'
 
 type RepositoryDto = components['schemas']['RepositoryDto']
@@ -13,6 +15,7 @@ export function RepositoriesPage() {
   const [search, setSearch] = useState('')
   const [connectionId, setConnectionId] = useState('')
   const [togglingId, setTogglingId] = useState<string | null>(null)
+  const [selectedRepo, setSelectedRepo] = useState<RepositoryDto | null>(null)
   const deferredSearch = useDeferredValue(search)
 
   const { data: connections = [] } = useQuery<GitConnectionDto[]>({
@@ -95,7 +98,7 @@ export function RepositoriesPage() {
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
             <thead className="bg-gray-50 dark:bg-gray-800">
               <tr>
-                {['Repository', 'Azure project', 'Default branch', 'Web URL', 'Tracked'].map(
+                {['Repository', 'Azure project', 'Default branch', 'Web URL', 'Latest tag', 'Tracked'].map(
                   (h) => (
                     <th
                       key={h}
@@ -109,7 +112,11 @@ export function RepositoriesPage() {
             </thead>
             <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
               {repos.map((repo) => (
-                <tr key={repo.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                <tr
+                  key={repo.id}
+                  onClick={() => setSelectedRepo(repo)}
+                  className="hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer"
+                >
                   <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">
                     {repo.name}
                   </td>
@@ -130,6 +137,9 @@ export function RepositoriesPage() {
                     </a>
                   </td>
                   <td className="px-4 py-3">
+                    <LatestTagCell repo={repo} />
+                  </td>
+                  <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                     <button
                       role="switch"
                       aria-checked={repo.isTracked}
@@ -164,6 +174,13 @@ export function RepositoriesPage() {
         {repos.filter((r) => r.isTracked).length > 0 &&
           ` · ${repos.filter((r) => r.isTracked).length} tracked`}
       </p>
+
+      {selectedRepo && (
+        <RepositoryDetailSheet
+          repository={selectedRepo}
+          onClose={() => setSelectedRepo(null)}
+        />
+      )}
     </div>
   )
 }

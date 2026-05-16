@@ -2,11 +2,13 @@ import { useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { apiFetch } from '../../lib/apiClient'
 import { useAuthStore } from '../../lib/authStore'
+import { ProjectRepositoriesTable } from './components/ProjectRepositoriesTable'
 import type { components } from '../../lib/api'
 
 type ProjectDetailDto = components['schemas']['ProjectDetailDto']
 type ProjectChangesDto = components['schemas']['ProjectChangesDto']
 type RepositoryChangesDto = components['schemas']['RepositoryChangesDto']
+type RepositoryDto = components['schemas']['RepositoryDto']
 
 function MetricCard({ label, value, accent }: { label: string; value: number; accent?: boolean }) {
   return (
@@ -95,6 +97,16 @@ export function ProjectDashboard() {
     queryFn: () => apiFetch(`/api/v1/projects/${id}/changes`).then((r) => r.json()),
     enabled: !!id,
   })
+
+  const { data: allRepos = [] } = useQuery<RepositoryDto[]>({
+    queryKey: ['repositories'],
+    queryFn: () => apiFetch('/api/v1/repositories').then((r) => r.json()),
+    enabled: !!project,
+  })
+
+  const projectRepos = allRepos.filter((r) =>
+    project?.repositories.some((pr) => pr.repositoryId === r.id)
+  )
 
   if (isLoading) {
     return (
@@ -188,6 +200,18 @@ export function ProjectDashboard() {
             {changes.repositories.map((repo) => (
               <RepoCard key={repo.repositoryId} repo={repo} color={projectColor} />
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Repository latest tags */}
+      {projectRepos.length > 0 && (
+        <div>
+          <h2 className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3">
+            Latest tags
+          </h2>
+          <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
+            <ProjectRepositoriesTable repositories={projectRepos} />
           </div>
         </div>
       )}

@@ -1,6 +1,10 @@
+using System.Security.Claims;
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RepoManager.Application.Common.Exceptions;
 using RepoManager.Application.Repositories;
+using AppValidationException = RepoManager.Application.Common.Exceptions.ValidationException;
 
 namespace RepoManager.Api.Controllers;
 
@@ -9,8 +13,13 @@ namespace RepoManager.Api.Controllers;
 public class RepositoriesController : ControllerBase
 {
     private readonly IRepositoryService _service;
+    private readonly IValidator<SetLatestTagDto> _setTagValidator;
 
-    public RepositoriesController(IRepositoryService service) => _service = service;
+    public RepositoriesController(IRepositoryService service, IValidator<SetLatestTagDto> setTagValidator)
+    {
+        _service = service;
+        _setTagValidator = setTagValidator;
+    }
 
     [HttpGet]
     public async Task<IActionResult> List(
@@ -44,5 +53,64 @@ public class RepositoriesController : ControllerBase
         var query = new GetChangesQuery(groupBy, type, contributor, search);
         var changes = await _service.GetChangesAsync(id, query, ct);
         return Ok(changes);
+    }
+
+    [Authorize]
+    [HttpGet("{id:guid}/tags")]
+    public async Task<IActionResult> GetTags(Guid id, CancellationToken ct)
+    {
+        try
+        {
+            var tags = await _service.GetTagsAsync(id, ct);
+            return Ok(new { tags });
+        }
+        catch (NotFoundException)
+        {
+            return NotFound();
+        }
+        catch (AppValidationException)
+        {
+            return UnprocessableEntity();
+        }
+    }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpPut("{id:guid}/latest-tag")]
+    public async Task<IActionResult> SetLatestTag(Guid id, [FromBody] SetLatestTagDto dto, CancellationToken ct)
+    {
+        var validation = await _setTagValidator.ValidateAsync(dto, ct);
+        if (!validation.IsValid)
+            return UnprocessableEntity(validation.ToDictionary());
+
+        var actingUserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        try
+        {
+            var repo = await _service.SetLatestTagAsync(id, dto.TagName, actingUserId, ct);
+            return Ok(repo);
+        }
+        catch (NotFoundException)
+        {
+            return NotFound();
+        }
+        catch (AppValidationException)
+        {
+            return UnprocessableEntity();
+        }
+    }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpDelete("{id:guid}/latest-tag")]
+    public async Task<IActionResult> ClearLatestTag(Guid id, CancellationToken ct)
+    {
+        var actingUserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        try
+        {
+            await _service.ClearLatestTagAsync(id, actingUserId, ct);
+            return NoContent();
+        }
+        catch (NotFoundException)
+        {
+            return NotFound();
+        }
     }
 }
