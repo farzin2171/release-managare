@@ -17,6 +17,24 @@ public class Repository
     public DateTime? LatestTagSetAt { get; set; }
     public Guid? LatestTagSetByUserId { get; set; }
 
+    public void PinLatestTag(string tagName, string commitSha, Guid userId, DateTime utcNow)
+    {
+        if (!IsTracked)
+            throw new InvalidOperationException("Repository must be tracked to pin a latest tag.");
+        LatestTag = tagName;
+        LatestTagCommitSha = commitSha;
+        LatestTagSetAt = utcNow;
+        LatestTagSetByUserId = userId;
+    }
+
+    public void ClearLatestTag(Guid userId, DateTime utcNow)
+    {
+        LatestTag = null;
+        LatestTagCommitSha = null;
+        LatestTagSetAt = null;
+        LatestTagSetByUserId = null;
+    }
+
     public GitProviderConnection GitProviderConnection { get; set; } = null!;
     public User? LatestTagSetBy { get; set; }
     public ICollection<ProjectRepository> ProjectRepositories { get; set; } = [];

@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using RepoManager.Application.Common.Exceptions;
 using RepoManager.Application.Repositories;
 using RepoManager.Domain.Entities;
+using RepoManager.Domain.ValueObjects;
 using RepoManager.Infrastructure.Persistence;
 
 namespace RepoManager.Infrastructure.Repositories;
@@ -157,10 +158,21 @@ public class RepositoryService : IRepositoryService
             ContributorCount: commits.Select(c => c.AuthorEmail).Distinct().Count());
     }
 
+    public Task<IReadOnlyList<RepositoryTag>> GetTagsAsync(Guid repositoryId, CancellationToken ct = default)
+        => throw new NotImplementedException("Implemented in Phase 3 — T009/T010");
+
+    public Task<RepositoryDto> SetLatestTagAsync(Guid repositoryId, string tagName, Guid actingUserId, CancellationToken ct = default)
+        => throw new NotImplementedException("Implemented in Phase 3 — T012");
+
+    public Task ClearLatestTagAsync(Guid repositoryId, Guid actingUserId, CancellationToken ct = default)
+        => throw new NotImplementedException("Implemented in Phase 3 — T013");
+
     private static CommitItemDto ToCommitItemDto(Commit c) =>
         new(c.Sha, c.ShortSha, c.Message, c.AuthorName, c.CommittedAt);
 
     private static RepositoryDto ToDto(Repository r) =>
         new(r.Id, r.GitProviderConnectionId, r.ExternalId, r.Name,
-            r.DefaultBranch, r.WebUrl, r.AzureProjectName, r.IsTracked, r.LastSyncedAt);
+            r.DefaultBranch, r.WebUrl, r.AzureProjectName, r.IsTracked, r.LastSyncedAt,
+            r.LatestTag, r.LatestTagCommitSha, r.LatestTagSetAt,
+            r.LatestTagSetBy is { } u ? new UserSummaryDto(u.Id, u.Email) : null);
 }

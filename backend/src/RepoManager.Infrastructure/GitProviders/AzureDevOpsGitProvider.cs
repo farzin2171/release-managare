@@ -77,6 +77,7 @@ public class AzureDevOpsGitProvider : IGitProvider
             return refs.Select(r => new TagInfo(
                 r.Name.Replace("refs/tags/", ""),
                 r.PeeledObjectId ?? r.ObjectId,
+                null,
                 null));
         }
         catch (ExternalServiceException)

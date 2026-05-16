@@ -44,13 +44,13 @@ frontend/tests/                              ← Vitest unit + Playwright E2E
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T002 [P] Add `RepositoryTag` sealed record `(string Name, string CommitSha, DateTimeOffset? CommitDate, string? AuthorName)` to `backend/src/RepoManager.Domain/ValueObjects/RepositoryTag.cs`
-- [ ] T003 [P] Write failing TDD unit tests (Red phase) for `Repository.PinLatestTag` and `Repository.ClearLatestTag` — cover: untracked repo throws `ValidationException`; tracked repo sets all four fields; clear nulls all four fields — in `backend/tests/RepoManager.UnitTests/Domain/RepositoryLatestTagTests.cs`
-- [ ] T004 Add `LatestTag`, `LatestTagCommitSha`, `LatestTagSetAt`, `LatestTagSetByUserId` properties and `PinLatestTag(string tagName, string commitSha, Guid userId, DateTime utcNow)` / `ClearLatestTag(Guid userId, DateTime utcNow)` methods to `backend/src/RepoManager.Domain/Entities/Repository.cs` — verify T003 tests now pass (Green)
-- [ ] T005 [P] Add `AuthorName` field to the existing `TagInfo` record and add `ListTagsAsync(Guid repositoryId, CancellationToken ct = default)` signature to `backend/src/RepoManager.Application/GitProviders/IGitProviderService.cs`
-- [ ] T006 [P] Add `GetTagsAsync`, `SetLatestTagAsync`, and `ClearLatestTagAsync` method signatures (as specified in `contracts/service-interfaces.md`) to `backend/src/RepoManager.Application/Repositories/IRepositoryService.cs`
-- [ ] T007 [P] Extend `backend/src/RepoManager.Application/Repositories/Dtos/RepositoryDto.cs` with four new nullable fields (`LatestTag`, `LatestTagCommitSha`, `LatestTagSetAt`, `LatestTagSetBy`) and add `UserSummaryDto(Guid Id, string Email)` record to the same file
-- [ ] T008 Update `backend/src/RepoManager.Infrastructure/Persistence/Configurations/RepositoryConfiguration.cs` — add column max-length mappings for `LatestTag` (255), `LatestTagCommitSha` (64); add `HasOne(r => r.LatestTagSetBy).WithMany().HasForeignKey(r => r.LatestTagSetByUserId).OnDelete(DeleteBehavior.SetNull)` navigation
+- [X] T002 [P] Add `RepositoryTag` sealed record `(string Name, string CommitSha, DateTimeOffset? CommitDate, string? AuthorName)` to `backend/src/RepoManager.Domain/ValueObjects/RepositoryTag.cs`
+- [X] T003 [P] Write failing TDD unit tests (Red phase) for `Repository.PinLatestTag` and `Repository.ClearLatestTag` — cover: untracked repo throws `ValidationException`; tracked repo sets all four fields; clear nulls all four fields — in `backend/tests/RepoManager.UnitTests/Domain/RepositoryLatestTagTests.cs`
+- [X] T004 Add `LatestTag`, `LatestTagCommitSha`, `LatestTagSetAt`, `LatestTagSetByUserId` properties and `PinLatestTag(string tagName, string commitSha, Guid userId, DateTime utcNow)` / `ClearLatestTag(Guid userId, DateTime utcNow)` methods to `backend/src/RepoManager.Domain/Entities/Repository.cs` — verify T003 tests now pass (Green)
+- [X] T005 [P] Add `AuthorName` field to the existing `TagInfo` record and add `ListTagsAsync(Guid repositoryId, CancellationToken ct = default)` signature to `backend/src/RepoManager.Application/GitProviders/IGitProviderService.cs`
+- [X] T006 [P] Add `GetTagsAsync`, `SetLatestTagAsync`, and `ClearLatestTagAsync` method signatures (as specified in `contracts/service-interfaces.md`) to `backend/src/RepoManager.Application/Repositories/IRepositoryService.cs`
+- [X] T007 [P] Extend `backend/src/RepoManager.Application/Repositories/Dtos/RepositoryDto.cs` with four new nullable fields (`LatestTag`, `LatestTagCommitSha`, `LatestTagSetAt`, `LatestTagSetBy`) and add `UserSummaryDto(Guid Id, string Email)` record to the same file
+- [X] T008 Update `backend/src/RepoManager.Infrastructure/Persistence/Configurations/RepositoryConfiguration.cs` — add column max-length mappings for `LatestTag` (255), `LatestTagCommitSha` (64); add `HasOne(r => r.LatestTagSetBy).WithMany().HasForeignKey(r => r.LatestTagSetByUserId).OnDelete(DeleteBehavior.SetNull)` navigation
 
 **Checkpoint**: Run `dotnet build backend/src` — must compile cleanly. Run T003's tests — must be green.
 
