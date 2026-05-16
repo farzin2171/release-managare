@@ -19,7 +19,7 @@
 
 **Purpose**: Verify no naming conflicts and establish the EF context extension points for the two new tables before any implementation begins.
 
-- [ ] T001 Review `RepoManagerDbContext` for conflicts; confirm `RepositorySyncs` and `ProjectSyncs` are not already defined; note the two `DbSet` properties to add in T010
+- [X] T001 Review `RepoManagerDbContext` for conflicts; confirm `RepositorySyncs` and `ProjectSyncs` are not already defined; note the two `DbSet` properties to add in T010
 
 **Checkpoint**: T001 complete — safe to begin parallel foundational work
 
@@ -33,28 +33,28 @@
 
 ### Domain — Tests First (RED)
 
-- [ ] T002 [P] Write `RepositorySyncStateTests` (RED — all state transitions: Pending→InProgress, InProgress→Succeeded/Failed/Skipped, illegal transitions throw, SetStep only valid while InProgress, Complete idempotency throws) in `backend/tests/RepoManager.Domain.Tests/RepositorySyncStateTests.cs`
-- [ ] T003 [P] Write `ProjectSyncStateTests` (RED — all transitions: Pending→InProgress, InProgress→Succeeded/PartiallyFailed/Failed/Cancelled, RecordChildResult updates counts correctly, illegal transitions throw) in `backend/tests/RepoManager.Domain.Tests/ProjectSyncStateTests.cs`
+- [X] T002 [P] Write `RepositorySyncStateTests` (RED — all state transitions: Pending→InProgress, InProgress→Succeeded/Failed/Skipped, illegal transitions throw, SetStep only valid while InProgress, Complete idempotency throws) in `backend/tests/RepoManager.Domain.Tests/RepositorySyncStateTests.cs`
+- [X] T003 [P] Write `ProjectSyncStateTests` (RED — all transitions: Pending→InProgress, InProgress→Succeeded/PartiallyFailed/Failed/Cancelled, RecordChildResult updates counts correctly, illegal transitions throw) in `backend/tests/RepoManager.Domain.Tests/ProjectSyncStateTests.cs`
 
 ### Domain — Implementation (make T002/T003 GREEN)
 
-- [ ] T004 [P] Create `SyncStatus`, `ProjectSyncStatus` enums and `SyncStep` string constants in `backend/src/RepoManager.Domain/Enums/SyncStatus.cs`, `ProjectSyncStatus.cs`, `SyncStep.cs`
-- [ ] T005 [P] Create `ContributorSnapshot` record (`Name`, `Email`, `Commits`) in `backend/src/RepoManager.Domain/ValueObjects/ContributorSnapshot.cs`
-- [ ] T006 Implement `RepositorySync` aggregate with `Start()`, `Skip(reason)`, `SetStep(step)`, `Complete(commitCount, ticketCount, breakingCount, contributors)`, `Fail(message)` state-transition methods in `backend/src/RepoManager.Domain/Aggregates/RepositorySync.cs` — confirm T002 goes GREEN
-- [ ] T007 Implement `ProjectSync` aggregate with `Start()`, `RecordChildResult(status)`, `Complete()`, `Cancel()` methods and final-status computation logic in `backend/src/RepoManager.Domain/Aggregates/ProjectSync.cs` — confirm T003 goes GREEN
+- [X] T004 [P] Create `SyncStatus`, `ProjectSyncStatus` enums and `SyncStep` string constants in `backend/src/RepoManager.Domain/Enums/SyncStatus.cs`, `ProjectSyncStatus.cs`, `SyncStep.cs`
+- [X] T005 [P] Create `ContributorSnapshot` record (`Name`, `Email`, `Commits`) in `backend/src/RepoManager.Domain/ValueObjects/ContributorSnapshot.cs`
+- [X] T006 Implement `RepositorySync` aggregate with `Start()`, `Skip(reason)`, `SetStep(step)`, `Complete(commitCount, ticketCount, breakingCount, contributors)`, `Fail(message)` state-transition methods in `backend/src/RepoManager.Domain/Aggregates/RepositorySync.cs` — confirm T002 goes GREEN
+- [X] T007 Implement `ProjectSync` aggregate with `Start()`, `RecordChildResult(status)`, `Complete()`, `Cancel()` methods and final-status computation logic in `backend/src/RepoManager.Domain/Aggregates/ProjectSync.cs` — confirm T003 goes GREEN
 
 ### Persistence
 
-- [ ] T008 [P] Create `RepositorySyncConfiguration` with all column mappings, FK constraints, and composite index `(RepositoryId, FromTag, Status, StartedAt DESC)` in `backend/src/RepoManager.Infrastructure/Persistence/Configurations/RepositorySyncConfiguration.cs`
-- [ ] T009 [P] Create `ProjectSyncConfiguration` with column mappings, FK constraints, and unique partial index on `ProjectId` where `Status IN (0, 1)` in `backend/src/RepoManager.Infrastructure/Persistence/Configurations/ProjectSyncConfiguration.cs`
-- [ ] T010 Add `DbSet<RepositorySync>` and `DbSet<ProjectSync>` to `RepoManagerDbContext`; register both new configurations via `modelBuilder.ApplyConfiguration(...)` in `backend/src/RepoManager.Infrastructure/Persistence/RepoManagerDbContext.cs`
-- [ ] T011 Generate migration `AddSyncTables` via `dotnet ef migrations add AddSyncTables --project backend/src/RepoManager.Infrastructure --startup-project backend/src/RepoManager.Api`; apply to dev DB; verify both tables and the partial index exist in `sqlite_master`
+- [X] T008 [P] Create `RepositorySyncConfiguration` with all column mappings, FK constraints, and composite index `(RepositoryId, FromTag, Status, StartedAt DESC)` in `backend/src/RepoManager.Infrastructure/Persistence/Configurations/RepositorySyncConfiguration.cs`
+- [X] T009 [P] Create `ProjectSyncConfiguration` with column mappings, FK constraints, and unique partial index on `ProjectId` where `Status IN (0, 1)` in `backend/src/RepoManager.Infrastructure/Persistence/Configurations/ProjectSyncConfiguration.cs`
+- [X] T010 Add `DbSet<RepositorySync>` and `DbSet<ProjectSync>` to `RepoManagerDbContext`; register both new configurations via `modelBuilder.ApplyConfiguration(...)` in `backend/src/RepoManager.Infrastructure/Persistence/RepoManagerDbContext.cs`
+- [X] T011 Generate migration `AddSyncTables` via `dotnet ef migrations add AddSyncTables --project backend/src/RepoManager.Infrastructure --startup-project backend/src/RepoManager.Api`; apply to dev DB; verify both tables and the partial index exist in `sqlite_master`
 
 ### Application Layer Shared Types
 
-- [ ] T012 [P] Create `RepositorySyncDto`, `ProjectSyncDto`, `RepoSyncSnapshotItemDto` record types with Mapster configuration in `backend/src/RepoManager.Application/DTOs/`
-- [ ] T013 [P] Create `ISyncJobQueue`, `SyncJob` in `backend/src/RepoManager.Application/Queues/` and `ISyncEventPublisher`, `SyncEvent` (`Type`, `RepoId`, `RepoName`, `Status`, `CurrentStep`, `ElapsedMs`, `Counts`) in `backend/src/RepoManager.Application/Events/`
-- [ ] T014 [P] Create stub interfaces `IRepositorySyncService`, `IProjectSyncService`, `IProjectSyncSnapshotService` with method signatures matching the contracts in `backend/src/RepoManager.Application/Services/`
+- [X] T012 [P] Create `RepositorySyncDto`, `ProjectSyncDto`, `RepoSyncSnapshotItemDto` record types with Mapster configuration in `backend/src/RepoManager.Application/DTOs/`
+- [X] T013 [P] Create `ISyncJobQueue`, `SyncJob` in `backend/src/RepoManager.Application/Queues/` and `ISyncEventPublisher`, `SyncEvent` (`Type`, `RepoId`, `RepoName`, `Status`, `CurrentStep`, `ElapsedMs`, `Counts`) in `backend/src/RepoManager.Application/Events/`
+- [X] T014 [P] Create stub interfaces `IRepositorySyncService`, `IProjectSyncService`, `IProjectSyncSnapshotService` with method signatures matching the contracts in `backend/src/RepoManager.Application/Services/`
 
 **Checkpoint**: All domain tests GREEN; migration applied; interfaces defined — user story implementation can now begin
 
