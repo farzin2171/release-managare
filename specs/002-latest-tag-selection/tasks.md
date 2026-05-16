@@ -34,7 +34,7 @@ frontend/tests/                              ← Vitest unit + Playwright E2E
 
 **Purpose**: Apply the schema migration before any other work begins.
 
-- [ ] T001 Create and apply EF Core migration `AddLatestTagToRepositories` — run `dotnet ef migrations add AddLatestTagToRepositories --project backend/src/RepoManager.Infrastructure --startup-project backend/src/RepoManager.Api` then `dotnet ef database update` — verify four new nullable columns exist on `Repositories` table with no data backfill
+- [X] T001 Create and apply EF Core migration `AddLatestTagToRepositories` — run `dotnet ef migrations add AddLatestTagToRepositories --project backend/src/RepoManager.Infrastructure --startup-project backend/src/RepoManager.Api` then `dotnet ef database update` — verify four new nullable columns exist on `Repositories` table with no data backfill
 
 ---
 

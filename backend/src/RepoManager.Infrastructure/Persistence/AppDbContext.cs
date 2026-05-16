@@ -76,8 +76,14 @@ public class AppDbContext : DbContext
             e.Property(r => r.WebUrl).HasMaxLength(500).IsRequired();
             e.Property(r => r.AzureProjectName).HasMaxLength(200).IsRequired();
             e.Property(r => r.IsTracked).HasDefaultValue(false).IsRequired();
+            e.Property(r => r.LatestTag).HasMaxLength(255);
+            e.Property(r => r.LatestTagCommitSha).HasMaxLength(64);
             e.HasIndex(r => r.IsTracked);
             e.HasIndex(r => new { r.GitProviderConnectionId, r.ExternalId }).IsUnique();
+            e.HasOne(r => r.LatestTagSetBy)
+             .WithMany()
+             .HasForeignKey(r => r.LatestTagSetByUserId)
+             .OnDelete(DeleteBehavior.SetNull);
             e.HasMany(r => r.Commits)
              .WithOne(c => c.Repository)
              .HasForeignKey(c => c.RepositoryId)

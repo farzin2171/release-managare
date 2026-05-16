@@ -12,7 +12,13 @@ public class Repository
     public bool IsTracked { get; set; } = false;
     public DateTimeOffset? LastSyncedAt { get; set; }
 
+    public string? LatestTag { get; set; }
+    public string? LatestTagCommitSha { get; set; }
+    public DateTime? LatestTagSetAt { get; set; }
+    public Guid? LatestTagSetByUserId { get; set; }
+
     public GitProviderConnection GitProviderConnection { get; set; } = null!;
+    public User? LatestTagSetBy { get; set; }
     public ICollection<ProjectRepository> ProjectRepositories { get; set; } = [];
     public ICollection<Commit> Commits { get; set; } = [];
     public ICollection<Ticket> Tickets { get; set; } = [];
