@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using FluentValidation;
 using RepoManager.Application.Auth;
 using RepoManager.Application.Commits;
 using RepoManager.Application.Confluence;
@@ -45,7 +46,9 @@ public static class DependencyInjection
         services.AddSingleton<AzureDevOpsGitProvider>();
         services.AddSingleton<IGitProviderFactory, GitProviderFactory>();
         services.AddScoped<IGitProviderConnectionService, GitProviderConnectionService>();
+        services.AddScoped<IGitProviderService, GitProviderService>();
         services.AddScoped<IRepositoryService, RepositoryService>();
+        services.AddScoped<IValidator<SetLatestTagDto>, SetLatestTagDtoValidator>();
         services.AddScoped<IProjectService, ProjectService>();
         services.AddSingleton<IConventionalCommitParser, ConventionalCommitParser>();
         services.AddScoped<CommitSyncService>();

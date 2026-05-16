@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using Microsoft.Extensions.Logging;
 using Microsoft.TeamFoundation.SourceControl.WebApi;
 using Microsoft.VisualStudio.Services.Common;
 using Microsoft.VisualStudio.Services.WebApi;
@@ -8,6 +10,10 @@ namespace RepoManager.Infrastructure.GitProviders;
 
 public class AzureDevOpsGitProvider : IGitProvider
 {
+    private readonly ILogger<AzureDevOpsGitProvider> _logger;
+
+    public AzureDevOpsGitProvider(ILogger<AzureDevOpsGitProvider> logger) => _logger = logger;
+
     private static GitHttpClient CreateGitClient(ProviderConnection conn)
     {
         var credentials = new VssBasicCredential(string.Empty, conn.DecryptedPat);
@@ -57,12 +63,12 @@ public class AzureDevOpsGitProvider : IGitProvider
 
     public async Task<IEnumerable<TagInfo>> ListTagsAsync(ProviderConnection conn, string repoExternalId, CancellationToken ct = default)
     {
+        var sw = Stopwatch.StartNew();
         try
         {
             var client = CreateGitClient(conn);
-            var repoId = Guid.Parse(repoExternalId);
             var refs = await client.GetRefsAsync(
-                repositoryId: repoId.ToString(),
+                repositoryId: repoExternalId,
                 project: null,
                 filter: "tags/",
                 includeLinks: null,
@@ -74,11 +80,33 @@ public class AzureDevOpsGitProvider : IGitProvider
                 userState: null,
                 cancellationToken: ct);
 
-            return refs.Select(r => new TagInfo(
-                r.Name.Replace("refs/tags/", ""),
-                r.PeeledObjectId ?? r.ObjectId,
-                null,
-                null));
+            var tagRefs = refs.Take(200).ToList();
+
+            var commitTasks = tagRefs.Select(async r =>
+            {
+                var commitSha = r.PeeledObjectId ?? r.ObjectId;
+                try
+                {
+                    var commit = await client.GetCommitAsync(commitSha, repoExternalId, cancellationToken: ct);
+                    return new TagInfo(
+                        r.Name.Replace("refs/tags/", ""),
+                        commitSha,
+                        commit.Author?.Date is DateTime d ? new DateTimeOffset(d, TimeSpan.Zero) : (DateTimeOffset?)null,
+                        commit.Author?.Name);
+                }
+                catch
+                {
+                    return new TagInfo(r.Name.Replace("refs/tags/", ""), commitSha, null, null);
+                }
+            });
+
+            var result = await Task.WhenAll(commitTasks);
+
+            _logger.LogInformation(
+                "repository.tags.fetched repositoryId={RepositoryId} count={Count} durationMs={DurationMs} outcome=success",
+                repoExternalId, result.Length, sw.ElapsedMilliseconds);
+
+            return result;
         }
         catch (ExternalServiceException)
         {
@@ -86,6 +114,9 @@ public class AzureDevOpsGitProvider : IGitProvider
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex,
+                "repository.tags.fetched repositoryId={RepositoryId} durationMs={DurationMs} outcome=error",
+                repoExternalId, sw.ElapsedMilliseconds);
             throw new ExternalServiceException("AzureDevOps", $"Failed to list tags for repository '{repoExternalId}'.", ex);
         }
     }
