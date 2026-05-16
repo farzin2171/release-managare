@@ -7,6 +7,7 @@ import { TagPickerDialog } from './TagPickerDialog'
 import type { components } from '../../../lib/api'
 
 type RepositoryDto = components['schemas']['RepositoryDto']
+type RepositoryTagDto = components['schemas']['RepositoryTagDto']
 
 interface RepositoryDetailSheetProps {
   repository: RepositoryDto
@@ -43,6 +44,12 @@ export function RepositoryDetailSheet({ repository: initialRepo, projectId, onCl
     initialData: initialRepo,
     staleTime: 30_000,
   })
+
+  const cachedTags = qc.getQueryData<RepositoryTagDto[]>(['repository', repo.id, 'tags'])
+  const pinnedTagStale =
+    !!repo.latestTag &&
+    Array.isArray(cachedTags) &&
+    !cachedTags.some((t) => t.name === repo.latestTag)
 
   const { mutate: clearTag, isPending: isClearing } = useMutation({
     mutationFn: () => clearLatestTag(repo.id),
@@ -124,6 +131,12 @@ export function RepositoryDetailSheet({ repository: initialRepo, projectId, onCl
               </div>
             ) : (
               <p className="text-sm text-gray-500 dark:text-gray-400 italic">Not set</p>
+            )}
+
+            {pinnedTagStale && (
+              <div className="mt-3 rounded-md border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/30 px-4 py-3 text-sm text-amber-800 dark:text-amber-300">
+                The pinned tag is no longer present in the remote repository. Please select a new one.
+              </div>
             )}
 
             {isAdmin && (

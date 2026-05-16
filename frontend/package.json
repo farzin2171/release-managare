@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "codegen": "npx openapi-typescript http://localhost:5000/swagger/v1/swagger.json -o src/lib/api.d.ts",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -28,6 +29,7 @@
     "zustand": "^5.0.13"
   },
   "devDependencies": {
+    "@playwright/test": "^1.52.0",
     "@eslint/js": "^10.0.1",
     "@tailwindcss/vite": "^4.3.0",
     "@testing-library/dom": "^10.4.0",

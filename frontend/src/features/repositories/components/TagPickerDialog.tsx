@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getRepositoryTags, setLatestTag } from '../api/repositoriesApi'
 import type { components } from '../../../lib/api'
@@ -21,12 +21,21 @@ export function TagPickerDialog({ repositoryId, projectId, onClose, onSuccess }:
   const qc = useQueryClient()
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<RepositoryTagDto | null>(null)
+  const [errorToast, setErrorToast] = useState<string | null>(null)
 
-  const { data: tags = [], isLoading, isError, refetch } = useQuery<RepositoryTagDto[]>({
+  const { data: tags = [], isLoading, isError, error, refetch } = useQuery<RepositoryTagDto[]>({
     queryKey: ['repository', repositoryId, 'tags'],
     queryFn: () => getRepositoryTags(repositoryId),
     staleTime: 0,
   })
+
+  useEffect(() => {
+    if (isError && error) {
+      setErrorToast(error instanceof Error ? error.message : 'Failed to load tags from provider.')
+    } else if (!isError) {
+      setErrorToast(null)
+    }
+  }, [isError, error])
 
   const { mutate: pinTag, isPending } = useMutation({
     mutationFn: () => setLatestTag(repositoryId, selected!.name),
@@ -75,6 +84,19 @@ export function TagPickerDialog({ repositoryId, projectId, onClose, onSuccess }:
           />
         </div>
 
+        {/* Error toast */}
+        {errorToast && (
+          <div className="mx-6 mt-3 shrink-0 flex items-start gap-3 rounded-md border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/30 px-4 py-3 text-sm text-red-800 dark:text-red-300">
+            <span className="flex-1">{errorToast}</span>
+            <button
+              onClick={() => { setErrorToast(null); refetch() }}
+              className="font-medium underline underline-offset-2 hover:no-underline shrink-0"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
         {/* Tag list */}
         <div className="overflow-y-auto flex-1">
           {isLoading ? (
@@ -85,13 +107,9 @@ export function TagPickerDialog({ repositoryId, projectId, onClose, onSuccess }:
             </div>
           ) : isError ? (
             <div className="px-6 py-8 text-center">
-              <p className="text-sm text-red-600 dark:text-red-400 mb-3">Failed to load tags from provider.</p>
-              <button
-                onClick={() => refetch()}
-                className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
-              >
-                Retry
-              </button>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                No tags could be loaded. Use the Retry button above to try again.
+              </p>
             </div>
           ) : filtered.length === 0 ? (
             <p className="px-6 py-8 text-sm text-gray-500 dark:text-gray-400 text-center">
@@ -139,7 +157,7 @@ export function TagPickerDialog({ repositoryId, projectId, onClose, onSuccess }:
                       <td className="px-4 py-2.5 text-gray-500 dark:text-gray-400">
                         {formatDate(tag.commitDate)}
                       </td>
-                      <td className="px-4 py-2.5 text-gray-500 dark:text-gray-400 truncate max-w-[160px]">
+                      <td className="px-4 py-2.5 text-gray-500 dark:text-gray-400 truncate max-w-40">
                         {tag.authorName ?? '—'}
                       </td>
                     </tr>
