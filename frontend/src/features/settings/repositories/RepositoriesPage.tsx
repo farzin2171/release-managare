@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiFetch } from '../../../lib/apiClient'
 import { useAuthStore } from '../../../lib/authStore'
 import { RepositoryDetailSheet } from '../../repositories/components/RepositoryDetailSheet'
+import { LatestTagCell } from '../../repositories/components/LatestTagCell'
 import type { components } from '../../../lib/api'
 
 type RepositoryDto = components['schemas']['RepositoryDto']
@@ -97,7 +98,7 @@ export function RepositoriesPage() {
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
             <thead className="bg-gray-50 dark:bg-gray-800">
               <tr>
-                {['Repository', 'Azure project', 'Default branch', 'Web URL', 'Tracked'].map(
+                {['Repository', 'Azure project', 'Default branch', 'Web URL', 'Latest tag', 'Tracked'].map(
                   (h) => (
                     <th
                       key={h}
@@ -134,6 +135,9 @@ export function RepositoriesPage() {
                     >
                       {repo.webUrl}
                     </a>
+                  </td>
+                  <td className="px-4 py-3">
+                    <LatestTagCell repo={repo} />
                   </td>
                   <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                     <button
