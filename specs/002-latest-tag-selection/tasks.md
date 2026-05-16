@@ -92,8 +92,8 @@ frontend/tests/                              ← Vitest unit + Playwright E2E
 
 ### Implementation for User Story 2
 
-- [ ] T024 [US2] Add "Latest tag" column to `frontend/src/features/projects/components/ProjectRepositoriesTable.tsx` — render `<Badge variant="outline" className="font-mono">{latestTag}</Badge>` when pinned or `<span className="text-muted-foreground">—</span>` when null; wrap badge in shadcn `Tooltip` showing short commit SHA (first 7 chars), `commitDate` formatted as locale date, and `latestTagSetBy.email` (or "Unknown user" when `latestTagSetBy` is null); add amber dot indicator (`<span className="h-2 w-2 rounded-full bg-amber-400" />`) adjacent to the "—" placeholder for rows with no pinned tag
-- [ ] T025 [P] [US2] Write Vitest component test for the "Latest tag" column in `frontend/tests/unit/ProjectRepositoriesTable.test.tsx` — cover: pinned tag renders badge with correct name; tooltip shows SHA + date + email; null tag shows "—"; null tag shows amber dot; null `latestTagSetBy` falls back to "Unknown user" in tooltip
+- [X] T024 [US2] Add "Latest tag" column to `frontend/src/features/projects/components/ProjectRepositoriesTable.tsx` — render `<Badge variant="outline" className="font-mono">{latestTag}</Badge>` when pinned or `<span className="text-muted-foreground">—</span>` when null; wrap badge in shadcn `Tooltip` showing short commit SHA (first 7 chars), `commitDate` formatted as locale date, and `latestTagSetBy.email` (or "Unknown user" when `latestTagSetBy` is null); add amber dot indicator (`<span className="h-2 w-2 rounded-full bg-amber-400" />`) adjacent to the "—" placeholder for rows with no pinned tag
+- [X] T025 [P] [US2] Write Vitest component test for the "Latest tag" column in `frontend/tests/unit/ProjectRepositoriesTable.test.tsx` — cover: pinned tag renders badge with correct name; tooltip shows SHA + date + email; null tag shows "—"; null tag shows amber dot; null `latestTagSetBy` falls back to "Unknown user" in tooltip
 
 **Checkpoint**: User Story 2 is independently functional. Project screen shows tag column for all authenticated users without any admin action beyond the initial pin.
 
