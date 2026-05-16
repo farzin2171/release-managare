@@ -3,11 +3,11 @@ import { useQuery } from '@tanstack/react-query'
 import { apiFetch } from '../../lib/apiClient'
 import { useAuthStore } from '../../lib/authStore'
 import { ProjectRepositoriesTable } from './components/ProjectRepositoriesTable'
+import { RepositoryCard } from './components/RepositoryCard'
 import type { components } from '../../lib/api'
 
 type ProjectDetailDto = components['schemas']['ProjectDetailDto']
 type ProjectChangesDto = components['schemas']['ProjectChangesDto']
-type RepositoryChangesDto = components['schemas']['RepositoryChangesDto']
 type RepositoryDto = components['schemas']['RepositoryDto']
 
 function MetricCard({ label, value, accent }: { label: string; value: number; accent?: boolean }) {
@@ -23,63 +23,6 @@ function MetricCard({ label, value, accent }: { label: string; value: number; ac
   )
 }
 
-function RepoCard({
-  repo,
-  color,
-}: {
-  repo: RepositoryChangesDto
-  color: string
-}) {
-  const s = repo.summary
-  return (
-    <Link
-      to={`/repositories/${repo.repositoryId}`}
-      className="block rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5 hover:shadow-md hover:border-blue-300 dark:hover:border-blue-600 transition-all"
-    >
-      <div className="flex items-start justify-between gap-3 mb-4">
-        <div className="flex items-center gap-2 min-w-0">
-          <span
-            className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
-            style={{ backgroundColor: color }}
-          />
-          <span className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-            {repo.repositoryName}
-          </span>
-        </div>
-        <span className="text-xs text-gray-400 dark:text-gray-500 font-mono shrink-0">
-          {repo.fromTag ?? 'init'} → {repo.toTag}
-        </span>
-      </div>
-
-      <div className="grid grid-cols-4 gap-3 text-center">
-        <div>
-          <p className="text-xl font-bold tabular-nums text-gray-900 dark:text-white">
-            {s.commitCount}
-          </p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">commits</p>
-        </div>
-        <div>
-          <p className="text-xl font-bold tabular-nums text-gray-900 dark:text-white">
-            {s.ticketCount}
-          </p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">tickets</p>
-        </div>
-        <div>
-          <p className={`text-xl font-bold tabular-nums ${s.breakingCount > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'}`}>
-            {s.breakingCount}
-          </p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">breaking</p>
-        </div>
-        <div>
-          <p className="text-xl font-bold tabular-nums text-gray-900 dark:text-white">
-            {s.contributorCount}
-          </p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">contributors</p>
-        </div>
-      </div>
-    </Link>
-  )
-}
 
 
 export function ProjectDashboard() {
@@ -197,9 +140,17 @@ export function ProjectDashboard() {
             Repositories ({changes.repositories.length})
           </h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {changes.repositories.map((repo) => (
-              <RepoCard key={repo.repositoryId} repo={repo} color={projectColor} />
-            ))}
+            {changes.repositories.map((repo) => {
+              const repoMeta = allRepos.find((r) => r.id === repo.repositoryId)
+              return (
+                <RepositoryCard
+                  key={repo.repositoryId}
+                  repo={repo}
+                  color={projectColor}
+                  latestTag={repoMeta?.latestTag ?? null}
+                />
+              )
+            })}
           </div>
         </div>
       )}

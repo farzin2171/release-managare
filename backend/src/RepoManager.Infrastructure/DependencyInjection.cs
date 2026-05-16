@@ -5,12 +5,15 @@ using FluentValidation;
 using RepoManager.Application.Auth;
 using RepoManager.Application.Commits;
 using RepoManager.Application.Confluence;
+using RepoManager.Application.Events;
 using RepoManager.Application.GitProviders;
 using RepoManager.Application.Jira;
 using RepoManager.Application.Projects;
+using RepoManager.Application.Queues;
 using RepoManager.Application.Reconciliation;
 using RepoManager.Application.Releases;
 using RepoManager.Application.Repositories;
+using RepoManager.Application.Services;
 using RepoManager.Application.Templates;
 using RepoManager.Infrastructure.Auth;
 using RepoManager.Infrastructure.Commits;
@@ -22,6 +25,7 @@ using RepoManager.Infrastructure.Projects;
 using RepoManager.Infrastructure.Reconciliation;
 using RepoManager.Infrastructure.Releases;
 using RepoManager.Infrastructure.Repositories;
+using RepoManager.Infrastructure.Sync;
 using RepoManager.Infrastructure.Templates;
 
 namespace RepoManager.Infrastructure;
@@ -64,6 +68,10 @@ public static class DependencyInjection
         services.AddScoped<IReleaseService, ReleaseService>();
         services.AddScoped<IReleaseNoteTemplateService, ReleaseNoteTemplateService>();
         services.AddScoped<IReleaseReconciliationService, ReleaseReconciliationService>();
+
+        services.AddSingleton<ISyncJobQueue, InMemorySyncJobQueue>();
+        services.AddSingleton<ISyncEventPublisher, InMemorySyncEventPublisher>();
+        services.AddScoped<IRepositorySyncService, RepositorySyncService>();
 
         return services;
     }

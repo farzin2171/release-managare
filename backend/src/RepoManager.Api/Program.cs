@@ -8,6 +8,7 @@ using Microsoft.OpenApi;
 using RepoManager.Api.Middleware;
 using RepoManager.Infrastructure;
 using RepoManager.Infrastructure.Persistence;
+using RepoManager.Infrastructure.Sync;
 using Serilog;
 using Serilog.Context;
 
@@ -27,6 +28,7 @@ try
             "[{Timestamp:HH:mm:ss} {Level:u3}] {CorrelationId} {UserId} {Message:lj}{NewLine}{Exception}"));
 
     builder.Services.AddInfrastructure(builder.Configuration);
+    builder.Services.AddHostedService<SyncBackgroundService>();
 
     var jwtSecret = builder.Configuration["Jwt:Secret"]
         ?? throw new InvalidOperationException("Jwt:Secret is required.");
