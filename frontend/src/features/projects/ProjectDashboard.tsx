@@ -4,6 +4,7 @@ import { apiFetch } from '../../lib/apiClient'
 import { useAuthStore } from '../../lib/authStore'
 import { ProjectRepositoriesTable } from './components/ProjectRepositoriesTable'
 import { RepositoryCard } from './components/RepositoryCard'
+import { ProjectSyncStrip } from './components/ProjectSyncStrip'
 import type { components } from '../../lib/api'
 
 type ProjectDetailDto = components['schemas']['ProjectDetailDto']
@@ -111,6 +112,9 @@ export function ProjectDashboard() {
           </span>
         )}
       </div>
+
+      {/* Project sync strip — inserted between title row and metrics */}
+      {id && <ProjectSyncStrip projectId={id} />}
 
       {/* Aggregate metrics */}
       <div>

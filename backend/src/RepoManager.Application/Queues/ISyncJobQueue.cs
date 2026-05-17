@@ -1,6 +1,6 @@
 namespace RepoManager.Application.Queues;
 
-public sealed record SyncJob(Guid RepositorySyncId, Guid RepositoryId);
+public sealed record SyncJob(Guid RepositorySyncId, Guid RepositoryId, Guid? ProjectSyncId = null);
 
 public interface ISyncJobQueue
 {

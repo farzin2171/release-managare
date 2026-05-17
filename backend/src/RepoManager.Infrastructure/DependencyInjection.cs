@@ -71,7 +71,10 @@ public static class DependencyInjection
 
         services.AddSingleton<ISyncJobQueue, InMemorySyncJobQueue>();
         services.AddSingleton<ISyncEventPublisher, InMemorySyncEventPublisher>();
+        services.AddSingleton<IProjectSyncEventPublisher, InMemoryProjectSyncEventPublisher>();
+        services.AddSingleton<ProjectSyncCancellationRegistry>();
         services.AddScoped<IRepositorySyncService, RepositorySyncService>();
+        services.AddScoped<IProjectSyncService, ProjectSyncService>();
 
         return services;
     }

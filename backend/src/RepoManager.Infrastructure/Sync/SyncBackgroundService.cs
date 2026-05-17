@@ -54,15 +54,23 @@ public class SyncBackgroundService : BackgroundService
     private async Task DispatchJobAsync(SyncJob job, CancellationToken ct)
     {
         using var scope = _services.CreateScope();
-        var syncService = scope.ServiceProvider.GetRequiredService<IRepositorySyncService>();
-
         try
         {
-            await syncService.ExecuteAsync(job.RepositorySyncId, ct);
+            if (job.ProjectSyncId.HasValue)
+            {
+                var svc = scope.ServiceProvider.GetRequiredService<IProjectSyncService>();
+                await svc.ExecuteAsync(job.ProjectSyncId.Value, ct);
+            }
+            else
+            {
+                var svc = scope.ServiceProvider.GetRequiredService<IRepositorySyncService>();
+                await svc.ExecuteAsync(job.RepositorySyncId, ct);
+            }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unhandled exception processing sync job {SyncId}", job.RepositorySyncId);
+            var id = (object?)job.ProjectSyncId ?? job.RepositorySyncId;
+            _logger.LogError(ex, "Unhandled exception processing sync job {SyncId}", id);
         }
     }
 
