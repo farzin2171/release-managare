@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RepoManager.Application.Events;
 using RepoManager.Application.Services;
+using RepoManager.Application.DTOs;
 
 namespace RepoManager.Api.Controllers;
 
@@ -12,11 +13,16 @@ public class ProjectSyncsController : ControllerBase
 {
     private readonly IProjectSyncService _syncService;
     private readonly IProjectSyncEventPublisher _projectEvents;
+    private readonly IProjectSyncSnapshotService _snapshot;
 
-    public ProjectSyncsController(IProjectSyncService syncService, IProjectSyncEventPublisher projectEvents)
+    public ProjectSyncsController(
+        IProjectSyncService syncService,
+        IProjectSyncEventPublisher projectEvents,
+        IProjectSyncSnapshotService snapshot)
     {
         _syncService = syncService;
         _projectEvents = projectEvents;
+        _snapshot = snapshot;
     }
 
     [HttpPost("api/v1/projects/{id:guid}/sync")]
@@ -71,6 +77,13 @@ public class ProjectSyncsController : ControllerBase
             await Response.WriteAsync($"id: {msg.Id}\nevent: {msg.Event}\ndata: {msg.Data}\n\n", ct);
             await Response.Body.FlushAsync(ct);
         }
+    }
+
+    [HttpGet("api/v1/projects/{id:guid}/repositories/sync-snapshot")]
+    public async Task<ActionResult<IEnumerable<RepoSyncSnapshotItemDto>>> GetSyncSnapshot(Guid id, CancellationToken ct)
+    {
+        var result = await _snapshot.GetSnapshotAsync(id, ct);
+        return Ok(result);
     }
 
     private Guid GetUserId()

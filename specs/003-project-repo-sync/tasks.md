@@ -136,17 +136,17 @@
 
 ### Backend
 
-- [ ] T039 [US3] Implement `ProjectSyncSnapshotService`: execute a single SQL query using EF correlated subquery to fetch the latest successful `RepositorySync` per repo for each repo's current `LatestTag`; wrap result in 5s sliding `IMemoryCache` per `projectId`; expose a cache-invalidation method called by `RepositorySyncService` on sync completion in `backend/src/RepoManager.Infrastructure/Sync/ProjectSyncSnapshotService.cs`
-- [ ] T040 [US3] Add snapshot endpoint `GET /api/v1/projects/{id}/repositories/sync-snapshot` to `ProjectSyncsController`; returns `IEnumerable<RepoSyncSnapshotItemDto>` (one item per assigned repo; `LatestSync` null when not yet synced against current tag; `CurrentStep` non-null when a sync is in-flight) in `backend/src/RepoManager.Api/Controllers/ProjectSyncsController.cs`
+- [X] T039 [US3] Implement `ProjectSyncSnapshotService`: execute a single SQL query using EF correlated subquery to fetch the latest successful `RepositorySync` per repo for each repo's current `LatestTag`; wrap result in 5s sliding `IMemoryCache` per `projectId`; expose a cache-invalidation method called by `RepositorySyncService` on sync completion in `backend/src/RepoManager.Infrastructure/Sync/ProjectSyncSnapshotService.cs`
+- [X] T040 [US3] Add snapshot endpoint `GET /api/v1/projects/{id}/repositories/sync-snapshot` to `ProjectSyncsController`; returns `IEnumerable<RepoSyncSnapshotItemDto>` (one item per assigned repo; `LatestSync` null when not yet synced against current tag; `CurrentStep` non-null when a sync is in-flight) in `backend/src/RepoManager.Api/Controllers/ProjectSyncsController.cs`
 
 ### Backend Tests
 
-- [ ] T041 [P] [US3] Integration test: snapshot returns correct data after one repo synced; after tag change on that repo `LatestSync` becomes null; after project sync completes all repos show data; cache invalidates within 5s of any child sync completing in `backend/tests/RepoManager.Api.Tests/RepositorySyncIntegrationTests.cs` (extend existing file)
+- [X] T041 [P] [US3] Integration test: snapshot returns correct data after one repo synced; after tag change on that repo `LatestSync` becomes null; after project sync completes all repos show data; cache invalidates within 5s of any child sync completing in `backend/tests/RepoManager.Api.Tests/RepositorySyncIntegrationTests.cs` (extend existing file)
 
 ### Frontend
 
-- [ ] T042 [P] [US3] Create `useProjectSyncSnapshot` hook: single `useQuery(['project', id, 'sync-snapshot'])` calling `GET /repositories/sync-snapshot`; `staleTime: 5000`; this is the single source of truth for all card metrics on screen load in `frontend/src/features/projects/hooks/useProjectSyncSnapshot.ts`
-- [ ] T043 [US3] Update `ProjectDetailPage.tsx`: wire stat cards (`UnreleasedChangesSummary`) to derive totals from the `useProjectSyncSnapshot` result (sum across repos where `LatestSync.Status === 'Succeeded'`) instead of calling the Git provider; animate stat card numbers to new values when snapshot updates after a sync in `frontend/src/features/projects/pages/ProjectDetailPage.tsx`
+- [X] T042 [P] [US3] Create `useProjectSyncSnapshot` hook: single `useQuery(['project', id, 'sync-snapshot'])` calling `GET /repositories/sync-snapshot`; `staleTime: 5000`; this is the single source of truth for all card metrics on screen load in `frontend/src/features/projects/hooks/useProjectSyncSnapshot.ts`
+- [X] T043 [US3] Update `ProjectDetailPage.tsx`: wire stat cards (`UnreleasedChangesSummary`) to derive totals from the `useProjectSyncSnapshot` result (sum across repos where `LatestSync.Status === 'Succeeded'`) instead of calling the Git provider; animate stat card numbers to new values when snapshot updates after a sync in `frontend/src/features/projects/pages/ProjectDetailPage.tsx`
 
 **Checkpoint**: User Story 3 fully functional — page loads metrics from DB only; changing pinned tag resets card; stat cards aggregate from snapshot.
 

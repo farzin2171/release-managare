@@ -28,6 +28,7 @@ public class RepositorySyncService : IRepositorySyncService
     private readonly IConventionalCommitParser _parser;
     private readonly ISyncJobQueue _queue;
     private readonly ISyncEventPublisher _events;
+    private readonly IProjectSyncSnapshotService _snapshot;
     private readonly ILogger<RepositorySyncService> _logger;
 
     public RepositorySyncService(
@@ -37,6 +38,7 @@ public class RepositorySyncService : IRepositorySyncService
         IConventionalCommitParser parser,
         ISyncJobQueue queue,
         ISyncEventPublisher events,
+        IProjectSyncSnapshotService snapshot,
         ILogger<RepositorySyncService> logger)
     {
         _db = db;
@@ -45,6 +47,7 @@ public class RepositorySyncService : IRepositorySyncService
         _parser = parser;
         _queue = queue;
         _events = events;
+        _snapshot = snapshot;
         _logger = logger;
     }
 
@@ -171,6 +174,7 @@ public class RepositorySyncService : IRepositorySyncService
             "Sync {SyncId} for {RepoName} succeeded: {CommitCount} commits, {TicketCount} tickets, {ElapsedMs}ms",
             sync.Id, repo.Name, rawCommits.Count, ticketCount, sw.ElapsedMilliseconds);
 
+        await InvalidateSnapshotCacheAsync(repo.Id, ct);
         _events.CloseChannel(sync.Id);
     }
 
@@ -321,6 +325,16 @@ public class RepositorySyncService : IRepositorySyncService
     {
         var sync = await _db.RepositorySyncs.FindAsync([syncId], ct);
         return sync == null ? null : ToDto(sync);
+    }
+
+    private async Task InvalidateSnapshotCacheAsync(Guid repositoryId, CancellationToken ct)
+    {
+        var projectIds = await _db.ProjectRepositories
+            .Where(pr => pr.RepositoryId == repositoryId)
+            .Select(pr => pr.ProjectId)
+            .ToListAsync(ct);
+        foreach (var pid in projectIds)
+            _snapshot.InvalidateCache(pid);
     }
 
     // ── DTO mapping ─────────────────────────────────────────────────────────

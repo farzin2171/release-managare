@@ -69,12 +69,14 @@ public static class DependencyInjection
         services.AddScoped<IReleaseNoteTemplateService, ReleaseNoteTemplateService>();
         services.AddScoped<IReleaseReconciliationService, ReleaseReconciliationService>();
 
+        services.AddMemoryCache();
         services.AddSingleton<ISyncJobQueue, InMemorySyncJobQueue>();
         services.AddSingleton<ISyncEventPublisher, InMemorySyncEventPublisher>();
         services.AddSingleton<IProjectSyncEventPublisher, InMemoryProjectSyncEventPublisher>();
         services.AddSingleton<ProjectSyncCancellationRegistry>();
         services.AddScoped<IRepositorySyncService, RepositorySyncService>();
         services.AddScoped<IProjectSyncService, ProjectSyncService>();
+        services.AddScoped<IProjectSyncSnapshotService, ProjectSyncSnapshotService>();
 
         return services;
     }
