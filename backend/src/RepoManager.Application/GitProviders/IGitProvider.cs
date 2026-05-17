@@ -7,7 +7,8 @@ public interface IGitProvider
     Task<bool> TestConnectionAsync(ProviderConnection conn, CancellationToken ct = default);
     Task<IEnumerable<RepoSummary>> ListRepositoriesAsync(ProviderConnection conn, CancellationToken ct = default);
     Task<IEnumerable<TagInfo>> ListTagsAsync(ProviderConnection conn, string repoExternalId, CancellationToken ct = default);
-    Task<IEnumerable<CommitInfo>> GetCommitsBetweenAsync(ProviderConnection conn, string repoExternalId, string fromRef, string toRef, CancellationToken ct = default);
+    Task<DateTimeOffset?> GetCommitDateAsync(ProviderConnection conn, string repoExternalId, string commitSha, CancellationToken ct = default);
+    Task<IEnumerable<CommitInfo>> GetCommitsBetweenAsync(ProviderConnection conn, string repoExternalId, string fromRef, string toRef, DateTimeOffset? fromDate = null, CancellationToken ct = default);
     Task<IEnumerable<PullRequestInfo>> GetMergedPullRequestsAsync(ProviderConnection conn, string repoExternalId, DateTime since, CancellationToken ct = default);
 }
 

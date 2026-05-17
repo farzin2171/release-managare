@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using RepoManager.Domain.Aggregates;
 using RepoManager.Domain.Entities;
 using RepoManager.Domain.Enums;
+using RepoManager.Infrastructure.Persistence.Configurations;
 
 namespace RepoManager.Infrastructure.Persistence;
 
@@ -24,6 +26,8 @@ public class AppDbContext : DbContext
     public DbSet<JiraRelease> JiraReleases => Set<JiraRelease>();
     public DbSet<JiraTicket> JiraTickets => Set<JiraTicket>();
     public DbSet<ReleaseReconciliation> ReleaseReconciliations => Set<ReleaseReconciliation>();
+    public DbSet<RepositorySync> RepositorySyncs => Set<RepositorySync>();
+    public DbSet<ProjectSync> ProjectSyncs => Set<ProjectSync>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -38,6 +42,9 @@ public class AppDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.ApplyConfiguration(new RepositorySyncConfiguration());
+        modelBuilder.ApplyConfiguration(new ProjectSyncConfiguration());
 
         // Users
         modelBuilder.Entity<User>(e =>

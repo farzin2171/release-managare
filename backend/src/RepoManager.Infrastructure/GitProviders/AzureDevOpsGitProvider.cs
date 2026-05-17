@@ -121,8 +121,24 @@ public class AzureDevOpsGitProvider : IGitProvider
         }
     }
 
+    public async Task<DateTimeOffset?> GetCommitDateAsync(
+        ProviderConnection conn, string repoExternalId, string commitSha, CancellationToken ct = default)
+    {
+        try
+        {
+            var client = CreateGitClient(conn);
+            var commit = await client.GetCommitAsync(commitSha, repoExternalId, cancellationToken: ct);
+            return commit.Author?.Date is DateTime d ? new DateTimeOffset(d, TimeSpan.Zero) : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     public async Task<IEnumerable<CommitInfo>> GetCommitsBetweenAsync(
-        ProviderConnection conn, string repoExternalId, string fromRef, string toRef, CancellationToken ct = default)
+        ProviderConnection conn, string repoExternalId, string fromRef, string toRef,
+        DateTimeOffset? fromDate = null, CancellationToken ct = default)
     {
         try
         {
@@ -131,9 +147,13 @@ public class AzureDevOpsGitProvider : IGitProvider
 
             var criteria = new GitQueryCommitsCriteria
             {
-                ItemVersion = BuildVersionDescriptor(toRef),
-                CompareVersion = string.IsNullOrEmpty(fromRef) ? null : BuildVersionDescriptor(fromRef)
+                ItemVersion = BuildVersionDescriptor(toRef, GitVersionType.Branch),
             };
+
+            if (fromDate.HasValue)
+                criteria.FromDate = fromDate.Value.AddSeconds(1).ToString("o");
+            else if (!string.IsNullOrEmpty(fromRef))
+                criteria.CompareVersion = BuildVersionDescriptor(fromRef, GitVersionType.Tag);
 
             var allCommits = new List<GitCommitRef>();
             int skip = 0;
@@ -214,7 +234,7 @@ public class AzureDevOpsGitProvider : IGitProvider
         }
     }
 
-    private static GitVersionDescriptor? BuildVersionDescriptor(string refName)
+    private static GitVersionDescriptor? BuildVersionDescriptor(string refName, GitVersionType fallbackType = GitVersionType.Tag)
     {
         if (string.IsNullOrEmpty(refName) || refName == "HEAD")
             return null;
@@ -222,6 +242,6 @@ public class AzureDevOpsGitProvider : IGitProvider
         if (refName.Length == 40 && refName.All(c => "0123456789abcdefABCDEF".Contains(c)))
             return new GitVersionDescriptor { Version = refName, VersionType = GitVersionType.Commit };
 
-        return new GitVersionDescriptor { Version = refName, VersionType = GitVersionType.Tag };
+        return new GitVersionDescriptor { Version = refName, VersionType = fallbackType };
     }
 }

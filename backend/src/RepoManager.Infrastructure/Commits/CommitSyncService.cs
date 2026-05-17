@@ -48,7 +48,7 @@ public class CommitSyncService
         var fromRef = latestTag?.Name ?? string.Empty;
         var toRef = "HEAD";
 
-        var commits = await provider.GetCommitsBetweenAsync(providerConn, repo.ExternalId, fromRef, toRef, ct);
+        var commits = await provider.GetCommitsBetweenAsync(providerConn, repo.ExternalId, fromRef, toRef, ct: ct);
 
         await UpsertCommitsAsync(repositoryId, commits, ct);
 

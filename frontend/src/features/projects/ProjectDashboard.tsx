@@ -3,83 +3,28 @@ import { useQuery } from '@tanstack/react-query'
 import { apiFetch } from '../../lib/apiClient'
 import { useAuthStore } from '../../lib/authStore'
 import { ProjectRepositoriesTable } from './components/ProjectRepositoriesTable'
+import { RepositoryCard } from './components/RepositoryCard'
+import { ProjectSyncStrip } from './components/ProjectSyncStrip'
+import { useProjectSyncSnapshot } from './hooks/useProjectSyncSnapshot'
 import type { components } from '../../lib/api'
 
 type ProjectDetailDto = components['schemas']['ProjectDetailDto']
 type ProjectChangesDto = components['schemas']['ProjectChangesDto']
-type RepositoryChangesDto = components['schemas']['RepositoryChangesDto']
 type RepositoryDto = components['schemas']['RepositoryDto']
 
 function MetricCard({ label, value, accent }: { label: string; value: number; accent?: boolean }) {
   return (
-    <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
+    <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 transition-all duration-300">
       <p className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
         {label}
       </p>
-      <p className={`mt-1 text-3xl font-bold tabular-nums ${accent ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'}`}>
+      <p className={`mt-1 text-3xl font-bold tabular-nums transition-all duration-500 ${accent ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'}`}>
         {value}
       </p>
     </div>
   )
 }
 
-function RepoCard({
-  repo,
-  color,
-}: {
-  repo: RepositoryChangesDto
-  color: string
-}) {
-  const s = repo.summary
-  return (
-    <Link
-      to={`/repositories/${repo.repositoryId}`}
-      className="block rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5 hover:shadow-md hover:border-blue-300 dark:hover:border-blue-600 transition-all"
-    >
-      <div className="flex items-start justify-between gap-3 mb-4">
-        <div className="flex items-center gap-2 min-w-0">
-          <span
-            className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
-            style={{ backgroundColor: color }}
-          />
-          <span className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-            {repo.repositoryName}
-          </span>
-        </div>
-        <span className="text-xs text-gray-400 dark:text-gray-500 font-mono shrink-0">
-          {repo.fromTag ?? 'init'} → {repo.toTag}
-        </span>
-      </div>
-
-      <div className="grid grid-cols-4 gap-3 text-center">
-        <div>
-          <p className="text-xl font-bold tabular-nums text-gray-900 dark:text-white">
-            {s.commitCount}
-          </p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">commits</p>
-        </div>
-        <div>
-          <p className="text-xl font-bold tabular-nums text-gray-900 dark:text-white">
-            {s.ticketCount}
-          </p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">tickets</p>
-        </div>
-        <div>
-          <p className={`text-xl font-bold tabular-nums ${s.breakingCount > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'}`}>
-            {s.breakingCount}
-          </p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">breaking</p>
-        </div>
-        <div>
-          <p className="text-xl font-bold tabular-nums text-gray-900 dark:text-white">
-            {s.contributorCount}
-          </p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">contributors</p>
-        </div>
-      </div>
-    </Link>
-  )
-}
 
 
 export function ProjectDashboard() {
@@ -104,6 +49,8 @@ export function ProjectDashboard() {
     enabled: !!project,
   })
 
+  const { data: snapshot } = useProjectSyncSnapshot(id ?? '')
+
   const projectRepos = allRepos.filter((r) =>
     project?.repositories.some((pr) => pr.repositoryId === r.id)
   )
@@ -124,8 +71,34 @@ export function ProjectDashboard() {
     )
   }
 
-  const aggregate = changes.summary
+  const fallbackAggregate = changes.summary
   const projectColor = project?.color ?? '#6B7280'
+
+  // Derive totals from snapshot (succeeded syncs only); fall back to /changes summary while no snapshot
+  const succeededItems = snapshot?.filter((item) => item.latestSync?.status === 'Succeeded') ?? []
+  const snapshotAvailable = snapshot != null && succeededItems.length > 0
+  const aggregate = snapshotAvailable
+    ? {
+        commitCount: succeededItems.reduce((s, i) => s + (i.latestSync?.commitCount ?? 0), 0),
+        ticketCount: succeededItems.reduce((s, i) => s + (i.latestSync?.ticketCount ?? 0), 0),
+        breakingCount: succeededItems.reduce((s, i) => s + (i.latestSync?.breakingChangeCount ?? 0), 0),
+        // De-duplicate contributors across repos by lowercased email, falling back to name
+        contributorCount: (() => {
+          const seen = new Set<string>()
+          for (const item of succeededItems) {
+            for (const c of item.latestSync?.contributors ?? []) {
+              seen.add((c.email?.toLowerCase() || c.name?.toLowerCase()) ?? '')
+            }
+          }
+          return seen.size
+        })(),
+      }
+    : {
+        commitCount: fallbackAggregate.commitCount,
+        ticketCount: fallbackAggregate.ticketCount,
+        breakingCount: fallbackAggregate.breakingCount,
+        contributorCount: fallbackAggregate.contributorCount,
+      }
 
   return (
     <div className="max-w-6xl space-y-6 p-6">
@@ -169,10 +142,13 @@ export function ProjectDashboard() {
         )}
       </div>
 
-      {/* Aggregate metrics */}
+      {/* Project sync strip — inserted between title row and metrics */}
+      {id && <ProjectSyncStrip projectId={id} />}
+
+      {/* Aggregate metrics — totals from persisted snapshot when available */}
       <div>
         <h2 className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3">
-          Unreleased changes across all repositories
+          {snapshotAvailable ? 'Synced changes across all repositories' : 'Unreleased changes across all repositories'}
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <MetricCard label="Total commits" value={aggregate.commitCount} />
@@ -197,9 +173,17 @@ export function ProjectDashboard() {
             Repositories ({changes.repositories.length})
           </h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {changes.repositories.map((repo) => (
-              <RepoCard key={repo.repositoryId} repo={repo} color={projectColor} />
-            ))}
+            {changes.repositories.map((repo) => {
+              const repoMeta = allRepos.find((r) => r.id === repo.repositoryId)
+              return (
+                <RepositoryCard
+                  key={repo.repositoryId}
+                  repo={repo}
+                  color={projectColor}
+                  latestTag={repoMeta?.latestTag ?? null}
+                />
+              )
+            })}
           </div>
         </div>
       )}
