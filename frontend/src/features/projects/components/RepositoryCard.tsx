@@ -3,6 +3,7 @@ import type { components } from '../../../lib/api'
 import { useRepositorySync } from '../hooks/useRepositorySync'
 import { RepoCardSyncOverlay } from './RepoCardSyncOverlay'
 import { RepoCardSyncFooter } from './RepoCardSyncFooter'
+import { ContributorsPopover } from './ContributorsPopover'
 
 type RepositoryChangesDto = components['schemas']['RepositoryChangesDto']
 
@@ -76,7 +77,14 @@ export function RepositoryCard({ repo, color, latestTag }: Props) {
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">breaking</p>
           </div>
           <div>
-            <p className="text-xl font-bold tabular-nums text-gray-900 dark:text-white">{displayContributors}</p>
+            {latestSync?.status === 'Succeeded' ? (
+              <ContributorsPopover
+                contributors={latestSync.contributors ?? []}
+                count={displayContributors}
+              />
+            ) : (
+              <p className="text-xl font-bold tabular-nums text-gray-900 dark:text-white">{displayContributors}</p>
+            )}
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">contributors</p>
           </div>
         </div>

@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -15,6 +17,11 @@ namespace RepoManager.Infrastructure.Sync;
 
 public class ProjectSyncService : IProjectSyncService
 {
+    private static readonly Meter _meter = new("RepoManager.Sync", "1.0");
+    private static readonly Counter<long> _repoCompletedCounter = _meter.CreateCounter<long>("sync.repository.completed");
+    private static readonly Counter<long> _repoFailedCounter = _meter.CreateCounter<long>("sync.repository.failed");
+    private static readonly Counter<long> _projectCompletedCounter = _meter.CreateCounter<long>("sync.project.completed");
+
     private readonly AppDbContext _db;
     private readonly ISyncJobQueue _queue;
     private readonly IProjectSyncEventPublisher _projectEvents;
@@ -95,6 +102,11 @@ public class ProjectSyncService : IProjectSyncService
         run.Start();
         await _db.SaveChangesAsync(workerCt);
 
+        _logger.LogInformation(
+            "ProjectSync {ProjectSyncId} started: project {ProjectId}, {TotalRepos} repos, user {UserId}",
+            run.Id, run.ProjectId, run.TotalRepos, run.TriggeredByUserId);
+
+        var sw = Stopwatch.StartNew();
         var repos = await GetProjectReposAsync(run.ProjectId, workerCt);
         try
         {
@@ -103,7 +115,7 @@ public class ProjectSyncService : IProjectSyncService
                 if (linked.Token.IsCancellationRequested) break;
                 await ProcessRepoAsync(run, repo, workerCt);
             }
-            await FinaliseRunAsync(run, linked.Token.IsCancellationRequested, workerCt);
+            await FinaliseRunAsync(run, linked.Token.IsCancellationRequested, sw.ElapsedMilliseconds, workerCt);
         }
         catch (Exception ex)
         {
@@ -172,6 +184,9 @@ public class ProjectSyncService : IProjectSyncService
         run.RecordChildResult(repoSync.Status);
         await _db.SaveChangesAsync(ct);
 
+        if (repoSync.Status == SyncStatus.Succeeded) _repoCompletedCounter.Add(1);
+        else if (repoSync.Status == SyncStatus.Failed) _repoFailedCounter.Add(1);
+
         await PublishAsync(run.Id, "repo_completed",
             new { repoId = repo.Id, syncId = repoSync.Id, status = repoSync.Status.ToString(), commitCount = repoSync.CommitCount, ticketCount = repoSync.TicketCount, breakingChangeCount = repoSync.BreakingChangeCount, contributorCount = repoSync.ContributorCount, errorMessage = repoSync.ErrorMessage }, ct);
     }
@@ -215,7 +230,7 @@ public class ProjectSyncService : IProjectSyncService
         }
     }
 
-    private async Task FinaliseRunAsync(ProjectSync run, bool wasCancelled, CancellationToken ct)
+    private async Task FinaliseRunAsync(ProjectSync run, bool wasCancelled, long elapsedMs, CancellationToken ct)
     {
         if (wasCancelled) run.Cancel(); else run.Complete();
         await _db.SaveChangesAsync(ct);
@@ -224,8 +239,20 @@ public class ProjectSyncService : IProjectSyncService
             new { projectSyncId = run.Id, status = run.Status.ToString(), succeededCount = run.SucceededCount, failedCount = run.FailedCount, skippedCount = run.SkippedCount, completedAt = run.CompletedAt }, ct);
         _projectEvents.CloseStream(run.Id);
 
-        _logger.LogInformation("ProjectSync {SyncId} finished: {Status}, {Succeeded} succeeded, {Failed} failed, {Skipped} skipped",
-            run.Id, run.Status, run.SucceededCount, run.FailedCount, run.SkippedCount);
+        _projectCompletedCounter.Add(1);
+
+        if (wasCancelled)
+        {
+            _logger.LogInformation(
+                "ProjectSync {ProjectSyncId} cancelled: user {UserId}, {CompletedCount} of {TotalRepos} repos processed",
+                run.Id, run.TriggeredByUserId, run.SucceededCount + run.FailedCount + run.SkippedCount, run.TotalRepos);
+        }
+        else
+        {
+            _logger.LogInformation(
+                "ProjectSync {ProjectSyncId} completed: {Status}, {Succeeded} succeeded, {Failed} failed, {Skipped} skipped, {ElapsedMs}ms",
+                run.Id, run.Status, run.SucceededCount, run.FailedCount, run.SkippedCount, elapsedMs);
+        }
     }
 
     private async Task HandleExecutionFailureAsync(ProjectSync run, Guid projectSyncId, Exception ex, CancellationToken ct)

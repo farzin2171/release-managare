@@ -127,8 +127,8 @@ public class RepositorySyncService : IRepositorySyncService
         {
             sync.Fail(ex.Message[..Math.Min(ex.Message.Length, 1000)]);
             await _db.SaveChangesAsync(ct);
-            _logger.LogWarning("Sync {SyncId} for repo {RepoName} failed: {ErrorMessage}",
-                sync.Id, sync.Repository.Name, ex.Message);
+            _logger.LogWarning("Sync {CorrelationId} for repo {RepoName} failed: {ErrorMessage}, outcome: {Outcome}",
+                sync.Id, sync.Repository.Name, ex.Message, "Failed");
             _events.CloseChannel(sync.Id);
         }
     }
@@ -171,8 +171,8 @@ public class RepositorySyncService : IRepositorySyncService
         await tx.CommitAsync(ct);
 
         _logger.LogInformation(
-            "Sync {SyncId} for {RepoName} succeeded: {CommitCount} commits, {TicketCount} tickets, {ElapsedMs}ms",
-            sync.Id, repo.Name, rawCommits.Count, ticketCount, sw.ElapsedMilliseconds);
+            "Sync {CorrelationId} for {RepoName} completed: {CommitCount} commits, {TicketCount} tickets, {ElapsedMs}ms, outcome: {Outcome}",
+            sync.Id, repo.Name, rawCommits.Count, ticketCount, sw.ElapsedMilliseconds, "Succeeded");
 
         await InvalidateSnapshotCacheAsync(repo.Id, ct);
         _events.CloseChannel(sync.Id);
