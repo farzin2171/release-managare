@@ -4,8 +4,10 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.EntityFrameworkCore;
 using RepoManager.Application.Common.Exceptions;
 using RepoManager.Application.Jira;
+using RepoManager.Application.Jira.Dtos;
 using RepoManager.Domain.Enums;
 using RepoManager.Infrastructure.Persistence;
 
@@ -68,12 +70,89 @@ public class JiraService : IJiraService
             throw new ExternalServiceException("Jira", $"AddTicketToFixVersion failed for {ticketKey}: {(int)response.StatusCode}", null);
     }
 
+    public async Task<IReadOnlyList<JiraIssueSummary>> GetTicketsInFixVersionAsync(
+        IEnumerable<string> jiraProjectKeys,
+        string fixVersionName,
+        CancellationToken ct = default)
+    {
+        var conn = await ResolveActiveConnectionAsync(ct);
+        var keys = jiraProjectKeys.ToList();
+        if (keys.Count == 0) return [];
+
+        var projectClause = keys.Count == 1
+            ? $"project = \"{keys[0]}\""
+            : $"project in ({string.Join(",", keys.Select(k => $"\"{k}\""))})";
+        var jql = Uri.EscapeDataString($"{projectClause} AND fixVersion = \"{fixVersionName}\"");
+        var path = $"/rest/api/3/search?jql={jql}&maxResults=500&fields=summary,status,assignee";
+
+        using var request = BuildRequest(HttpMethod.Get, conn.BaseUrl, path, conn.Username, conn.DecryptedApiToken);
+        var response = await _httpClient.SendAsync(request, ct);
+        if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+            return [];
+        if (!response.IsSuccessStatusCode)
+            throw new ExternalServiceException("Jira", $"GetTicketsInFixVersion failed: {(int)response.StatusCode}", null);
+
+        var body = await response.Content.ReadFromJsonAsync<JiraSearchResponse>(JsonOptions, ct);
+        return (body?.Issues ?? []).Select(ToIssueSummary).ToList();
+    }
+
+    public async Task AddTicketToFixVersionAsync(
+        string ticketKey,
+        string fixVersionName,
+        CancellationToken ct = default)
+    {
+        var conn = await ResolveActiveConnectionAsync(ct);
+        var payload = JsonSerializer.Serialize(new
+        {
+            update = new { fixVersions = new[] { new { add = new { name = fixVersionName } } } }
+        });
+        using var request = BuildRequest(HttpMethod.Put, conn.BaseUrl, $"/rest/api/3/issue/{ticketKey}", conn.Username, conn.DecryptedApiToken);
+        request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
+        var response = await _httpClient.SendAsync(request, ct);
+        if (!response.IsSuccessStatusCode)
+            throw new ExternalServiceException("Jira", $"AddTicketToFixVersion failed for {ticketKey}: {(int)response.StatusCode}", null);
+    }
+
+    public async Task<string> CreateFixVersionAsync(
+        string jiraProjectKey,
+        string fixVersionName,
+        CancellationToken ct = default)
+    {
+        var conn = await ResolveActiveConnectionAsync(ct);
+        var payload = JsonSerializer.Serialize(new { name = fixVersionName, project = jiraProjectKey, released = false });
+        using var request = BuildRequest(HttpMethod.Post, conn.BaseUrl, "/rest/api/3/version", conn.Username, conn.DecryptedApiToken);
+        request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
+        var response = await _httpClient.SendAsync(request, ct);
+        if (!response.IsSuccessStatusCode)
+            throw new ExternalServiceException("Jira", $"CreateFixVersion failed for {fixVersionName}: {(int)response.StatusCode}", null);
+        var version = await response.Content.ReadFromJsonAsync<JiraVersionInfo>(JsonOptions, ct)
+            ?? throw new ExternalServiceException("Jira", "CreateFixVersion returned an empty response.", null);
+        return version.Id;
+    }
+
     private async Task<JiraConnectionDto> ResolveConnectionAsync(Guid connectionId, CancellationToken ct)
     {
         var entity = await _db.JiraConnections.FindAsync([connectionId], ct)
             ?? throw new NotFoundException("JiraConnection", connectionId);
         return new JiraConnectionDto(entity.BaseUrl, entity.Username, _protector.Unprotect(entity.EncryptedApiToken));
     }
+
+    private async Task<JiraConnectionDto> ResolveActiveConnectionAsync(CancellationToken ct)
+    {
+        var entity = await _db.JiraConnections
+            .Where(c => c.IsActive)
+            .FirstOrDefaultAsync(ct)
+            ?? throw new NotFoundException("JiraConnection", "active");
+        return new JiraConnectionDto(entity.BaseUrl, entity.Username, _protector.Unprotect(entity.EncryptedApiToken));
+    }
+
+    private static JiraIssueSummary ToIssueSummary(JiraIssueInfo issue) => new(
+        issue.Key,
+        issue.Fields?.Summary ?? string.Empty,
+        issue.Fields?.Status?.Name ?? string.Empty,
+        issue.Fields?.Status?.StatusCategory?.Key ?? string.Empty,
+        issue.Fields?.Assignee?.AvatarUrl48
+    );
 
     private async Task<JiraVersionInfo> FindOrCreateVersionAsync(JiraConnectionDto conn, string projectKey, string versionName, bool createIfMissing, CancellationToken ct)
     {
@@ -169,7 +248,11 @@ public class JiraService : IJiraService
     private record JiraIssueType([property: JsonPropertyName("name")] string? Name);
     private record JiraAssignee(
         [property: JsonPropertyName("displayName")] string? DisplayName,
-        [property: JsonPropertyName("emailAddress")] string? EmailAddress);
+        [property: JsonPropertyName("emailAddress")] string? EmailAddress,
+        [property: JsonPropertyName("avatarUrls")] Dictionary<string, string>? AvatarUrls)
+    {
+        public string? AvatarUrl48 => AvatarUrls?.GetValueOrDefault("48x48");
+    }
     private record JiraPriority([property: JsonPropertyName("name")] string? Name);
     private record JiraParent([property: JsonPropertyName("key")] string? Key);
 }

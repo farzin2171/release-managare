@@ -26,16 +26,16 @@ description: "Task list for Per-Repo Jira Coverage feature implementation"
 
 **⚠️ CRITICAL**: Complete T001–T010 before any user story work begins.
 
-- [ ] T001 Write failing unit tests for `SemVer.TryParse` and `NextMinor` covering 7 cases from research.md Decision 2 in `backend/tests/RepoManager.UnitTests/Domain/SemVerTests.cs` *(TDD — tests MUST fail before T002)*
-- [ ] T002 Implement `SemVer` sealed record (`TryParse`, `NextMinor`, `ToString`) in `backend/src/RepoManager.Domain/ValueObjects/SemVer.cs` — confirm all 7 tests from T001 pass
-- [ ] T003 [P] Create `HealthBand` enum (`Green`, `Amber`, `Red`, `Unknown`) in `backend/src/RepoManager.Domain/Enums/HealthBand.cs`
-- [ ] T004 [P] Create `RepoJiraComparisonSnapshot` entity class with all columns from data-model.md §1 in `backend/src/RepoManager.Domain/Entities/RepoJiraComparisonSnapshot.cs`
-- [ ] T005 [P] Add `LastViewedAt` nullable `DateTime?` property and `JiraComparisonSnapshots` nav prop (`ICollection<RepoJiraComparisonSnapshot>`) to `Repository` entity in `backend/src/RepoManager.Domain/Entities/Repository.cs`
-- [ ] T006 [P] Create `RepoJiraComparisonDto` and `ComparisonCounts` DTO records per data-model.md §5 in `backend/src/RepoManager.Application/Jira/Dtos/RepoJiraComparisonDto.cs` and `ComparisonCounts.cs`
-- [ ] T007 [P] Create `TicketSummaryDto`, `CommitSummaryDto`, and `JiraIssueSummary` DTO records in `backend/src/RepoManager.Application/Jira/Dtos/` (three files)
-- [ ] T008 [P] Create `ProjectJiraCoverageDto` and `AddToFixVersionResultDto` DTO records in `backend/src/RepoManager.Application/Jira/Dtos/ProjectJiraCoverageDto.cs` and `AddToFixVersionResultDto.cs`
-- [ ] T009 [P] Create `IRepoJiraComparisonService` interface (`GetForRepoAsync`, `GetForProjectAsync`, `AddTicketToFixVersionAsync`) per contracts/service-interfaces.md in `backend/src/RepoManager.Application/Jira/IRepoJiraComparisonService.cs`
-- [ ] T010 [P] Add `GetTicketsInFixVersionAsync`, `AddTicketToFixVersionAsync`, and `CreateFixVersionAsync` signatures to `IJiraService` interface per contracts/service-interfaces.md in `backend/src/RepoManager.Application/Jira/IJiraService.cs`
+- [X] T001 Write failing unit tests for `SemVer.TryParse` and `NextMinor` covering 7 cases from research.md Decision 2 in `backend/tests/RepoManager.UnitTests/Domain/SemVerTests.cs` *(TDD — tests MUST fail before T002)*
+- [X] T002 Implement `SemVer` sealed record (`TryParse`, `NextMinor`, `ToString`) in `backend/src/RepoManager.Domain/ValueObjects/SemVer.cs` — confirm all 7 tests from T001 pass
+- [X] T003 [P] Create `HealthBand` enum (`Green`, `Amber`, `Red`, `Unknown`) in `backend/src/RepoManager.Domain/Enums/HealthBand.cs`
+- [X] T004 [P] Create `RepoJiraComparisonSnapshot` entity class with all columns from data-model.md §1 in `backend/src/RepoManager.Domain/Entities/RepoJiraComparisonSnapshot.cs`
+- [X] T005 [P] Add `LastViewedAt` nullable `DateTime?` property and `JiraComparisonSnapshots` nav prop (`ICollection<RepoJiraComparisonSnapshot>`) to `Repository` entity in `backend/src/RepoManager.Domain/Entities/Repository.cs`
+- [X] T006 [P] Create `RepoJiraComparisonDto` and `ComparisonCounts` DTO records per data-model.md §5 in `backend/src/RepoManager.Application/Jira/Dtos/RepoJiraComparisonDto.cs` and `ComparisonCounts.cs`
+- [X] T007 [P] Create `TicketSummaryDto`, `CommitSummaryDto`, and `JiraIssueSummary` DTO records in `backend/src/RepoManager.Application/Jira/Dtos/` (three files)
+- [X] T008 [P] Create `ProjectJiraCoverageDto` and `AddToFixVersionResultDto` DTO records in `backend/src/RepoManager.Application/Jira/Dtos/ProjectJiraCoverageDto.cs` and `AddToFixVersionResultDto.cs`
+- [X] T009 [P] Create `IRepoJiraComparisonService` interface (`GetForRepoAsync`, `GetForProjectAsync`, `AddTicketToFixVersionAsync`) per contracts/service-interfaces.md in `backend/src/RepoManager.Application/Jira/IRepoJiraComparisonService.cs`
+- [X] T010 [P] Add `GetTicketsInFixVersionAsync`, `AddTicketToFixVersionAsync`, and `CreateFixVersionAsync` signatures to `IJiraService` interface per contracts/service-interfaces.md in `backend/src/RepoManager.Application/Jira/IJiraService.cs`
 
 **Checkpoint**: Domain layer compiles, SemVer tests pass, all interfaces defined. Foundational phase can now begin.
 
@@ -47,10 +47,10 @@ description: "Task list for Per-Repo Jira Coverage feature implementation"
 
 **⚠️ CRITICAL**: T014 (migration) requires T011 and T012 to complete first.
 
-- [ ] T011 [P] Create `RepoJiraComparisonSnapshotConfiguration` EF Fluent API config (unique index on `(RepositoryId, NextVersion)`, cascade delete, decimal precision, JSON column defaults) in `backend/src/RepoManager.Infrastructure/Persistence/Configurations/RepoJiraComparisonSnapshotConfiguration.cs`
-- [ ] T012 [P] Add `LastViewedAt` column mapping and `HasMany(r => r.JiraComparisonSnapshots).WithOne(s => s.Repository).OnDelete(DeleteBehavior.Cascade)` to `RepositoryConfiguration` in `backend/src/RepoManager.Infrastructure/Persistence/Configurations/RepositoryConfiguration.cs`
-- [ ] T013 [P] Implement the three new `IJiraService` methods in `JiraService.cs`: `GetTicketsInFixVersionAsync` (JQL search), `AddTicketToFixVersionAsync` (PUT issue fixVersions update), `CreateFixVersionAsync` (POST /rest/api/3/version) — all using the existing Polly-wrapped Jira `HttpClient` in `backend/src/RepoManager.Infrastructure/Jira/JiraService.cs`
-- [ ] T014 Add `RepoJiraComparisonSnapshotConfiguration` to `AppDbContext.OnModelCreating` and run `dotnet ef migrations add AddRepoJiraComparisonSnapshot` then `dotnet ef database update` (depends on T011, T012) in `backend/src/RepoManager.Infrastructure/Persistence/AppDbContext.cs`
+- [X] T011 [P] Create `RepoJiraComparisonSnapshotConfiguration` EF Fluent API config (unique index on `(RepositoryId, NextVersion)`, cascade delete, decimal precision, JSON column defaults) in `backend/src/RepoManager.Infrastructure/Persistence/Configurations/RepoJiraComparisonSnapshotConfiguration.cs`
+- [X] T012 [P] Add `LastViewedAt` column mapping and `HasMany(r => r.JiraComparisonSnapshots).WithOne(s => s.Repository).OnDelete(DeleteBehavior.Cascade)` to `RepositoryConfiguration` in `backend/src/RepoManager.Infrastructure/Persistence/Configurations/RepositoryConfiguration.cs`
+- [X] T013 [P] Implement the three new `IJiraService` methods in `JiraService.cs`: `GetTicketsInFixVersionAsync` (JQL search), `AddTicketToFixVersionAsync` (PUT issue fixVersions update), `CreateFixVersionAsync` (POST /rest/api/3/version) — all using the existing Polly-wrapped Jira `HttpClient` in `backend/src/RepoManager.Infrastructure/Jira/JiraService.cs`
+- [X] T014 Add `RepoJiraComparisonSnapshotConfiguration` to `AppDbContext.OnModelCreating` and run `dotnet ef migrations add AddRepoJiraComparisonSnapshot` then `dotnet ef database update` (depends on T011, T012) in `backend/src/RepoManager.Infrastructure/Persistence/AppDbContext.cs`
 
 **Checkpoint**: Migration applied, `RepoJiraComparisonSnapshots` table exists, all IJiraService methods implemented. User story phases can now begin.
 

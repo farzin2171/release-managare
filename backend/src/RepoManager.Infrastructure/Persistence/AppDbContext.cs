@@ -28,6 +28,7 @@ public class AppDbContext : DbContext
     public DbSet<ReleaseReconciliation> ReleaseReconciliations => Set<ReleaseReconciliation>();
     public DbSet<RepositorySync> RepositorySyncs => Set<RepositorySync>();
     public DbSet<ProjectSync> ProjectSyncs => Set<ProjectSync>();
+    public DbSet<RepoJiraComparisonSnapshot> RepoJiraComparisonSnapshots => Set<RepoJiraComparisonSnapshot>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -45,6 +46,7 @@ public class AppDbContext : DbContext
 
         modelBuilder.ApplyConfiguration(new RepositorySyncConfiguration());
         modelBuilder.ApplyConfiguration(new ProjectSyncConfiguration());
+        modelBuilder.ApplyConfiguration(new RepoJiraComparisonSnapshotConfiguration());
 
         // Users
         modelBuilder.Entity<User>(e =>
@@ -85,6 +87,7 @@ public class AppDbContext : DbContext
             e.Property(r => r.IsTracked).HasDefaultValue(false).IsRequired();
             e.Property(r => r.LatestTag).HasMaxLength(255);
             e.Property(r => r.LatestTagCommitSha).HasMaxLength(64);
+            e.Property(r => r.LastViewedAt);
             e.HasIndex(r => r.IsTracked);
             e.HasIndex(r => new { r.GitProviderConnectionId, r.ExternalId }).IsUnique();
             e.HasOne(r => r.LatestTagSetBy)
