@@ -61,6 +61,7 @@ public static class DependencyInjection
         services.AddHttpClient<IJiraService, JiraService>()
             .AddHttpMessageHandler<JiraResilienceHandler>();
         services.AddScoped<IJiraConnectionService, JiraConnectionService>();
+        services.AddScoped<IRepoJiraComparisonService, RepoJiraComparisonService>();
 
         services.AddHttpClient<IConfluencePublisher, ConfluencePublisher>();
         services.AddScoped<IConfluenceConnectionService, ConfluenceConnectionService>();

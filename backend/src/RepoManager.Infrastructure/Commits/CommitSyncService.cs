@@ -56,6 +56,8 @@ public class CommitSyncService
         await _db.SaveChangesAsync(ct);
         _logger.LogInformation("Commit sync completed for repository {RepositoryId}: {Count} commits processed from '{FromRef}'", repositoryId, commits.Count(), fromRef);
 
+        await InvalidateJiraCoverageSnapshotsAsync(repositoryId, ct);
+
         await AggregateTicketsAsync(repositoryId, fromRef, toRef, ct);
     }
 
@@ -140,6 +142,16 @@ public class CommitSyncService
             });
         }
 
+        await _db.SaveChangesAsync(ct);
+    }
+
+    private async Task InvalidateJiraCoverageSnapshotsAsync(Guid repositoryId, CancellationToken ct)
+    {
+        var snapshots = await _db.RepoJiraComparisonSnapshots
+            .Where(s => s.RepositoryId == repositoryId)
+            .ToListAsync(ct);
+        if (snapshots.Count == 0) return;
+        snapshots.ForEach(s => s.LastSyncedAt = DateTime.MinValue);
         await _db.SaveChangesAsync(ct);
     }
 
