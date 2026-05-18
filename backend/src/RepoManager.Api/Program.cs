@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using RepoManager.Api.Middleware;
 using RepoManager.Infrastructure;
+using RepoManager.Infrastructure.BackgroundServices;
 using RepoManager.Infrastructure.Persistence;
 using RepoManager.Infrastructure.Sync;
 using Serilog;
@@ -29,6 +30,7 @@ try
 
     builder.Services.AddInfrastructure(builder.Configuration);
     builder.Services.AddHostedService<SyncBackgroundService>();
+    builder.Services.AddHostedService<JiraCoverageRefreshService>();
 
     var jwtSecret = builder.Configuration["Jwt:Secret"]
         ?? throw new InvalidOperationException("Jwt:Secret is required.");

@@ -4,6 +4,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using RepoManager.Infrastructure.Persistence;
 
 namespace RepoManager.IntegrationTests;
@@ -50,9 +51,13 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
             services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlite(_connection));
 
-            var sp = services.BuildServiceProvider();
-            using var scope = sp.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            // Create the schema now (ConfigureServices runs before background services start).
+            // Avoid BuildServiceProvider() here — it triggers Serilog's ReloadableLogger.Freeze()
+            // prematurely, causing a double-freeze error when the host later resolves ILoggerFactory.
+            var dbOptions = new DbContextOptionsBuilder<AppDbContext>()
+                .UseSqlite(_connection)
+                .Options;
+            using var db = new AppDbContext(dbOptions);
             db.Database.EnsureCreated();
         });
     }

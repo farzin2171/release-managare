@@ -123,8 +123,8 @@ description: "Task list for Per-Repo Jira Coverage feature implementation"
 
 ### Implementation for User Story 4
 
-- [ ] T035 [P] [US4] Wire Re-sync icon `Button` in `RepoCoverageCard.tsx` — clicking calls `useRepoCoverage(repoId, refresh=true)` as a refetch; button shows spinner while loading; Tooltip shows `lastSyncedAt` formatted as relative time; visible to Admin only (hide for Viewer) in `frontend/src/features/jira-coverage/components/RepoCoverageCard.tsx` *(depends on T025)*
-- [ ] T036 [P] [US4] Wire Re-sync `Button` in `RepoCoverageTab.tsx` header — same behaviour as T035; last-synced timestamp visible to all roles in `frontend/src/features/jira-coverage/components/RepoCoverageTab.tsx` *(depends on T028)*
+- [X] T035 [P] [US4] Wire Re-sync icon `Button` in `RepoCoverageCard.tsx` — clicking calls `useRepoCoverage(repoId, refresh=true)` as a refetch; button shows spinner while loading; Tooltip shows `lastSyncedAt` formatted as relative time; visible to Admin only (hide for Viewer) in `frontend/src/features/jira-coverage/components/RepoCoverageCard.tsx` *(depends on T025)*
+- [X] T036 [P] [US4] Wire Re-sync `Button` in `RepoCoverageTab.tsx` header — same behaviour as T035; last-synced timestamp visible to all roles in `frontend/src/features/jira-coverage/components/RepoCoverageTab.tsx` *(depends on T028)*
 
 **Checkpoint**: All four user stories are complete and independently testable end-to-end.
 
@@ -134,8 +134,8 @@ description: "Task list for Per-Repo Jira Coverage feature implementation"
 
 **Purpose**: Keeps project-page caches warm for recently-viewed repositories so cold-cache skeleton states are rare in practice.
 
-- [ ] T037 Create `JiraCoverageRefreshService` extending `BackgroundService` using `PeriodicTimer` (10-minute interval); on each tick query `Repository` rows where `LastViewedAt > now - 24h` and their snapshot `LastSyncedAt < now - 5min`; call `_comparisonService.GetForRepoAsync(id, forceRefresh: true, ct)` per result; log `jira_coverage.background_refresh` event in `backend/src/RepoManager.Infrastructure/BackgroundServices/JiraCoverageRefreshService.cs`
-- [ ] T038 Register `JiraCoverageRefreshService` as hosted service via `builder.Services.AddHostedService<JiraCoverageRefreshService>()` in `backend/src/RepoManager.Api/Program.cs` *(depends on T037)*
+- [X] T037 Create `JiraCoverageRefreshService` extending `BackgroundService` using `PeriodicTimer` (10-minute interval); on each tick query `Repository` rows where `LastViewedAt > now - 24h` and their snapshot `LastSyncedAt < now - 5min`; call `_comparisonService.GetForRepoAsync(id, forceRefresh: true, ct)` per result; log `jira_coverage.background_refresh` event in `backend/src/RepoManager.Infrastructure/BackgroundServices/JiraCoverageRefreshService.cs`
+- [X] T038 Register `JiraCoverageRefreshService` as hosted service via `builder.Services.AddHostedService<JiraCoverageRefreshService>()` in `backend/src/RepoManager.Api/Program.cs` *(depends on T037)*
 
 ---
 
