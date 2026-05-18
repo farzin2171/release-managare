@@ -8,10 +8,11 @@ import { TicketGroupList } from './TicketGroupList'
 import { UnscopedBucket } from './UnscopedBucket'
 import { CommitsView } from './CommitsView'
 import { ContributorsView } from './ContributorsView'
+import { RepoCoverageTab } from '../jira-coverage/components/RepoCoverageTab'
 
 type RepositoryChangesDto = components['schemas']['RepositoryChangesDto']
 
-type ViewMode = 'tickets' | 'commits' | 'contributors'
+type ViewMode = 'tickets' | 'commits' | 'contributors' | 'jira-coverage'
 
 function SummaryCard({ label, value, accent }: { label: string; value: number; accent?: boolean }) {
   return (
@@ -60,6 +61,7 @@ export function RepositoryDetail() {
     { key: 'tickets', label: 'Tickets' },
     { key: 'commits', label: 'Commits' },
     { key: 'contributors', label: 'Contributors' },
+    { key: 'jira-coverage', label: 'Jira Coverage' },
   ]
 
   return (
@@ -131,6 +133,9 @@ export function RepositoryDetail() {
       )}
       {viewMode === 'contributors' && (
         <ContributorsView groups={groups} unscoped={unscoped} />
+      )}
+      {viewMode === 'jira-coverage' && id && (
+        <RepoCoverageTab repositoryId={id} />
       )}
     </div>
   )

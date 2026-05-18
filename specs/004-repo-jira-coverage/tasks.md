@@ -90,8 +90,8 @@ description: "Task list for Per-Repo Jira Coverage feature implementation"
 
 ### Implementation for User Story 2
 
-- [ ] T028 [US2] Create `RepoCoverageTab.tsx` — header strip (repo name, tag, fix version, `HealthPill`, Re-sync `Button` visible to Admin only, last-synced timestamp visible to all), four summary `Card` components (commits/git tickets/Jira tickets/match rate), full `BucketList` (all three buckets), collapsed `Collapsible` unmatched commits panel listing SHA + author + message per `CommitSummaryDto` in `frontend/src/features/jira-coverage/components/RepoCoverageTab.tsx` *(depends on T023, T024)*
-- [ ] T029 [US2] Add "Jira coverage" `TabsTrigger` and `TabsContent` to `RepositoryDetailPage.tsx` rendering `<RepoCoverageTab repositoryId={id} />` in `frontend/src/features/repositories/pages/RepositoryDetailPage.tsx` *(depends on T028)*
+- [X] T028 [US2] Create `RepoCoverageTab.tsx` — header strip (repo name, tag, fix version, `HealthPill`, Re-sync `Button` visible to Admin only, last-synced timestamp visible to all), four summary `Card` components (commits/git tickets/Jira tickets/match rate), full `BucketList` (all three buckets), collapsed `Collapsible` unmatched commits panel listing SHA + author + message per `CommitSummaryDto` in `frontend/src/features/jira-coverage/components/RepoCoverageTab.tsx` *(depends on T023, T024)*
+- [X] T029 [US2] Add "Jira coverage" `TabsTrigger` and `TabsContent` to `RepositoryDetailPage.tsx` rendering `<RepoCoverageTab repositoryId={id} />` in `frontend/src/features/repositories/pages/RepositoryDetailPage.tsx` *(depends on T028)*
 
 **Checkpoint**: Repository detail page has a functional "Jira coverage" tab. User Stories 1 and 2 independently testable.
 
