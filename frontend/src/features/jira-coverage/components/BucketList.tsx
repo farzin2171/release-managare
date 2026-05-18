@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { components } from '../../../lib/api'
+import { useAddTicketToFixVersion } from '../hooks/useJiraCoverage'
 
 type TicketSummaryDto = components['schemas']['TicketSummaryDto']
 
@@ -8,6 +9,9 @@ interface BucketListProps {
   jiraOnly: TicketSummaryDto[]
   gitOnly: TicketSummaryDto[]
   jiraBaseUrl?: string
+  repositoryId?: string
+  fixVersionName?: string
+  isAdmin?: boolean
 }
 
 const statusColors: Record<string, string> = {
@@ -29,9 +33,13 @@ function StatusBadge({ status }: { status: string | null }) {
 function TicketRow({
   ticket,
   jiraBaseUrl,
+  onAddToFixVersion,
+  addDisabled,
 }: {
   ticket: TicketSummaryDto
   jiraBaseUrl?: string
+  onAddToFixVersion?: (ticketKey: string) => void
+  addDisabled?: boolean
 }) {
   const ticketUrl = jiraBaseUrl ? `${jiraBaseUrl.replace(/\/$/, '')}/browse/${ticket.key}` : null
 
@@ -73,6 +81,16 @@ function TicketRow({
         {ticket.commitCount > 0 && (
           <span className="text-xs text-gray-400">{ticket.commitCount}c</span>
         )}
+        {onAddToFixVersion && (
+          <button
+            type="button"
+            disabled={addDisabled}
+            onClick={() => onAddToFixVersion(ticket.key)}
+            className="text-xs text-blue-600 dark:text-blue-400 hover:underline disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+          >
+            + Fix version
+          </button>
+        )}
       </div>
     </div>
   )
@@ -84,9 +102,11 @@ interface BucketProps {
   tickets: TicketSummaryDto[]
   defaultCollapsed?: boolean
   jiraBaseUrl?: string
+  onAddToFixVersion?: (ticketKey: string) => void
+  addDisabled?: boolean
 }
 
-function Bucket({ title, accent, tickets, defaultCollapsed = false, jiraBaseUrl }: BucketProps) {
+function Bucket({ title, accent, tickets, defaultCollapsed = false, jiraBaseUrl, onAddToFixVersion, addDisabled }: BucketProps) {
   const [open, setOpen] = useState(!defaultCollapsed)
 
   if (tickets.length === 0) return null
@@ -117,7 +137,13 @@ function Bucket({ title, accent, tickets, defaultCollapsed = false, jiraBaseUrl 
       {open && (
         <div className="px-4 pb-3">
           {tickets.map((t) => (
-            <TicketRow key={t.key} ticket={t} jiraBaseUrl={jiraBaseUrl} />
+            <TicketRow
+              key={t.key}
+              ticket={t}
+              jiraBaseUrl={jiraBaseUrl}
+              onAddToFixVersion={onAddToFixVersion}
+              addDisabled={addDisabled}
+            />
           ))}
         </div>
       )}
@@ -125,7 +151,58 @@ function Bucket({ title, accent, tickets, defaultCollapsed = false, jiraBaseUrl 
   )
 }
 
-export function BucketList({ inBoth, jiraOnly, gitOnly, jiraBaseUrl }: BucketListProps) {
+function AddTicketDialog({
+  ticketKey,
+  fixVersionName,
+  onConfirm,
+  onCancel,
+  isPending,
+}: {
+  ticketKey: string
+  fixVersionName: string
+  onConfirm: () => void
+  onCancel: () => void
+  isPending: boolean
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/50" onClick={onCancel} />
+      <div className="relative z-10 bg-white dark:bg-gray-900 rounded-lg shadow-xl p-6 max-w-sm w-full mx-4">
+        <h2 className="text-base font-semibold text-gray-900 dark:text-white">Add to fix version?</h2>
+        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+          Ticket{' '}
+          <span className="font-mono font-medium text-gray-900 dark:text-white">{ticketKey}</span>{' '}
+          will be added to fix version{' '}
+          <span className="font-mono font-medium text-gray-900 dark:text-white">{fixVersionName}</span>.
+          The fix version will be created in Jira if it does not already exist.
+        </p>
+        <div className="mt-5 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={isPending}
+            className="px-3 py-1.5 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            disabled={isPending}
+            onClick={onConfirm}
+            className="px-3 py-1.5 rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+          >
+            {isPending ? 'Adding…' : 'Confirm'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export function BucketList({ inBoth, jiraOnly, gitOnly, jiraBaseUrl, repositoryId, fixVersionName, isAdmin }: BucketListProps) {
+  const [confirmingTicket, setConfirmingTicket] = useState<string | null>(null)
+  const addTicketMutation = useAddTicketToFixVersion(repositoryId ?? '')
+
   const total = inBoth.length + jiraOnly.length + gitOnly.length
   if (total === 0) {
     return (
@@ -133,29 +210,56 @@ export function BucketList({ inBoth, jiraOnly, gitOnly, jiraBaseUrl }: BucketLis
     )
   }
 
+  const canAddToFixVersion = isAdmin && !!repositoryId && !!fixVersionName
+
+  const handleAddToFixVersion = (ticketKey: string) => {
+    setConfirmingTicket(ticketKey)
+  }
+
+  const handleConfirm = () => {
+    if (!confirmingTicket) return
+    addTicketMutation.mutate(confirmingTicket, {
+      onSuccess: () => setConfirmingTicket(null),
+    })
+  }
+
   return (
-    <div className="space-y-2">
-      <Bucket
-        title="In both"
-        accent="bg-green-500"
-        tickets={inBoth}
-        defaultCollapsed={inBoth.length >= 5}
-        jiraBaseUrl={jiraBaseUrl}
-      />
-      <Bucket
-        title="Jira only"
-        accent="bg-amber-500"
-        tickets={jiraOnly}
-        defaultCollapsed={false}
-        jiraBaseUrl={jiraBaseUrl}
-      />
-      <Bucket
-        title="Git only"
-        accent="bg-red-500"
-        tickets={gitOnly}
-        defaultCollapsed={false}
-        jiraBaseUrl={jiraBaseUrl}
-      />
-    </div>
+    <>
+      <div className="space-y-2">
+        <Bucket
+          title="In both"
+          accent="bg-green-500"
+          tickets={inBoth}
+          defaultCollapsed={inBoth.length >= 5}
+          jiraBaseUrl={jiraBaseUrl}
+        />
+        <Bucket
+          title="Jira only"
+          accent="bg-amber-500"
+          tickets={jiraOnly}
+          defaultCollapsed={false}
+          jiraBaseUrl={jiraBaseUrl}
+        />
+        <Bucket
+          title="Git only"
+          accent="bg-red-500"
+          tickets={gitOnly}
+          defaultCollapsed={false}
+          jiraBaseUrl={jiraBaseUrl}
+          onAddToFixVersion={canAddToFixVersion ? handleAddToFixVersion : undefined}
+          addDisabled={addTicketMutation.isPending}
+        />
+      </div>
+
+      {confirmingTicket && fixVersionName && (
+        <AddTicketDialog
+          ticketKey={confirmingTicket}
+          fixVersionName={fixVersionName}
+          onConfirm={handleConfirm}
+          onCancel={() => setConfirmingTicket(null)}
+          isPending={addTicketMutation.isPending}
+        />
+      )}
+    </>
   )
 }

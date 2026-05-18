@@ -187,7 +187,14 @@ export function RepoCoverageTab({ repositoryId }: RepoCoverageTabProps) {
 
       {/* Three-bucket list */}
       {cov.supported && (
-        <BucketList inBoth={cov.inBoth} jiraOnly={cov.jiraOnly} gitOnly={cov.gitOnly} />
+        <BucketList
+          inBoth={cov.inBoth}
+          jiraOnly={cov.jiraOnly}
+          gitOnly={cov.gitOnly}
+          repositoryId={repositoryId}
+          fixVersionName={cov.jiraFixVersionName ?? undefined}
+          isAdmin={isAdmin}
+        />
       )}
 
       {/* Unmatched commits */}

@@ -1,9 +1,10 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiFetch } from '../../../lib/apiClient'
 import type { components } from '../../../lib/api'
 
 type RepoJiraComparisonDto = components['schemas']['RepoJiraComparisonDto']
 type ProjectJiraCoverageDto = components['schemas']['ProjectJiraCoverageDto']
+type AddToFixVersionResultDto = components['schemas']['AddToFixVersionResultDto']
 
 export function useRepoCoverage(repositoryId: string, refresh = false) {
   return useQuery<RepoJiraComparisonDto>({
@@ -39,4 +40,22 @@ export function useInvalidateProjectCoverage() {
   const queryClient = useQueryClient()
   return (projectId: string) =>
     queryClient.invalidateQueries({ queryKey: ['jira-coverage', 'project', projectId] })
+}
+
+export function useAddTicketToFixVersion(repositoryId: string) {
+  const queryClient = useQueryClient()
+  return useMutation<AddToFixVersionResultDto, Error, string>({
+    mutationFn: (ticketKey) =>
+      apiFetch(`/api/v1/repositories/${repositoryId}/jira-coverage/add-ticket`, {
+        method: 'POST',
+        body: JSON.stringify({ ticketKey }),
+      }).then(async (r) => {
+        if (!r.ok) throw new Error(`Failed to add ticket: ${r.status}`)
+        return r.json() as Promise<AddToFixVersionResultDto>
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['jira-coverage', 'repo', repositoryId] })
+      queryClient.invalidateQueries({ queryKey: ['jira-coverage', 'project'] })
+    },
+  })
 }

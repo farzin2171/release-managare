@@ -174,12 +174,50 @@ public class RepoJiraComparisonService : IRepoJiraComparisonService
             sorted);
     }
 
-    public Task<AddToFixVersionResultDto> AddTicketToFixVersionAsync(
+    public async Task<AddToFixVersionResultDto> AddTicketToFixVersionAsync(
         Guid repositoryId,
         string ticketKey,
         CancellationToken ct = default)
     {
-        throw new NotImplementedException("Implemented in Phase 5 (T030).");
+        var repo = await _db.Repositories
+            .FirstOrDefaultAsync(r => r.Id == repositoryId, ct)
+            ?? throw new NotFoundException("Repository", repositoryId);
+
+        var snapshot = await _db.RepoJiraComparisonSnapshots
+            .Where(s => s.RepositoryId == repositoryId && s.Supported)
+            .OrderByDescending(s => s.LastSyncedAt)
+            .FirstOrDefaultAsync(ct)
+            ?? throw new ConflictException(
+                $"Repository '{repo.Name}' has no valid SemVer tag; fix version cannot be determined.");
+
+        var fixVersionName = snapshot.JiraFixVersionName;
+        var dashIndex = ticketKey.IndexOf('-');
+        var projectKey = dashIndex > 0 ? ticketKey[..dashIndex] : ticketKey;
+
+        bool fixVersionCreated;
+        try
+        {
+            await _jiraService.CreateFixVersionAsync(projectKey, fixVersionName, ct);
+            fixVersionCreated = true;
+        }
+        catch (ExternalServiceException)
+        {
+            fixVersionCreated = false;
+        }
+
+        await _jiraService.AddTicketToFixVersionAsync(ticketKey, fixVersionName, ct);
+
+        var snapshots = await _db.RepoJiraComparisonSnapshots
+            .Where(s => s.RepositoryId == repositoryId)
+            .ToListAsync(ct);
+        snapshots.ForEach(s => s.LastSyncedAt = DateTime.MinValue);
+        await _db.SaveChangesAsync(ct);
+
+        _logger.LogInformation(
+            "jira_coverage.add_ticket repoId={RepositoryId} ticketKey={TicketKey} fixVersionName={FixVersionName} fixVersionCreated={FixVersionCreated}",
+            repositoryId, ticketKey, fixVersionName, fixVersionCreated);
+
+        return new AddToFixVersionResultDto(true, fixVersionName, fixVersionCreated);
     }
 
     private async Task<RepoJiraComparisonDto> PersistUnsupportedAsync(
