@@ -14,8 +14,10 @@ using RepoManager.Application.Reconciliation;
 using RepoManager.Application.Releases;
 using RepoManager.Application.Repositories;
 using RepoManager.Application.Services;
+using RepoManager.Application.Maintenance;
 using RepoManager.Application.Templates;
 using RepoManager.Infrastructure.Auth;
+using RepoManager.Infrastructure.Maintenance;
 using RepoManager.Infrastructure.Commits;
 using RepoManager.Infrastructure.Confluence;
 using RepoManager.Infrastructure.GitProviders;
@@ -78,6 +80,8 @@ public static class DependencyInjection
         services.AddScoped<IRepositorySyncService, RepositorySyncService>();
         services.AddScoped<IProjectSyncService, ProjectSyncService>();
         services.AddScoped<IProjectSyncSnapshotService, ProjectSyncSnapshotService>();
+
+        services.AddScoped<IDatabaseMaintenanceService, DatabaseMaintenanceService>();
 
         return services;
     }

@@ -276,8 +276,13 @@ public class RepoJiraComparisonService : IRepoJiraComparisonService
         var providerConn = new ProviderConnection(
             repo.GitProviderConnection.OrganizationUrl, pat, repo.GitProviderConnection.ProviderType);
         var provider = _providerFactory.GetProvider(repo.GitProviderConnection.ProviderType);
+        
+        DateTimeOffset? fromDate = null;
+        if (!string.IsNullOrEmpty(repo.LatestTagCommitSha))
+            fromDate = await provider.GetCommitDateAsync(providerConn, repo.ExternalId, repo.LatestTagCommitSha, ct);
+
         var rawCommits = (await provider.GetCommitsBetweenAsync(
-            providerConn, repo.ExternalId, repo.LatestTag!, "HEAD", ct: ct)).ToList();
+            providerConn, repo.ExternalId, repo.LatestTag!, repo.DefaultBranch,fromDate, ct: ct)).ToList();
 
         var parsedCommits = rawCommits
             .Select(c => (commit: c, parsed: _parser.Parse(c.Message)))
@@ -289,9 +294,8 @@ public class RepoJiraComparisonService : IRepoJiraComparisonService
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        IReadOnlyList<JiraIssueSummary> jiraTickets = jiraProjectKeys.Count > 0
-            ? await _jiraService.GetTicketsInFixVersionAsync(jiraProjectKeys, fixVersionName, ct)
-            : Array.Empty<JiraIssueSummary>();
+        IReadOnlyList<JiraIssueSummary> jiraTickets = await _jiraService.GetTicketsInFixVersionAsync(jiraProjectKeys, fixVersionName, ct);
+            
 
         var jiraKeys = jiraTickets.Select(t => t.Key)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
