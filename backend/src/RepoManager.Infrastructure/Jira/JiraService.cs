@@ -82,10 +82,11 @@ public class JiraService : IJiraService
         var projectClause = keys.Count == 1
             ? $"project = \"{keys[0]}\""
             : $"project in ({string.Join(",", keys.Select(k => $"\"{k}\""))})";
-        var jql = Uri.EscapeDataString($"{projectClause} AND fixVersion = \"{fixVersionName}\"");
-        var path = $"/rest/api/3/search?jql={jql}&maxResults=500&fields=summary,status,assignee";
+        var jql = $"{projectClause} AND fixVersion = \"{fixVersionName}\"";
+        var payload = JsonSerializer.Serialize(new { jql, maxResults = 500, fields = new[] { "summary", "status", "assignee" } });
 
-        using var request = BuildRequest(HttpMethod.Get, conn.BaseUrl, path, conn.Username, conn.DecryptedApiToken);
+        using var request = BuildRequest(HttpMethod.Post, conn.BaseUrl, "/rest/api/3/search/jql", conn.Username, conn.DecryptedApiToken);
+        request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
         var response = await _httpClient.SendAsync(request, ct);
         if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
             return [];
@@ -181,9 +182,10 @@ public class JiraService : IJiraService
 
     private async Task<List<JiraIssueInfo>> FetchVersionTicketsAsync(JiraConnectionDto conn, string projectKey, string versionName, CancellationToken ct)
     {
-        var jql = Uri.EscapeDataString($"project = {projectKey} AND fixVersion = \"{versionName}\"");
-        var path = $"/rest/api/3/search?jql={jql}&maxResults=500&fields=summary,status,issuetype,assignee,priority,parent";
-        using var request = BuildRequest(HttpMethod.Get, conn.BaseUrl, path, conn.Username, conn.DecryptedApiToken);
+        var jql = $"project = {projectKey} AND fixVersion = \"{versionName}\"";
+        var payload = JsonSerializer.Serialize(new { jql, maxResults = 500, fields = new[] { "summary", "status", "issuetype", "assignee", "priority", "parent" } });
+        using var request = BuildRequest(HttpMethod.Post, conn.BaseUrl, "/rest/api/3/search/jql", conn.Username, conn.DecryptedApiToken);
+        request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
         var response = await _httpClient.SendAsync(request, ct);
         if (!response.IsSuccessStatusCode)
             throw new ExternalServiceException("Jira", $"SearchIssues failed: {(int)response.StatusCode}", null);

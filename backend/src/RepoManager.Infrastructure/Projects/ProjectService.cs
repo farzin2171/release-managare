@@ -34,7 +34,7 @@ public class ProjectService : IProjectService
             Name = dto.Name,
             Description = dto.Description,
             Color = dto.Color,
-            JiraProjectKeys = "[]",
+            JiraProjectKeys = "[\"DIT\"]",
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         };
@@ -171,7 +171,7 @@ public class ProjectService : IProjectService
         }
 
         project.JiraConnectionId = dto.JiraConnectionId;
-        project.JiraProjectKeys = JsonSerializer.Serialize(dto.JiraProjectKeys);
+        project.JiraProjectKeys = "[\"DIT\"]";
         project.FixVersionPattern = dto.FixVersionPattern;
         project.AutoCreateFixVersion = dto.AutoCreateFixVersion;
         project.MatchSubtasksToParents = dto.MatchSubtasksToParents;
