@@ -6,6 +6,9 @@ import { ProjectRepositoriesTable } from './components/ProjectRepositoriesTable'
 import { RepositoryCard } from './components/RepositoryCard'
 import { ProjectSyncStrip } from './components/ProjectSyncStrip'
 import { useProjectSyncSnapshot } from './hooks/useProjectSyncSnapshot'
+import { useProjectCoverage, useRepoCoverage } from '../jira-coverage/hooks/useJiraCoverage'
+import { ProjectCoverageAggregate } from '../jira-coverage/components/ProjectCoverageAggregate'
+import { RepoCoverageCard, RepoCoverageCardSkeleton } from '../jira-coverage/components/RepoCoverageCard'
 import type { components } from '../../lib/api'
 
 type ProjectDetailDto = components['schemas']['ProjectDetailDto']
@@ -26,6 +29,12 @@ function MetricCard({ label, value, accent }: { label: string; value: number; ac
 }
 
 
+
+function ColdRepoHydrator({ repositoryId }: { repositoryId: string }) {
+  const { data } = useRepoCoverage(repositoryId)
+  if (!data) return <RepoCoverageCardSkeleton />
+  return <RepoCoverageCard coverage={data} />
+}
 
 export function ProjectDashboard() {
   const { id } = useParams<{ id: string }>()
@@ -50,6 +59,7 @@ export function ProjectDashboard() {
   })
 
   const { data: snapshot } = useProjectSyncSnapshot(id ?? '')
+  const { data: coverage } = useProjectCoverage(id ?? '', false)
 
   const projectRepos = allRepos.filter((r) =>
     project?.repositories.some((pr) => pr.repositoryId === r.id)
@@ -184,6 +194,22 @@ export function ProjectDashboard() {
                 />
               )
             })}
+          </div>
+        </div>
+      )}
+
+      {/* Jira coverage */}
+      {coverage && (
+        <div className="space-y-3">
+          <ProjectCoverageAggregate coverage={coverage} />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {coverage.repos.map((repoCov) =>
+              repoCov.health === 'Unknown' && repoCov.unsupportedReason === 'Coverage not yet computed. Loading…' ? (
+                <ColdRepoHydrator key={repoCov.repositoryId} repositoryId={repoCov.repositoryId} />
+              ) : (
+                <RepoCoverageCard key={repoCov.repositoryId} coverage={repoCov} />
+              )
+            )}
           </div>
         </div>
       )}

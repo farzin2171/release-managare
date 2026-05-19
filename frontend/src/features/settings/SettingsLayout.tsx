@@ -18,6 +18,10 @@ const navGroups = [
       { label: 'Users', path: '/settings/users' },
     ],
   },
+  {
+    label: 'Danger Zone',
+    items: [{ label: 'Maintenance', path: '/settings/maintenance' }],
+  },
 ]
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>

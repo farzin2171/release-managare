@@ -1,3 +1,4 @@
+using RepoManager.Application.Jira.Dtos;
 using RepoManager.Domain.Enums;
 
 namespace RepoManager.Application.Jira;
@@ -8,6 +9,21 @@ public interface IJiraService
     Task<IReadOnlyList<JiraProjectDto>> ListProjectsAsync(Guid connectionId, CancellationToken ct = default);
     Task<JiraReleaseDto> SyncFixVersionAsync(Guid connectionId, string projectKey, string versionName, bool createIfMissing, CancellationToken ct = default);
     Task AddTicketToFixVersionAsync(Guid connectionId, string ticketKey, string versionId, CancellationToken ct = default);
+
+    Task<IReadOnlyList<JiraIssueSummary>> GetTicketsInFixVersionAsync(
+        IEnumerable<string> jiraProjectKeys,
+        string fixVersionName,
+        CancellationToken ct = default);
+
+    Task AddTicketToFixVersionAsync(
+        string ticketKey,
+        string fixVersionName,
+        CancellationToken ct = default);
+
+    Task<string> CreateFixVersionAsync(
+        string jiraProjectKey,
+        string fixVersionName,
+        CancellationToken ct = default);
 }
 
 public record JiraConnectionDto(string BaseUrl, string Username, string DecryptedApiToken);

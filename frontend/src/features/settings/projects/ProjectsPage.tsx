@@ -257,7 +257,7 @@ function ProjectDetail({ projectId }: { projectId: string }) {
   const {
     register: regConf,
     handleSubmit: submitConf,
-    formState: { errors: confErrors, isSubmitting: confSubmitting },
+    formState: { isSubmitting: confSubmitting },
   } = useForm<ConfluenceFormData>({
     resolver: zodResolver(confluenceSchema),
     values: project

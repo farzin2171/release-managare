@@ -687,6 +687,101 @@ namespace RepoManager.Infrastructure.Migrations
                     b.ToTable("ReleaseRepositoryTags");
                 });
 
+            modelBuilder.Entity("RepoManager.Domain.Entities.RepoJiraComparisonSnapshot", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CommitCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("CurrentTag")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("GitOnlyCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("GitOnlyJson")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("[]");
+
+                    b.Property<int>("GitTicketCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("InBothCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("InBothJson")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("[]");
+
+                    b.Property<bool>("JiraFixVersionExists")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("JiraFixVersionName")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("JiraOnlyCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("JiraOnlyJson")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("[]");
+
+                    b.Property<int>("JiraTicketCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("LastSyncError")
+                        .HasMaxLength(1024)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("LastSyncedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("MatchRate")
+                        .HasPrecision(5, 4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NextVersion")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("RepositoryId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Supported")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("UnmatchedCommitsJson")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("[]");
+
+                    b.Property<string>("UnsupportedReason")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RepositoryId", "NextVersion")
+                        .IsUnique();
+
+                    b.ToTable("RepoJiraComparisonSnapshots");
+                });
+
             modelBuilder.Entity("RepoManager.Domain.Entities.Repository", b =>
                 {
                     b.Property<Guid>("Id")
@@ -718,6 +813,9 @@ namespace RepoManager.Infrastructure.Migrations
 
                     b.Property<long?>("LastSyncedAt")
                         .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("LastViewedAt")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("LatestTag")
                         .HasMaxLength(255)
@@ -1023,6 +1121,17 @@ namespace RepoManager.Infrastructure.Migrations
                     b.Navigation("Repository");
                 });
 
+            modelBuilder.Entity("RepoManager.Domain.Entities.RepoJiraComparisonSnapshot", b =>
+                {
+                    b.HasOne("RepoManager.Domain.Entities.Repository", "Repository")
+                        .WithMany("JiraComparisonSnapshots")
+                        .HasForeignKey("RepositoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Repository");
+                });
+
             modelBuilder.Entity("RepoManager.Domain.Entities.Repository", b =>
                 {
                     b.HasOne("RepoManager.Domain.Entities.GitProviderConnection", "GitProviderConnection")
@@ -1096,6 +1205,8 @@ namespace RepoManager.Infrastructure.Migrations
             modelBuilder.Entity("RepoManager.Domain.Entities.Repository", b =>
                 {
                     b.Navigation("Commits");
+
+                    b.Navigation("JiraComparisonSnapshots");
 
                     b.Navigation("ProjectRepositories");
 

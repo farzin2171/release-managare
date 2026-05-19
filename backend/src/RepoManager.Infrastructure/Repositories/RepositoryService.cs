@@ -196,6 +196,8 @@ public class RepositoryService : IRepositoryService
             "repository.latest_tag.changed repositoryId={RepositoryId} oldTag={OldTag} newTag={NewTag} actingUserId={ActingUserId}",
             repositoryId, oldTag, tagName, actingUserId);
 
+        await InvalidateJiraCoverageSnapshotsAsync(repositoryId, ct);
+
         await _db.Entry(repo).Reference(r => r.LatestTagSetBy).LoadAsync(ct);
         return ToDto(repo);
     }
@@ -212,6 +214,16 @@ public class RepositoryService : IRepositoryService
         _logger.LogInformation(
             "repository.latest_tag.changed repositoryId={RepositoryId} oldTag={OldTag} newTag=null actingUserId={ActingUserId}",
             repositoryId, oldTag, actingUserId);
+    }
+
+    private async Task InvalidateJiraCoverageSnapshotsAsync(Guid repositoryId, CancellationToken ct)
+    {
+        var snapshots = await _db.RepoJiraComparisonSnapshots
+            .Where(s => s.RepositoryId == repositoryId)
+            .ToListAsync(ct);
+        if (snapshots.Count == 0) return;
+        snapshots.ForEach(s => s.LastSyncedAt = DateTime.MinValue);
+        await _db.SaveChangesAsync(ct);
     }
 
     private static CommitItemDto ToCommitItemDto(Commit c) =>

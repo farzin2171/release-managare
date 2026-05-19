@@ -35,10 +35,13 @@ public class Repository
         LatestTagSetByUserId = null;
     }
 
+    public DateTime? LastViewedAt { get; set; }
+
     public GitProviderConnection GitProviderConnection { get; set; } = null!;
     public User? LatestTagSetBy { get; set; }
     public ICollection<ProjectRepository> ProjectRepositories { get; set; } = [];
     public ICollection<Commit> Commits { get; set; } = [];
     public ICollection<Ticket> Tickets { get; set; } = [];
     public ICollection<ReleaseRepositoryTag> ReleaseRepositoryTags { get; set; } = [];
+    public ICollection<RepoJiraComparisonSnapshot> JiraComparisonSnapshots { get; set; } = [];
 }

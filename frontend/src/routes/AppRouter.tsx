@@ -10,6 +10,7 @@ import { RepositoriesPage } from '../features/settings/repositories/Repositories
 import { ProjectsPage } from '../features/settings/projects/ProjectsPage'
 import { TemplatesPage } from '../features/settings/templates/TemplatesPage'
 import { UsersPage } from '../features/settings/users/UsersPage'
+import { MaintenancePage } from '../features/settings/maintenance/MaintenancePage'
 import { ProjectsListPage } from '../features/projects/ProjectsListPage'
 import { ProjectDashboard } from '../features/projects/ProjectDashboard'
 import { RepositoryDetail } from '../features/repositories/RepositoryDetail'
@@ -54,6 +55,7 @@ export function AppRouter() {
                 <Route path="integrations/confluence" element={<ConfluenceSettings />} />
                 <Route path="templates" element={<TemplatesPage />} />
                 <Route path="users" element={<UsersPage />} />
+                <Route path="maintenance" element={<MaintenancePage />} />
               </Route>
             </Route>
 
