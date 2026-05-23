@@ -18,7 +18,9 @@ public sealed record SemVer(int Major, int Minor, int Patch)
         return true;
     }
 
+    public SemVer NextMajor() => new(Major + 1, 0, 0);
     public SemVer NextMinor() => new(Major, Minor + 1, 0);
+    public SemVer NextPatch() => new(Major, Minor, Patch + 1);
 
     public override string ToString() => $"{Major}.{Minor}.{Patch}";
 }

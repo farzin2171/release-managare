@@ -19,13 +19,13 @@ using RepoManager.Application.Templates;
 using RepoManager.Infrastructure.Auth;
 using RepoManager.Infrastructure.Maintenance;
 using RepoManager.Infrastructure.Commits;
+using RepoManager.Infrastructure.Releases;
 using RepoManager.Infrastructure.Confluence;
 using RepoManager.Infrastructure.GitProviders;
 using RepoManager.Infrastructure.Jira;
 using RepoManager.Infrastructure.Persistence;
 using RepoManager.Infrastructure.Projects;
 using RepoManager.Infrastructure.Reconciliation;
-using RepoManager.Infrastructure.Releases;
 using RepoManager.Infrastructure.Repositories;
 using RepoManager.Infrastructure.Sync;
 using RepoManager.Infrastructure.Templates;
@@ -69,6 +69,8 @@ public static class DependencyInjection
         services.AddScoped<IConfluenceConnectionService, ConfluenceConnectionService>();
 
         services.AddScoped<IReleaseService, ReleaseService>();
+        services.AddScoped<IVersionBumpService, VersionBumpService>();
+        services.AddScoped<IReleaseCompositionService, ReleaseCompositionService>();
         services.AddScoped<IReleaseNoteTemplateService, ReleaseNoteTemplateService>();
         services.AddScoped<IReleaseReconciliationService, ReleaseReconciliationService>();
 
