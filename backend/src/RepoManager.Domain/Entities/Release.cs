@@ -19,5 +19,6 @@ public class Release
     public Project Project { get; set; } = null!;
     public User CreatedBy { get; set; } = null!;
     public ICollection<ReleaseRepositoryTag> RepositoryTags { get; set; } = [];
+    public ICollection<ReleaseRepository> ReleaseRepositories { get; set; } = [];
     public ReleaseReconciliation? Reconciliation { get; set; }
 }

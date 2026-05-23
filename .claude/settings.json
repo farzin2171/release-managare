@@ -6,7 +6,10 @@
       "PowerShell(.specify/scripts/powershell/check-prerequisites.ps1 -Json -RequireTasks -IncludeTasks)",
       "PowerShell(dotnet build backend/RepoManager.sln -c Release --nologo -v q 2>&1 | Where-Object { $_ -notmatch \"MSB3026|MSB3027|retry\" } | Select-Object -Last 20)",
       "Bash(powershell -File .specify/scripts/powershell/setup-tasks.ps1 -Json)",
-      "Bash(powershell -ExecutionPolicy Bypass -File .specify/scripts/powershell/setup-tasks.ps1 -Json)"
+      "Bash(powershell -ExecutionPolicy Bypass -File .specify/scripts/powershell/setup-tasks.ps1 -Json)",
+      "PowerShell(& \"c:\\\\MyWork\\\\release-managare\\\\.specify\\\\scripts\\\\powershell\\\\check-prerequisites.ps1\" -Json -RequireTasks -IncludeTasks 2>&1)",
+      "PowerShell(dotnet build backend/src --nologo -v q 2>&1)",
+      "PowerShell(dotnet build backend/RepoManager.sln --nologo -v q 2>&1)"
     ]
   }
 }

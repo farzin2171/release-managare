@@ -24,8 +24,8 @@ description: "Task list for Per-Repo Release Versioning feature implementation"
 
 **Purpose**: Extend the Domain layer with the new `ReleaseRepository` entity before any other work begins.
 
-- [ ] T001 Add `ReleaseRepository.cs` POCO entity with all snapshot columns (`Id`, `ReleaseId`, `RepositoryId`, `PreviousVersion`, `NextVersion`, `BumpType`, `FromCommitSha`, `ToCommitSha`, `CommitCount`, `TicketCount`) in `backend/src/RepoManager.Domain/Entities/ReleaseRepository.cs`
-- [ ] T002 [P] Update `Release.cs` to add `ICollection<ReleaseRepository> ReleaseRepositories` navigation property in `backend/src/RepoManager.Domain/Entities/Release.cs`
+- [X] T001 Add `ReleaseRepository.cs` POCO entity with all snapshot columns (`Id`, `ReleaseId`, `RepositoryId`, `PreviousVersion`, `NextVersion`, `BumpType`, `FromCommitSha`, `ToCommitSha`, `CommitCount`, `TicketCount`) in `backend/src/RepoManager.Domain/Entities/ReleaseRepository.cs`
+- [X] T002 [P] Update `Release.cs` to add `ICollection<ReleaseRepository> ReleaseRepositories` navigation property in `backend/src/RepoManager.Domain/Entities/Release.cs`
 
 ---
 
