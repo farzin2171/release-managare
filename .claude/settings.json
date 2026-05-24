@@ -15,7 +15,16 @@
       "Bash(Sort-Object FullName)",
       "PowerShell(.specify/scripts/powershell/check-prerequisites.ps1 -Json -RequireTasks -IncludeTasks 2>&1)",
       "PowerShell(cd \"c:\\\\MyWork\\\\release-managare\"; dotnet test \"backend/tests/RepoManager.IntegrationTests\" --nologo --filter \"FullyQualifiedName~CreateRelease_WithTwoRepos\" -- xunit.diagnostics=true 2>&1 | Where-Object { $_ -match \"401|login|token|auth|setup|Bearer|Admin\" } | Select-Object -First 30)",
-      "Bash(Get-ChildItem -Path \"c:\\\\MyWork\\\\release-managare\\\\frontend\\\\src\" -Recurse -Filter \"*.tsx\" -o Name)"
+      "Bash(Get-ChildItem -Path \"c:\\\\MyWork\\\\release-managare\\\\frontend\\\\src\" -Recurse -Filter \"*.tsx\" -o Name)",
+      "PowerShell(.specify/extensions/git/scripts/powershell/create-new-feature.ps1 -Json -ShortName \"project-page-templates\" \"Enhance Confluence page in the release process - use Handlebars and predefined values and define this template per project; when a release starts it fills all information and creates the release page based on these templates\")",
+      "Bash(New-Item -ItemType Directory -Force \"specs/007-project-page-templates\")",
+      "Bash(New-Item -ItemType Directory -Force \"specs/007-project-page-templates/checklists\")",
+      "Bash(Write-Output \"Directories created\")",
+      "PowerShell(New-Item -ItemType Directory -Force \"specs/007-project-page-templates\")",
+      "PowerShell(New-Item -ItemType Directory -Force \"specs/007-project-page-templates/checklists\")",
+      "PowerShell(.specify/scripts/powershell/setup-plan.ps1 -Json)",
+      "PowerShell(.specify/scripts/powershell/check-prerequisites.ps1 -Json -PathsOnly)",
+      "PowerShell(cd \"c:\\\\MyWork\\\\release-managare\" && powershell -ExecutionPolicy Bypass -File \".specify/scripts/powershell/setup-tasks.ps1\" -Json 2>&1)"
     ]
   }
 }

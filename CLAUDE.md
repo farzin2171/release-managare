@@ -15,7 +15,7 @@ Full specifications are in [docs/](docs/):
 **Status**: Spec-complete, implementation not yet started. Source directories (`backend/`, `frontend/`) do not exist yet.
 
 <!-- SPECKIT START -->
-**Active feature plan**: [specs/005-per-repo-release-versioning/plan.md](specs/005-per-repo-release-versioning/plan.md)
+**Active feature plan**: [specs/007-project-page-templates/plan.md](specs/007-project-page-templates/plan.md)
 <!-- SPECKIT END -->
 
 ## Tech Stack
