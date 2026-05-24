@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { apiFetch } from '../../../lib/apiClient'
 import type { components } from '../../../lib/api'
@@ -32,6 +32,7 @@ interface Props {
 }
 
 export function ProjectReleasesList({ projectId }: Props) {
+  const navigate = useNavigate()
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('All')
   const [searchInput, setSearchInput] = useState('')
   const debouncedSearch = useDebounce(searchInput, 300)
@@ -110,10 +111,11 @@ export function ProjectReleasesList({ projectId }: Props) {
                 <tr
                   key={rel.id}
                   className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                  onClick={() => navigate(`/releases/${rel.id}`)}
                 >
                   <td className="px-4 py-3">
                     <Link
-                      to={`/projects/${projectId}/releases/${rel.id}`}
+                      to={`/releases/${rel.id}`}
                       className="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400"
                     >
                       {rel.name}
