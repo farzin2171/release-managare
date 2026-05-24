@@ -16,6 +16,7 @@ using RepoManager.Application.Repositories;
 using RepoManager.Application.Services;
 using RepoManager.Application.Maintenance;
 using RepoManager.Application.Templates;
+using RepoManager.Application.Validators;
 using RepoManager.Infrastructure.Auth;
 using RepoManager.Infrastructure.Maintenance;
 using RepoManager.Infrastructure.Commits;
@@ -55,6 +56,7 @@ public static class DependencyInjection
         services.AddScoped<IGitProviderService, GitProviderService>();
         services.AddScoped<IRepositoryService, RepositoryService>();
         services.AddScoped<IValidator<SetLatestTagDto>, SetLatestTagDtoValidator>();
+        services.AddScoped<IValidator<CreateReleaseRequest>, CreateReleaseRequestValidator>();
         services.AddScoped<IProjectService, ProjectService>();
         services.AddSingleton<IConventionalCommitParser, ConventionalCommitParser>();
         services.AddScoped<CommitSyncService>();

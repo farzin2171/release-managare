@@ -2,7 +2,12 @@ namespace RepoManager.Application.Common.Exceptions;
 
 public class ConflictException : Exception
 {
-    public ConflictException(string message) : base(message)
+    public string? Code { get; }
+
+    public ConflictException(string message) : base(message) { }
+
+    public ConflictException(string message, string code) : base(message)
     {
+        Code = code;
     }
 }

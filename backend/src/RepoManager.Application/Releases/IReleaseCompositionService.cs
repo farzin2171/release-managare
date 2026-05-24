@@ -10,11 +10,40 @@ public interface IReleaseCompositionService
     Task<ReleaseCompositionDto> CreateDraftAsync(
         Guid projectId,
         CreateReleaseRequest request,
+        Guid createdByUserId,
         CancellationToken ct = default);
 
     Task<ReleaseCompositionDto> UpdateDraftAsync(
         Guid releaseId,
         UpdateReleaseRequest request,
+        CancellationToken ct = default);
+
+    Task<ReleaseCompositionDto> GetAsync(
+        Guid releaseId,
+        CancellationToken ct = default);
+
+    // Returns null when lock is successfully acquired; returns lock-holder name when blocked.
+    Task<string?> TryAcquireEditLockAsync(
+        Guid releaseId,
+        Guid userId,
+        string userName,
+        CancellationToken ct = default);
+
+    Task ReleaseEditLockAsync(
+        Guid releaseId,
+        Guid userId,
+        CancellationToken ct = default);
+
+    Task DeleteDraftAsync(
+        Guid releaseId,
+        CancellationToken ct = default);
+
+    Task<IReadOnlyList<ReleaseSummaryDto>> ListByProjectAsync(
+        Guid projectId,
+        string? status,
+        string? search,
+        string? sort,
+        string? order,
         CancellationToken ct = default);
 }
 
@@ -70,3 +99,12 @@ public record ReleaseRepositoryDto(
     int CommitCount,
     int TicketCount,
     bool IsLegacy);
+
+public record ReleaseSummaryDto(
+    Guid Id,
+    string Name,
+    string Version,
+    string Status,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset? PublishedAt,
+    int RepoCount);

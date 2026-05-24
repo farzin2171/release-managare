@@ -190,12 +190,14 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Release>(e =>
         {
             e.HasKey(r => r.Id);
+            e.Property(r => r.Name).HasMaxLength(200).IsRequired().HasDefaultValue(string.Empty);
             e.Property(r => r.Version).HasMaxLength(50).IsRequired();
             e.Property(r => r.Status).IsRequired();
             e.Property(r => r.GeneratedNotesMarkdown).IsRequired();
             e.Property(r => r.ConfluencePageId).HasMaxLength(100);
             e.Property(r => r.ConfluencePageUrl).HasMaxLength(500);
             e.Property(r => r.CreatedAt).IsRequired();
+            e.Property(r => r.EditLockedByUserName).HasMaxLength(200);
             e.HasOne(r => r.CreatedBy)
              .WithMany()
              .HasForeignKey(r => r.CreatedByUserId)

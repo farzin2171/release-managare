@@ -149,6 +149,21 @@ public class ProjectService : IProjectService
         var link = project.ProjectRepositories.FirstOrDefault(pr => pr.RepositoryId == repoId)
             ?? throw new NotFoundException("ProjectRepository", repoId);
 
+        // Block removal if the repo is included in any Draft release for this project
+        var inDraftRelease = await _db.ReleaseRepositories
+            .AnyAsync(rr => rr.RepositoryId == repoId
+                         && rr.Release.ProjectId == id
+                         && rr.Release.Status == Domain.Enums.ReleaseStatus.Draft, ct);
+
+        if (inDraftRelease)
+            throw new Application.Common.Exceptions.ValidationException([
+                new FluentValidation.Results.ValidationFailure("RepositoryId",
+                    "This repository is included in one or more Draft releases for this project.")
+                {
+                    ErrorCode = "repo_in_draft_release"
+                }
+            ]);
+
         _db.ProjectRepositories.Remove(link);
         await _db.SaveChangesAsync(ct);
         _logger.LogInformation("Repository {RepoId} removed from project {ProjectId}", repoId, id);
