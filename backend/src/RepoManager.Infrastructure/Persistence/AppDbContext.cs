@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RepoManager.Domain.Aggregates;
 using RepoManager.Domain.Entities;
-using RepoManager.Domain.Enums;
 using RepoManager.Infrastructure.Persistence.Configurations;
 
 namespace RepoManager.Infrastructure.Persistence;
@@ -19,6 +18,7 @@ public class AppDbContext : DbContext
     public DbSet<Commit> Commits => Set<Commit>();
     public DbSet<Ticket> Tickets => Set<Ticket>();
     public DbSet<Release> Releases => Set<Release>();
+    public DbSet<ReleaseRepository> ReleaseRepositories => Set<ReleaseRepository>();
     public DbSet<ReleaseRepositoryTag> ReleaseRepositoryTags => Set<ReleaseRepositoryTag>();
     public DbSet<ReleaseNoteTemplate> ReleaseNoteTemplates => Set<ReleaseNoteTemplate>();
     public DbSet<ConfluenceConnection> ConfluenceConnections => Set<ConfluenceConnection>();
@@ -47,6 +47,7 @@ public class AppDbContext : DbContext
         modelBuilder.ApplyConfiguration(new RepositorySyncConfiguration());
         modelBuilder.ApplyConfiguration(new ProjectSyncConfiguration());
         modelBuilder.ApplyConfiguration(new RepoJiraComparisonSnapshotConfiguration());
+        modelBuilder.ApplyConfiguration(new ReleaseRepositoryConfiguration());
 
         // Users
         modelBuilder.Entity<User>(e =>
@@ -189,12 +190,14 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Release>(e =>
         {
             e.HasKey(r => r.Id);
+            e.Property(r => r.Name).HasMaxLength(200).IsRequired().HasDefaultValue(string.Empty);
             e.Property(r => r.Version).HasMaxLength(50).IsRequired();
             e.Property(r => r.Status).IsRequired();
             e.Property(r => r.GeneratedNotesMarkdown).IsRequired();
             e.Property(r => r.ConfluencePageId).HasMaxLength(100);
             e.Property(r => r.ConfluencePageUrl).HasMaxLength(500);
             e.Property(r => r.CreatedAt).IsRequired();
+            e.Property(r => r.EditLockedByUserName).HasMaxLength(200);
             e.HasOne(r => r.CreatedBy)
              .WithMany()
              .HasForeignKey(r => r.CreatedByUserId)

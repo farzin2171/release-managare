@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiFetch } from '../../lib/apiClient'
 import { useAuthStore } from '../../lib/authStore'
 import type { components } from '../../lib/api'
+import { ReleaseRepositoriesTable } from './components/ReleaseRepositoriesTable'
 
 type ReleaseDetailDto = components['schemas']['ReleaseDetailDto']
 
@@ -153,6 +154,11 @@ export function ReleaseDetail() {
             This release is published and locked. Release notes cannot be edited.
           </p>
         </div>
+      )}
+
+      {/* Per-repo version snapshot (new releases) */}
+      {release.releaseRepositories && release.releaseRepositories.length > 0 && (
+        <ReleaseRepositoriesTable rows={release.releaseRepositories} />
       )}
 
       {/* Repository tags table */}

@@ -4,7 +4,18 @@
       "PowerShell(cd c:\\\\MyWork\\\\release-managare && dotnet build backend\\\\src\\\\RepoManager.Api\\\\RepoManager.Api.csproj 2>&1 | Where-Object { $_ -match \"error|FAILED\" } | Where-Object { $_ -notmatch \"MSB3026\" })",
       "PowerShell(cd c:\\\\MyWork\\\\release-managare && dotnet build backend\\\\src\\\\RepoManager.Api\\\\RepoManager.Api.csproj -c Release -o \"$env:TEMP\\\\rmapi-check\" 2>&1 | Where-Object { $_ -match \"error CS|error NU|Build succeeded|Build FAILED|Warning\" } | Select-Object -Last 20)",
       "PowerShell(.specify/scripts/powershell/check-prerequisites.ps1 -Json -RequireTasks -IncludeTasks)",
-      "PowerShell(dotnet build backend/RepoManager.sln -c Release --nologo -v q 2>&1 | Where-Object { $_ -notmatch \"MSB3026|MSB3027|retry\" } | Select-Object -Last 20)"
+      "PowerShell(dotnet build backend/RepoManager.sln -c Release --nologo -v q 2>&1 | Where-Object { $_ -notmatch \"MSB3026|MSB3027|retry\" } | Select-Object -Last 20)",
+      "Bash(powershell -File .specify/scripts/powershell/setup-tasks.ps1 -Json)",
+      "Bash(powershell -ExecutionPolicy Bypass -File .specify/scripts/powershell/setup-tasks.ps1 -Json)",
+      "PowerShell(& \"c:\\\\MyWork\\\\release-managare\\\\.specify\\\\scripts\\\\powershell\\\\check-prerequisites.ps1\" -Json -RequireTasks -IncludeTasks 2>&1)",
+      "PowerShell(dotnet build backend/src --nologo -v q 2>&1)",
+      "PowerShell(dotnet build backend/RepoManager.sln --nologo -v q 2>&1)",
+      "Bash(Get-ChildItem -Path \"C:\\\\MyWork\\\\release-managare\\\\backend\" -Recurse -File)",
+      "Bash(Select-Object FullName)",
+      "Bash(Sort-Object FullName)",
+      "PowerShell(.specify/scripts/powershell/check-prerequisites.ps1 -Json -RequireTasks -IncludeTasks 2>&1)",
+      "PowerShell(cd \"c:\\\\MyWork\\\\release-managare\"; dotnet test \"backend/tests/RepoManager.IntegrationTests\" --nologo --filter \"FullyQualifiedName~CreateRelease_WithTwoRepos\" -- xunit.diagnostics=true 2>&1 | Where-Object { $_ -match \"401|login|token|auth|setup|Bearer|Admin\" } | Select-Object -First 30)",
+      "Bash(Get-ChildItem -Path \"c:\\\\MyWork\\\\release-managare\\\\frontend\\\\src\" -Recurse -Filter \"*.tsx\" -o Name)"
     ]
   }
 }

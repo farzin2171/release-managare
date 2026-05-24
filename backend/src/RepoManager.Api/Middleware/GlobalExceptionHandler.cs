@@ -13,19 +13,18 @@ public class GlobalExceptionHandler : IExceptionHandler
 
     public async ValueTask<bool> TryHandleAsync(HttpContext context, Exception exception, CancellationToken ct)
     {
-        var (status, title, extensions) = exception switch
+        var (status, title) = exception switch
         {
-            NotFoundException e => (404, "Not Found", (object?)null),
-            ConflictException e => (409, "Conflict", (object?)null),
-            ValidationException e => (400, "Validation Failed", (object?)new { errors = e.Failures.GroupBy(f => f.PropertyName).ToDictionary(g => g.Key, g => g.Select(f => f.ErrorMessage).ToArray()) }),
-            ExternalServiceException e => (502, "External Service Error", (object?)null),
-            _ => (500, "An unexpected error occurred", (object?)null)
+            NotFoundException => (404, "Not Found"),
+            ConflictException => (409, "Conflict"),
+            ValidationException => (400, "Validation Failed"),
+            ExternalServiceException => (502, "External Service Error"),
+            _ => (500, "An unexpected error occurred")
         };
 
         if (status >= 500)
             _logger.LogError(exception, "Unhandled exception: {Message}", exception.Message);
 
-        var traceId = context.TraceIdentifier;
         var problem = new ProblemDetails
         {
             Status = status,
@@ -33,9 +32,19 @@ public class GlobalExceptionHandler : IExceptionHandler
             Detail = exception.Message,
             Instance = context.Request.Path
         };
-        problem.Extensions["traceId"] = traceId;
-        if (extensions is not null)
-            problem.Extensions["errors"] = ((dynamic)extensions).errors;
+        problem.Extensions["traceId"] = context.TraceIdentifier;
+
+        switch (exception)
+        {
+            case ConflictException { Code: not null } ce:
+                problem.Extensions["code"] = ce.Code;
+                break;
+            case ValidationException ve:
+                problem.Extensions["errors"] = ve.Failures
+                    .GroupBy(f => f.PropertyName)
+                    .ToDictionary(g => g.Key, g => g.Select(f => f.ErrorMessage).ToArray());
+                break;
+        }
 
         context.Response.StatusCode = status;
         await context.Response.WriteAsJsonAsync(problem, ct);

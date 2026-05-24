@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RepoManager.Infrastructure.Persistence;
 
@@ -10,9 +11,11 @@ using RepoManager.Infrastructure.Persistence;
 namespace RepoManager.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260523233044_AddReleaseRepository")]
+    partial class AddReleaseRepository
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.8");
@@ -559,29 +562,12 @@ namespace RepoManager.Infrastructure.Migrations
                     b.Property<Guid>("CreatedByUserId")
                         .HasColumnType("TEXT");
 
-                    b.Property<long?>("EditLockExpiresAt")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<Guid?>("EditLockedByUserId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("EditLockedByUserName")
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("EditedNotesMarkdown")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("GeneratedNotesMarkdown")
                         .IsRequired()
                         .HasColumnType("TEXT");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT")
-                        .HasDefaultValue("");
 
                     b.Property<Guid>("ProjectId")
                         .HasColumnType("TEXT");

@@ -16,16 +16,17 @@ using RepoManager.Application.Repositories;
 using RepoManager.Application.Services;
 using RepoManager.Application.Maintenance;
 using RepoManager.Application.Templates;
+using RepoManager.Application.Validators;
 using RepoManager.Infrastructure.Auth;
 using RepoManager.Infrastructure.Maintenance;
 using RepoManager.Infrastructure.Commits;
+using RepoManager.Infrastructure.Releases;
 using RepoManager.Infrastructure.Confluence;
 using RepoManager.Infrastructure.GitProviders;
 using RepoManager.Infrastructure.Jira;
 using RepoManager.Infrastructure.Persistence;
 using RepoManager.Infrastructure.Projects;
 using RepoManager.Infrastructure.Reconciliation;
-using RepoManager.Infrastructure.Releases;
 using RepoManager.Infrastructure.Repositories;
 using RepoManager.Infrastructure.Sync;
 using RepoManager.Infrastructure.Templates;
@@ -55,6 +56,7 @@ public static class DependencyInjection
         services.AddScoped<IGitProviderService, GitProviderService>();
         services.AddScoped<IRepositoryService, RepositoryService>();
         services.AddScoped<IValidator<SetLatestTagDto>, SetLatestTagDtoValidator>();
+        services.AddScoped<IValidator<CreateReleaseRequest>, CreateReleaseRequestValidator>();
         services.AddScoped<IProjectService, ProjectService>();
         services.AddSingleton<IConventionalCommitParser, ConventionalCommitParser>();
         services.AddScoped<CommitSyncService>();
@@ -69,6 +71,8 @@ public static class DependencyInjection
         services.AddScoped<IConfluenceConnectionService, ConfluenceConnectionService>();
 
         services.AddScoped<IReleaseService, ReleaseService>();
+        services.AddScoped<IVersionBumpService, VersionBumpService>();
+        services.AddScoped<IReleaseCompositionService, ReleaseCompositionService>();
         services.AddScoped<IReleaseNoteTemplateService, ReleaseNoteTemplateService>();
         services.AddScoped<IReleaseReconciliationService, ReleaseReconciliationService>();
 
