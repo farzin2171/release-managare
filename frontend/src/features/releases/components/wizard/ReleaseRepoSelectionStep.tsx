@@ -1,24 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { apiFetch } from '../../../../lib/apiClient'
-
-interface ReleasePreviewRepo {
-  repositoryId: string
-  name: string
-  isPrimary: boolean
-  hasChanges: boolean
-  previousVersion: string
-  suggestedNextVersion: string
-  bumpType: string
-  commitCount: number
-  ticketCount: number
-}
-
-interface ReleasePreviewDto {
-  repositories: ReleasePreviewRepo[]
-  derivedReleaseVersion: string
-  derivedFromRepositoryId: string
-}
+import { useReleasePreview } from '../../hooks/useReleasePreview'
 
 export interface RepoSelection {
   repositoryId: string
@@ -65,15 +46,12 @@ export function ReleaseRepoSelectionStep({ projectId, repoIds, onSubmit, onBack,
   const [bumpTypes, setBumpTypes] = useState<Record<string, BumpType>>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
 
-  const { data: preview, isLoading } = useQuery<ReleasePreviewDto>({
-    queryKey: ['release-preview', projectId, repoIds],
-    queryFn: () =>
-      apiFetch(`/api/v1/projects/${projectId}/releases/preview`, {
-        method: 'POST',
-        body: JSON.stringify({ repositoryIds: repoIds }),
-      }).then((r) => r.json()),
-    enabled: repoIds.length > 0,
-  })
+  const { mutate: fetchPreview, data: preview, isPending: isLoading } = useReleasePreview(projectId)
+
+  useEffect(() => {
+    if (repoIds.length > 0) fetchPreview(repoIds)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Pre-fill versions and bump types from preview
   useEffect(() => {

@@ -28,11 +28,70 @@ public class ReleaseCompositionService : IReleaseCompositionService
         _validator = validator;
     }
 
-    public Task<ReleasePreviewDto> PreviewAsync(
+    public async Task<ReleasePreviewDto> PreviewAsync(
         Guid projectId,
         IReadOnlyList<Guid> repositoryIds,
         CancellationToken ct = default)
-        => throw new NotImplementedException("Implemented in Phase 4 (T024)");
+    {
+        var project = await _db.Projects
+            .Include(p => p.ProjectRepositories)
+                .ThenInclude(pr => pr.Repository)
+            .FirstOrDefaultAsync(p => p.Id == projectId, ct)
+            ?? throw new NotFoundException("Project", projectId);
+
+        var projectRepoIds = project.ProjectRepositories.Select(pr => pr.RepositoryId).ToHashSet();
+        var failures = repositoryIds
+            .Where(id => !projectRepoIds.Contains(id))
+            .Select(id => new ValidationFailure(
+                $"RepositoryIds[{id}]",
+                $"Repository '{id}' does not belong to this project.")
+            {
+                ErrorCode = "repo_not_in_project"
+            })
+            .ToList();
+
+        if (failures.Count > 0)
+            throw new ValidationException(failures);
+
+        // Suggest versions for all repos in parallel
+        var suggestTasks = repositoryIds.ToDictionary(
+            id => id,
+            id => _versionBump.SuggestAsync(id, ct));
+
+        await Task.WhenAll(suggestTasks.Values);
+
+        var suggestions = suggestTasks.ToDictionary(
+            kvp => kvp.Key,
+            kvp => kvp.Value.Result);
+
+        // Build synthetic selections using suggested versions for DeriveReleaseVersion
+        var syntheticSelections = repositoryIds
+            .Select(id => new ReleaseRepositorySelectionDto(
+                id,
+                suggestions[id].SuggestedNextVersion,
+                suggestions[id].BumpType))
+            .ToList();
+
+        var (derivedVersion, derivedFromRepoId) = DeriveReleaseVersion(syntheticSelections, project);
+
+        var repoDtos = repositoryIds.Select(id =>
+        {
+            var pr = project.ProjectRepositories.First(p => p.RepositoryId == id);
+            var s = suggestions[id];
+            return new ReleasePreviewRepoDto(
+                id,
+                pr.Repository.Name,
+                pr.IsPrimary,
+                s.CommitCount > 0,
+                s.PreviousVersion,
+                s.SuggestedNextVersion,
+                s.BumpType,
+                s.CommitCount,
+                s.TicketCount);
+        }).ToList();
+
+        return new ReleasePreviewDto(repoDtos, derivedVersion, derivedFromRepoId);
+    }
 
     public async Task<ReleaseCompositionDto> CreateDraftAsync(
         Guid projectId,

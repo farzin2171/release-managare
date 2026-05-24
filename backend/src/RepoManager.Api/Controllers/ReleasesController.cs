@@ -25,7 +25,18 @@ public class ReleasesController : ControllerBase
         _reconciliation = reconciliation;
     }
 
-    // ── Composition-based endpoints (US1) ────────────────────────────────────
+    // ── Composition-based endpoints (US1 + US2) ──────────────────────────────
+
+    [HttpPost("projects/{projectId:guid}/releases/preview")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> PreviewRelease(
+        Guid projectId,
+        [FromBody] ReleasePreviewRequest request,
+        CancellationToken ct)
+    {
+        var preview = await _composition.PreviewAsync(projectId, request.RepositoryIds, ct);
+        return Ok(preview);
+    }
 
     [HttpGet("projects/{projectId:guid}/releases")]
     public async Task<IActionResult> ListByProject(
@@ -168,3 +179,5 @@ public class ReleasesController : ControllerBase
 }
 
 public record AddJiraTicketsDto(IReadOnlyList<string> TicketKeys);
+
+public record ReleasePreviewRequest(IReadOnlyList<Guid> RepositoryIds);
