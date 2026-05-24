@@ -1,3 +1,5 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
@@ -5,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
 using RepoManager.Infrastructure.Persistence;
 
 namespace RepoManager.IntegrationTests;
@@ -59,6 +62,18 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
                 .Options;
             using var db = new AppDbContext(dbOptions);
             db.Database.EnsureCreated();
+
+            // Program.cs reads Jwt:Secret from builder.Configuration before ConfigureAppConfiguration
+            // adds test values. PostConfigure ensures the validation key matches the generation key
+            // used by AuthService (which reads from IConfiguration at runtime, getting the test value).
+            services.PostConfigure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
+            {
+                var testKey = new SymmetricSecurityKey(
+                    Encoding.UTF8.GetBytes("integration-test-secret-key-that-is-at-least-32-characters"));
+                options.TokenValidationParameters.IssuerSigningKey = testKey;
+                options.TokenValidationParameters.ValidIssuer = "test-issuer";
+                options.TokenValidationParameters.ValidAudience = "test-audience";
+            });
         });
     }
 

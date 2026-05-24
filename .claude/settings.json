@@ -12,7 +12,9 @@
       "PowerShell(dotnet build backend/RepoManager.sln --nologo -v q 2>&1)",
       "Bash(Get-ChildItem -Path \"C:\\\\MyWork\\\\release-managare\\\\backend\" -Recurse -File)",
       "Bash(Select-Object FullName)",
-      "Bash(Sort-Object FullName)"
+      "Bash(Sort-Object FullName)",
+      "PowerShell(.specify/scripts/powershell/check-prerequisites.ps1 -Json -RequireTasks -IncludeTasks 2>&1)",
+      "PowerShell(cd \"c:\\\\MyWork\\\\release-managare\"; dotnet test \"backend/tests/RepoManager.IntegrationTests\" --nologo --filter \"FullyQualifiedName~CreateRelease_WithTwoRepos\" -- xunit.diagnostics=true 2>&1 | Where-Object { $_ -match \"401|login|token|auth|setup|Bearer|Admin\" } | Select-Object -First 30)"
     ]
   }
 }

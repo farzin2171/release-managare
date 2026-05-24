@@ -9,6 +9,7 @@ import { useProjectSyncSnapshot } from './hooks/useProjectSyncSnapshot'
 import { useProjectCoverage, useRepoCoverage } from '../jira-coverage/hooks/useJiraCoverage'
 import { ProjectCoverageAggregate } from '../jira-coverage/components/ProjectCoverageAggregate'
 import { RepoCoverageCard, RepoCoverageCardSkeleton } from '../jira-coverage/components/RepoCoverageCard'
+import { ProjectReleasesList } from '../releases/components/ProjectReleasesList'
 import type { components } from '../../lib/api'
 
 type ProjectDetailDto = components['schemas']['ProjectDetailDto']
@@ -223,6 +224,16 @@ export function ProjectDashboard() {
           <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
             <ProjectRepositoriesTable repositories={projectRepos} />
           </div>
+        </div>
+      )}
+
+      {/* Releases */}
+      {id && (
+        <div>
+          <h2 className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3">
+            Releases
+          </h2>
+          <ProjectReleasesList projectId={id} />
         </div>
       )}
     </div>

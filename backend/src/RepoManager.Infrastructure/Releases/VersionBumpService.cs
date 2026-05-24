@@ -30,8 +30,15 @@ public class VersionBumpService : IVersionBumpService
     {
         var sw = Stopwatch.StartNew();
 
-        var repo = await _db.Repositories.FindAsync([repositoryId], ct)
-            ?? throw new NotFoundException("Repository", repositoryId);
+        var repo = await _db.Repositories.FindAsync([repositoryId], ct);
+        if (repo is null)
+        {
+            sw.Stop();
+            _logger.LogDebug(
+                "VersionBump repoId={RepositoryId} elapsed={ElapsedMs}ms outcome=not_found",
+                repositoryId, sw.ElapsedMilliseconds);
+            throw new NotFoundException("Repository", repositoryId);
+        }
 
         var hasTag = !string.IsNullOrEmpty(repo.LatestTag);
         SemVer? previousSemVer = null;
@@ -39,12 +46,18 @@ public class VersionBumpService : IVersionBumpService
         if (hasTag)
         {
             if (!SemVer.TryParse(repo.LatestTag!, out previousSemVer))
+            {
+                sw.Stop();
+                _logger.LogDebug(
+                    "VersionBump repoId={RepositoryId} elapsed={ElapsedMs}ms outcome=non_semver_tag",
+                    repositoryId, sw.ElapsedMilliseconds);
                 throw new ValidationException([
                     new ValidationFailure("LatestTag", $"Repository '{repo.Name}' has a non-semver tag '{repo.LatestTag}'.")
                     {
                         ErrorCode = "non_semver_tag"
                     }
                 ]);
+            }
         }
 
         // Find commits since the latest tag (commits after the tag commit by timestamp)
