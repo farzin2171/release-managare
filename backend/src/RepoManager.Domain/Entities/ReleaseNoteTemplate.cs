@@ -7,5 +7,5 @@ public class ReleaseNoteTemplate
     public string ContentTemplate { get; set; } = string.Empty;
     public bool IsDefault { get; set; } = false;
 
-    public ICollection<Project> Projects { get; set; } = [];
+    public ICollection<ProjectTemplateBinding> TemplateBindings { get; set; } = [];
 }

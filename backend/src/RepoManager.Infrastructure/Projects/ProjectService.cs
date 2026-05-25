@@ -81,7 +81,6 @@ public class ProjectService : IProjectService
         }
         if (dto.Description is not null) project.Description = dto.Description;
         if (dto.Color is not null) project.Color = dto.Color;
-        if (dto.ReleaseNoteTemplateId.HasValue) project.ReleaseNoteTemplateId = dto.ReleaseNoteTemplateId;
         if (dto.ConfluenceSpaceKey is not null) project.ConfluenceSpaceKey = dto.ConfluenceSpaceKey;
         if (dto.ConfluenceParentPageId is not null) project.ConfluenceParentPageId = dto.ConfluenceParentPageId;
 
@@ -319,7 +318,7 @@ public class ProjectService : IProjectService
 
         return new ProjectDto(
             p.Id, p.Name, p.Description, p.Color,
-            p.ReleaseNoteTemplateId, p.ConfluenceSpaceKey, p.ConfluenceParentPageId,
+            p.ConfluenceSpaceKey, p.ConfluenceParentPageId,
             p.JiraConnectionId, keys, p.FixVersionPattern,
             p.AutoCreateFixVersion, p.MatchSubtasksToParents,
             p.CreatedAt, p.UpdatedAt, repos);

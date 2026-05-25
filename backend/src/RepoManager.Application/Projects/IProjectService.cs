@@ -24,7 +24,6 @@ public record UpdateProjectDto(
     string? Name,
     string? Description,
     string? Color,
-    Guid? ReleaseNoteTemplateId,
     string? ConfluenceSpaceKey,
     string? ConfluenceParentPageId);
 
@@ -48,7 +47,6 @@ public record ProjectDto(
     string Name,
     string? Description,
     string Color,
-    Guid? ReleaseNoteTemplateId,
     string? ConfluenceSpaceKey,
     string? ConfluenceParentPageId,
     Guid? JiraConnectionId,

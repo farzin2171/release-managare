@@ -24,7 +24,17 @@
       "PowerShell(New-Item -ItemType Directory -Force \"specs/007-project-page-templates/checklists\")",
       "PowerShell(.specify/scripts/powershell/setup-plan.ps1 -Json)",
       "PowerShell(.specify/scripts/powershell/check-prerequisites.ps1 -Json -PathsOnly)",
-      "PowerShell(cd \"c:\\\\MyWork\\\\release-managare\" && powershell -ExecutionPolicy Bypass -File \".specify/scripts/powershell/setup-tasks.ps1\" -Json 2>&1)"
+      "PowerShell(cd \"c:\\\\MyWork\\\\release-managare\" && powershell -ExecutionPolicy Bypass -File \".specify/scripts/powershell/setup-tasks.ps1\" -Json 2>&1)",
+      "Bash(Get-ChildItem -Path \"C:\\\\MyWork\\\\release-managare\\\\backend\\\\src\" -Recurse -Force)",
+      "Bash(Select-Object -Property FullName, PSIsContainer)",
+      "Bash(pwsh -Command \"Get-ChildItem -Path 'C:\\\\MyWork\\\\release-managare\\\\backend\\\\src' -Recurse -Force | Select-Object -Property FullName, PSIsContainer | Sort-Object FullName\")",
+      "Bash(pwsh -Command \"tree 'C:\\\\MyWork\\\\release-managare\\\\backend\\\\src' -L 3\")",
+      "Bash(pwsh -Command \"Get-ChildItem -Path 'C:\\\\MyWork\\\\release-managare\\\\backend\\\\src' -Directory | Select-Object -ExpandProperty Name\")",
+      "Bash(pwsh -Command '$srcPath = \"C:\\\\MyWork\\\\release-managare\\\\backend\\\\src\"; Get-ChildItem -Path $srcPath -Directory | ForEach-Object { $project = $_.Name; Write-Host \"\"; Write-Host \"=== $project ===\" -ForegroundColor Cyan; Get-ChildItem -Path $_.FullName -Exclude @\\(\"bin\", \"obj\", \".vs\"\\) -Recurse -File | Where-Object { $_.Extension -in \".cs\", \".csproj\", \".json\", \".xml\" } | Select-Object -ExpandProperty FullName | ForEach-Object { $_ -replace \"C:\\\\\\\\MyWork\\\\\\\\release-managare\\\\\\\\backend\\\\\\\\src\", \".\" } | Sort-Object }')",
+      "Bash(powershell -command '[System.Reflection.Assembly]::LoadFile\\(\\(Resolve-Path '\\\\''Handlebars.dll'\\\\''\\).Path\\).GetTypes\\(\\) | Where-Object { $_.Name -like '\\\\''*Formatter*'\\\\'' -or $_.Name -like '\\\\''*IFormatter*'\\\\'' } | Select-Object -ExpandProperty FullName')",
+      "Bash(cat)",
+      "Read(//c/Users/ffaghirnavaz/AppData/Local/Temp/hbs_probe/**)",
+      "Bash(dotnet run *)"
     ]
   }
 }
