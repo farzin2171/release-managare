@@ -34,7 +34,15 @@
       "Bash(powershell -command '[System.Reflection.Assembly]::LoadFile\\(\\(Resolve-Path '\\\\''Handlebars.dll'\\\\''\\).Path\\).GetTypes\\(\\) | Where-Object { $_.Name -like '\\\\''*Formatter*'\\\\'' -or $_.Name -like '\\\\''*IFormatter*'\\\\'' } | Select-Object -ExpandProperty FullName')",
       "Bash(cat)",
       "Read(//c/Users/ffaghirnavaz/AppData/Local/Temp/hbs_probe/**)",
-      "Bash(dotnet run *)"
+      "Bash(dotnet run *)",
+      "Bash(dotnet test *)",
+      "Bash(python -c \"import sys, json; d = json.load\\(sys.stdin\\); print\\(list\\(d.get\\('dependencies', {}\\).keys\\(\\)\\)[:30]\\)\")",
+      "Bash(node -e \"const d=require\\('./frontend/package.json'\\); console.log\\(Object.keys\\(d.dependencies\\).join\\(' '\\)\\)\")",
+      "PowerShell(Get-ChildItem \"c:\\\\MyWork\\\\release-managare\\\\frontend\\\\src\\\\features\\\\\" | ForEach-Object { $_.FullName })",
+      "PowerShell(Get-ChildItem \"c:\\\\MyWork\\\\release-managare\\\\frontend\\\\src\\\\features\\\\releases\\\\\" -Recurse | ForEach-Object { $_.FullName })",
+      "PowerShell(Get-ChildItem \"c:\\\\MyWork\\\\release-managare\\\\specs\\\\007-project-page-templates\\\\\" -Recurse | ForEach-Object { $_.FullName })",
+      "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\MyWork\\\\release-managare\\\\frontend\\\\src\\\\features\\\\releases\\\\wizard\\\\store\")",
+      "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\MyWork\\\\release-managare\\\\frontend\\\\src\\\\features\\\\releases\\\\wizard\\\\steps\")"
     ]
   }
 }

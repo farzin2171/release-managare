@@ -92,6 +92,13 @@ public static class DependencyInjection
         services.AddSingleton<HandlebarsDotNet.IHandlebars>(sp =>
             HandlebarsFactory.Create(sp.GetRequiredService<MissingTokenRecorder>()));
 
+        services.AddScoped<IValidator<Application.DTOs.Bindings.CreateBindingRequest>, CreateBindingRequestValidator>();
+        services.AddScoped<IValidator<Application.DTOs.Bindings.UpdateBindingRequest>, UpdateBindingRequestValidator>();
+        services.AddScoped<ProjectCustomVariableUpsertValidator>();
+        services.AddScoped<IProjectTemplateBindingService, ProjectTemplateBindingService>();
+        services.AddScoped<IProjectCustomVariableService, ProjectCustomVariableService>();
+        services.AddScoped<IReleaseRenderService, ReleaseRenderService>();
+
         return services;
     }
 }
