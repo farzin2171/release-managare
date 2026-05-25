@@ -19,11 +19,11 @@
 
 **Purpose**: Add new domain entities and enums that have zero external dependencies. All subsequent phases depend on this phase being complete.
 
-- [ ] T001 [P] Create `ProjectTemplateBinding` POCO entity (all fields from data-model.md) in `backend/src/RepoManager.Domain/Entities/ProjectTemplateBinding.cs`
-- [ ] T002 [P] Create `ProjectCustomVariable` POCO entity (all fields from data-model.md) in `backend/src/RepoManager.Domain/Entities/ProjectCustomVariable.cs`
-- [ ] T003 [P] Create `TemplateBindingKind` enum (`ReleaseNotes | Checklist | Custom`) in `backend/src/RepoManager.Domain/Enums/TemplateBindingKind.cs`
-- [ ] T004 [P] Create `VersionBumpStrategy` enum (`Patch | Minor | Major`) in `backend/src/RepoManager.Domain/Enums/VersionBumpStrategy.cs`
-- [ ] T005 Modify `Project` entity: add `VersionBumpStrategy` property (default `Minor`), add `ICollection<ProjectTemplateBinding>` and `ICollection<ProjectCustomVariable>` navigation properties, remove `DefaultReleaseNoteTemplateId` property in `backend/src/RepoManager.Domain/Entities/Project.cs`
+- [X] T001 [P] Create `ProjectTemplateBinding` POCO entity (all fields from data-model.md) in `backend/src/RepoManager.Domain/Entities/ProjectTemplateBinding.cs`
+- [X] T002 [P] Create `ProjectCustomVariable` POCO entity (all fields from data-model.md) in `backend/src/RepoManager.Domain/Entities/ProjectCustomVariable.cs`
+- [X] T003 [P] Create `TemplateBindingKind` enum (`ReleaseNotes | Checklist | Custom`) in `backend/src/RepoManager.Domain/Enums/TemplateBindingKind.cs`
+- [X] T004 [P] Create `VersionBumpStrategy` enum (`Patch | Minor | Major`) in `backend/src/RepoManager.Domain/Enums/VersionBumpStrategy.cs`
+- [X] T005 Modify `Project` entity: add `VersionBumpStrategy` property (default `Minor`), add `ICollection<ProjectTemplateBinding>` and `ICollection<ProjectCustomVariable>` navigation properties, remove `DefaultReleaseNoteTemplateId` property in `backend/src/RepoManager.Domain/Entities/Project.cs`
 
 **Checkpoint**: `dotnet build RepoManager.Domain` passes with zero errors.
 
