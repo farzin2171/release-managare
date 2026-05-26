@@ -104,21 +104,21 @@
 
 ### Backend Implementation
 
-- [ ] T041 [US2] Implement `ProjectTemplateBindingService.ReorderAsync` wrapping all sort-order swaps in an explicit `BeginTransactionAsync()` / `CommitAsync()` block, validating that `orderedIds` matches the project's current binding set in `backend/src/RepoManager.Infrastructure/Services/ProjectTemplateBindingService.cs`
-- [ ] T042 [US2] Add `POST /projects/{projectId}/template-bindings/reorder` endpoint to `ProjectTemplateBindingsController` (Admin role, validates `orderedIds` count matches current bindings, returns updated list) in `backend/src/RepoManager.Api/Controllers/ProjectTemplateBindingsController.cs`
-- [ ] T043 [US2] Implement `ReleaseRenderService.PublishAsync`: validate all submitted titles (1–255 chars), publish pages via `IConfluencePublisher.CreateOrUpdatePageAsync` in `SortOrder`, collect page IDs, then update the primary `ReleaseNotes` page to append `<ri:page>` cross-links for all pages with `LinkFromReleaseNotes = true` in `backend/src/RepoManager.Infrastructure/Services/ReleaseRenderService.cs`
-- [ ] T044 [US2] Add `POST /releases/{releaseId}/publish-pages` endpoint to `ReleasesController` mapping to `IReleaseRenderService.PublishAsync`; map `ExternalServiceException` to 502 in `backend/src/RepoManager.Api/Controllers/ReleasesController.cs`
+- [X] T041 [US2] Implement `ProjectTemplateBindingService.ReorderAsync` wrapping all sort-order swaps in an explicit `BeginTransactionAsync()` / `CommitAsync()` block, validating that `orderedIds` matches the project's current binding set in `backend/src/RepoManager.Infrastructure/Services/ProjectTemplateBindingService.cs`
+- [X] T042 [US2] Add `POST /projects/{projectId}/template-bindings/reorder` endpoint to `ProjectTemplateBindingsController` (Admin role, validates `orderedIds` count matches current bindings, returns updated list) in `backend/src/RepoManager.Api/Controllers/ProjectTemplateBindingsController.cs`
+- [X] T043 [US2] Implement `ReleaseRenderService.PublishAsync`: validate all submitted titles (1–255 chars), publish pages via `IConfluencePublisher.CreateOrUpdatePageAsync` in `SortOrder`, collect page IDs, then update the primary `ReleaseNotes` page to append `<ri:page>` cross-links for all pages with `LinkFromReleaseNotes = true` in `backend/src/RepoManager.Infrastructure/Services/ReleaseRenderService.cs`
+- [X] T044 [US2] Add `POST /releases/{releaseId}/publish-pages` endpoint to `ReleasesController` mapping to `IReleaseRenderService.PublishAsync`; map `ExternalServiceException` to 502 in `backend/src/RepoManager.Api/Controllers/ReleasesController.cs`
 
 ### Frontend Implementation
 
-- [ ] T045 [US2] Wire drag-to-reorder into `ProjectPagesTab` using `@dnd-kit/sortable`; call `POST /reorder` on drag-drop end; show optimistic reorder with rollback on error in `frontend/src/features/settings/projects/ProjectPagesTab.tsx`
-- [ ] T046 [US2] Add `reRenderPages` and `resolveConflict` actions to `useWizardStore`: `reRenderPages` merges fresh pages into existing slots (`server → server`, `edited → conflict`, `conflict → conflict` preserving prior draft); `resolveConflict('keep')` → `edited`; `resolveConflict('discard')` → `server` in `frontend/src/features/releases/wizard/store/useWizardStore.ts`
-- [ ] T047 [US2] Create `ConflictResolutionDialog` showing per-tab "keep my edits / discard and use fresh render" choice; block the publish button when any slot is in `conflict` state in `frontend/src/features/releases/wizard/ConflictResolutionDialog.tsx`
-- [ ] T048 [US2] Wire `PreparePagesStep` into the existing `ReleaseWizard` as the first step; add confirmation dialog before `POST /publish-pages`; show per-page publish status list on partial failure (abort-on-first-error with re-run capability) in `frontend/src/features/releases/wizard/`
+- [X] T045 [US2] Wire drag-to-reorder into `ProjectPagesTab` using `@dnd-kit/sortable`; call `POST /reorder` on drag-drop end; show optimistic reorder with rollback on error in `frontend/src/features/settings/projects/ProjectPagesTab.tsx`
+- [X] T046 [US2] Add `reRenderPages` and `resolveConflict` actions to `useWizardStore`: `reRenderPages` merges fresh pages into existing slots (`server → server`, `edited → conflict`, `conflict → conflict` preserving prior draft); `resolveConflict('keep')` → `edited`; `resolveConflict('discard')` → `server` in `frontend/src/features/releases/wizard/store/useWizardStore.ts`
+- [X] T047 [US2] Create `ConflictResolutionDialog` showing per-tab "keep my edits / discard and use fresh render" choice; block the publish button when any slot is in `conflict` state in `frontend/src/features/releases/wizard/ConflictResolutionDialog.tsx`
+- [X] T048 [US2] Wire `PreparePagesStep` into the existing `ReleaseWizard` as the first step; add confirmation dialog before `POST /publish-pages`; show per-page publish status list on partial failure (abort-on-first-error with re-run capability) in `frontend/src/features/releases/wizard/`
 
 ### Integration Tests
 
-- [ ] T049 [US2] Add integration tests for binding CRUD (full create/update/delete), single-`ReleaseNotes` constraint, reorder atomicity, and idempotent re-publish (same release published twice produces zero duplicate pages) in `backend/tests/RepoManager.IntegrationTests/Bindings/TemplateBindingCrudTests.cs` and `backend/tests/RepoManager.IntegrationTests/Releases/PublishPagesTests.cs`
+- [X] T049 [US2] Add integration tests for binding CRUD (full create/update/delete), single-`ReleaseNotes` constraint, reorder atomicity, and idempotent re-publish (same release published twice produces zero duplicate pages) in `backend/tests/RepoManager.IntegrationTests/Bindings/TemplateBindingCrudTests.cs` and `backend/tests/RepoManager.IntegrationTests/Releases/PublishPagesTests.cs`
 
 **Checkpoint**: User Stories 1 and 2 are both independently functional — admin can bind, prepare, edit, publish, cross-link, and idempotently re-publish.
 

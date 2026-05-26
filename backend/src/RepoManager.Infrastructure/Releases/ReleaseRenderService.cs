@@ -1,8 +1,10 @@
 using FluentValidation.Results;
 using HandlebarsDotNet;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RepoManager.Application.Common.Exceptions;
+using RepoManager.Application.Confluence;
 using RepoManager.Application.DTOs.Releases;
 using RepoManager.Application.Services;
 using RepoManager.Domain.Enums;
@@ -17,23 +19,31 @@ public class ReleaseRenderService : IReleaseRenderService
     private readonly AppDbContext _db;
     private readonly IHandlebars _hbs;
     private readonly MissingTokenRecorder _recorder;
+    private readonly IConfluencePublisher _publisher;
+    private readonly IDataProtector _protector;
     private readonly ILogger<ReleaseRenderService> _logger;
 
     public ReleaseRenderService(
         AppDbContext db,
         IHandlebars hbs,
         MissingTokenRecorder recorder,
+        IConfluencePublisher publisher,
+        IDataProtectionProvider dataProtection,
         ILogger<ReleaseRenderService> logger)
     {
         _db = db;
         _hbs = hbs;
         _recorder = recorder;
+        _publisher = publisher;
+        _protector = dataProtection.CreateProtector("ConfluenceConnection.ApiToken");
         _logger = logger;
     }
 
-    // Test-friendly constructor (no logger required)
+    // Test-friendly constructor (PrepareAsync tests only — PublishAsync not exercised here)
     internal ReleaseRenderService(AppDbContext db, IHandlebars hbs, MissingTokenRecorder recorder)
         : this(db, hbs, recorder,
+            null!,
+            new EphemeralDataProtectionProvider(),
             Microsoft.Extensions.Logging.Abstractions.NullLogger<ReleaseRenderService>.Instance)
     {
     }
@@ -163,11 +173,133 @@ public class ReleaseRenderService : IReleaseRenderService
         return new PreparedReleaseDto(ctx, pages, warnings);
     }
 
-    public Task<PublishResultDto> PublishAsync(
+    public async Task<PublishResultDto> PublishAsync(
         Guid releaseId,
         PublishPagesRequest request,
         CancellationToken ct = default)
-        => throw new NotImplementedException("PublishAsync is implemented in Phase 4 (T043).");
+    {
+        // Validate all titles
+        var invalid = request.Pages
+            .Where(p => string.IsNullOrWhiteSpace(p.Title) || p.Title.Length > 255)
+            .ToList();
+        if (invalid.Count > 0)
+        {
+            throw new ValidationException([
+                new ValidationFailure("Pages",
+                    "One or more page titles are empty or exceed 255 characters.")
+                { ErrorCode = "invalid_page_title" }
+            ]);
+        }
+
+        var release = await _db.Releases
+            .Include(r => r.Project)
+            .FirstOrDefaultAsync(r => r.Id == releaseId, ct)
+            ?? throw new NotFoundException("Release", releaseId);
+
+        var project = release.Project;
+
+        if (string.IsNullOrEmpty(project.ConfluenceSpaceKey))
+            throw new ConflictException(
+                "Confluence space key is not configured for this project.",
+                "no_confluence_space");
+
+        var connection = await _db.ConfluenceConnections
+            .FirstOrDefaultAsync(c => c.IsActive, ct)
+            ?? throw new NotFoundException("ConfluenceConnection", "active");
+
+        var conn = new ConfluenceConnectionDto(
+            connection.BaseUrl,
+            connection.Username,
+            _protector.Unprotect(connection.EncryptedApiToken));
+
+        // Load binding kinds so we know which page is the primary ReleaseNotes page
+        var bindingKinds = await _db.TemplateBindings
+            .Where(b => b.ProjectId == project.Id)
+            .Select(b => new { b.Id, b.Kind })
+            .ToDictionaryAsync(b => b.Id, b => b.Kind, ct);
+
+        var sortedPages = request.Pages.OrderBy(p => p.SortOrder).ToList();
+        var publishedPages = new List<PublishedPageDto>();
+        PublishPageDto? primaryPage = null;
+        string? primaryPageConfluenceId = null;
+
+        // Publish all pages in sort order
+        foreach (var page in sortedPages)
+        {
+            var parentPageId = page.ParentPageId ?? project.ConfluenceParentPageId ?? string.Empty;
+            var result = await _publisher.CreateOrUpdatePageAsync(
+                conn,
+                project.ConfluenceSpaceKey,
+                parentPageId,
+                page.Title,
+                page.Body,
+                page.ExistingConfluencePageId,
+                ct);
+
+            if (!result.Success)
+                throw new ExternalServiceException(
+                    "Confluence",
+                    result.ErrorMessage ?? $"Failed to publish page '{page.Title}'",
+                    null);
+
+            var published = new PublishedPageDto(
+                page.BindingId,
+                result.PageId!,
+                result.PageUrl!,
+                page.Title);
+
+            publishedPages.Add(published);
+
+            // Track primary ReleaseNotes page (first binding of that kind in sort order)
+            if (primaryPage is null
+                && bindingKinds.TryGetValue(page.BindingId, out var kind)
+                && kind == TemplateBindingKind.ReleaseNotes)
+            {
+                primaryPage = page;
+                primaryPageConfluenceId = result.PageId;
+            }
+        }
+
+        // Append cross-links to the primary ReleaseNotes page for any page with LinkFromReleaseNotes = true
+        var linkedPages = publishedPages
+            .Where(pp =>
+            {
+                var src = sortedPages.FirstOrDefault(p => p.BindingId == pp.BindingId);
+                return src?.LinkFromReleaseNotes == true && pp.BindingId != primaryPage?.BindingId;
+            })
+            .ToList();
+
+        if (primaryPage is not null && primaryPageConfluenceId is not null && linkedPages.Count > 0)
+        {
+            var crossLinks = "\n\n---\n\n## Related Pages\n\n" +
+                string.Join("\n", linkedPages.Select(pp => $"- [{pp.Title}]({pp.ConfluenceUrl})"));
+
+            var updatedBody = primaryPage.Body + crossLinks;
+            var parentPageId = primaryPage.ParentPageId ?? project.ConfluenceParentPageId ?? string.Empty;
+
+            var updateResult = await _publisher.CreateOrUpdatePageAsync(
+                conn,
+                project.ConfluenceSpaceKey,
+                parentPageId,
+                primaryPage.Title,
+                updatedBody,
+                primaryPageConfluenceId,
+                ct);
+
+            if (!updateResult.Success)
+            {
+                _logger.LogWarning(
+                    "PublishAsync releaseId={ReleaseId}: failed to append cross-links to page {PageId}: {Error}",
+                    releaseId, primaryPageConfluenceId, updateResult.ErrorMessage);
+            }
+        }
+
+        _logger.LogInformation(
+            "PublishAsync releaseId={ReleaseId} published {Count} pages",
+            releaseId, publishedPages.Count);
+
+        return new PublishResultDto(publishedPages);
+    }
 
     public Task<TemplatePreviewDto> PreviewTemplateAsync(
         Guid templateId,
@@ -298,4 +430,18 @@ public class ReleaseRenderService : IReleaseRenderService
 
     private static object TicketToAnon(TicketDto t) =>
         new { id = t.Id, summary = t.Summary, type = t.Type ?? string.Empty, isBreaking = t.IsBreaking };
+}
+
+// Minimal IDataProtectionProvider used only by the test-friendly constructor.
+// PublishAsync is never exercised through that path.
+file sealed class EphemeralDataProtectionProvider : IDataProtectionProvider
+{
+    public IDataProtector CreateProtector(string purpose) => new NullProtector();
+
+    private sealed class NullProtector : IDataProtector
+    {
+        public IDataProtector CreateProtector(string purpose) => this;
+        public byte[] Protect(byte[] plaintext) => plaintext;
+        public byte[] Unprotect(byte[] protectedData) => protectedData;
+    }
 }

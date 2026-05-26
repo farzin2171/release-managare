@@ -182,6 +182,17 @@ public class ReleasesController : ControllerBase
         return Ok(result);
     }
 
+    [HttpPost("releases/{id:guid}/publish-pages")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> PublishPages(
+        Guid id,
+        [FromBody] PublishPagesRequest request,
+        CancellationToken ct)
+    {
+        var result = await _render.PublishAsync(id, request, ct);
+        return Ok(result);
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private Guid? GetUserId()

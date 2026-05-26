@@ -27,7 +27,8 @@ public record PublishPageDto(
     string Body,
     string? ParentPageId,
     bool LinkFromReleaseNotes,
-    int SortOrder);
+    int SortOrder,
+    string? ExistingConfluencePageId = null);
 
 public record PublishResultDto(IReadOnlyList<PublishedPageDto> PublishedPages);
 

@@ -1,10 +1,26 @@
 import { useState } from 'react'
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import type { components } from '../../../lib/api'
 import {
   useProjectBindings,
   useCreateBinding,
   useUpdateBinding,
   useDeleteBinding,
+  useReorderBindings,
 } from './hooks/useProjectBindings'
 import { BindingFormSheet } from './BindingFormSheet'
 
@@ -37,11 +53,85 @@ function KindBadge({ kind }: { kind: string }) {
 function SkeletonRow() {
   return (
     <tr>
-      {[1, 2, 3, 4, 5, 6].map((i) => (
+      {[1, 2, 3, 4, 5, 6, 7].map((i) => (
         <td key={i} className="py-3 pr-4">
-          <div className="h-4 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" style={{ width: `${50 + i * 10}%` }} />
+          <div className="h-4 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" style={{ width: `${50 + i * 8}%` }} />
         </td>
       ))}
+    </tr>
+  )
+}
+
+interface SortableRowProps {
+  binding: ProjectTemplateBindingDto
+  isAdmin: boolean
+  onEdit: (b: ProjectTemplateBindingDto) => void
+  onDelete: (b: ProjectTemplateBindingDto) => void
+  deleteIsPending: boolean
+}
+
+function SortableRow({ binding: b, isAdmin, onEdit, onDelete, deleteIsPending }: SortableRowProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: b.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+
+  return (
+    <tr
+      ref={setNodeRef}
+      style={style}
+      className="hover:bg-gray-50 dark:hover:bg-gray-700/30"
+    >
+      {isAdmin && (
+        <td className="py-2 pr-2 w-6">
+          <span
+            {...attributes}
+            {...listeners}
+            className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 select-none text-base leading-none"
+            title="Drag to reorder"
+          >
+            ⠿
+          </span>
+        </td>
+      )}
+      <td className="py-2 pr-4">
+        <KindBadge kind={b.kind} />
+      </td>
+      <td className="py-2 pr-4 font-mono text-xs text-gray-700 dark:text-gray-300 max-w-xs truncate">
+        {b.pageTitleTemplate}
+      </td>
+      <td className="py-2 pr-4 text-xs text-gray-500 dark:text-gray-400">
+        {b.parentPageId ?? <span className="italic">Project default</span>}
+      </td>
+      <td className="py-2 pr-4 text-center">
+        {b.linkFromReleaseNotes ? (
+          <span className="text-green-600 dark:text-green-400" title="Linked from release notes">✓</span>
+        ) : (
+          <span className="text-gray-300 dark:text-gray-600">—</span>
+        )}
+      </td>
+      <td className="py-2 pr-4 text-gray-500 dark:text-gray-400 text-center">{b.sortOrder}</td>
+      {isAdmin && (
+        <td className="py-2 text-right whitespace-nowrap">
+          <button
+            onClick={() => onEdit(b)}
+            className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 mr-3"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => onDelete(b)}
+            disabled={deleteIsPending}
+            className="text-xs text-red-500 hover:text-red-700 disabled:opacity-50"
+          >
+            Delete
+          </button>
+        </td>
+      )}
     </tr>
   )
 }
@@ -53,10 +143,15 @@ interface ProjectPagesTabProps {
 }
 
 export function ProjectPagesTab({ projectId, templates, isAdmin }: ProjectPagesTabProps) {
-  const { data: bindings = [], isLoading } = useProjectBindings(projectId)
+  const { data: serverBindings = [], isLoading } = useProjectBindings(projectId)
   const createBinding = useCreateBinding(projectId)
   const updateBinding = useUpdateBinding(projectId)
   const deleteBinding = useDeleteBinding(projectId)
+  const reorderBindings = useReorderBindings(projectId)
+
+  // Optimistic local order
+  const [localOrder, setLocalOrder] = useState<ProjectTemplateBindingDto[] | null>(null)
+  const bindings = localOrder ?? serverBindings
 
   const [sheetOpen, setSheetOpen] = useState(false)
   const [editingBinding, setEditingBinding] = useState<ProjectTemplateBindingDto | undefined>()
@@ -66,6 +161,28 @@ export function ProjectPagesTab({ projectId, templates, isAdmin }: ProjectPagesT
   const showToast = (kind: 'success' | 'error', message: string) => {
     setToast({ kind, message })
     setTimeout(() => setToast(null), 3500)
+  }
+
+  const sensors = useSensors(useSensor(PointerSensor))
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+
+    const oldIndex = bindings.findIndex((b) => b.id === active.id)
+    const newIndex = bindings.findIndex((b) => b.id === over.id)
+    if (oldIndex === -1 || newIndex === -1) return
+
+    const reordered = arrayMove(bindings, oldIndex, newIndex)
+    setLocalOrder(reordered) // optimistic
+
+    try {
+      await reorderBindings.mutateAsync(reordered.map((b) => b.id))
+      setLocalOrder(null) // server is now authoritative
+    } catch {
+      setLocalOrder(null) // rollback
+      showToast('error', 'Reorder failed. Order has been reset.')
+    }
   }
 
   const openAdd = () => {
@@ -114,6 +231,7 @@ export function ProjectPagesTab({ projectId, templates, isAdmin }: ProjectPagesT
       <div className="flex items-center justify-between">
         <p className="text-sm text-gray-500 dark:text-gray-400">
           Bind page templates to this project. Each binding auto-fills a Confluence page in the release wizard.
+          {isAdmin && ' Drag rows to reorder.'}
         </p>
         {isAdmin && (
           <button
@@ -139,9 +257,7 @@ export function ProjectPagesTab({ projectId, templates, isAdmin }: ProjectPagesT
 
       {isLoading ? (
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
-          <thead>
-            <TableHead />
-          </thead>
+          <thead><TableHead isAdmin={isAdmin} /></thead>
           <tbody className="divide-y divide-gray-100 dark:divide-gray-700/50">
             <SkeletonRow />
             <SkeletonRow />
@@ -159,51 +275,25 @@ export function ProjectPagesTab({ projectId, templates, isAdmin }: ProjectPagesT
           </p>
         </div>
       ) : (
-        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
-          <thead>
-            <TableHead />
-          </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-gray-700/50">
-            {bindings.map((b) => (
-              <tr key={b.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
-                <td className="py-2 pr-4">
-                  <KindBadge kind={b.kind} />
-                </td>
-                <td className="py-2 pr-4 font-mono text-xs text-gray-700 dark:text-gray-300 max-w-xs truncate">
-                  {b.pageTitleTemplate}
-                </td>
-                <td className="py-2 pr-4 text-xs text-gray-500 dark:text-gray-400">
-                  {b.parentPageId ?? <span className="italic">Project default</span>}
-                </td>
-                <td className="py-2 pr-4 text-center">
-                  {b.linkFromReleaseNotes ? (
-                    <span className="text-green-600 dark:text-green-400" title="Linked from release notes">✓</span>
-                  ) : (
-                    <span className="text-gray-300 dark:text-gray-600">—</span>
-                  )}
-                </td>
-                <td className="py-2 pr-4 text-gray-500 dark:text-gray-400 text-center">{b.sortOrder}</td>
-                {isAdmin && (
-                  <td className="py-2 text-right whitespace-nowrap">
-                    <button
-                      onClick={() => openEdit(b)}
-                      className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 mr-3"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(b)}
-                      disabled={deleteBinding.isPending}
-                      className="text-xs text-red-500 hover:text-red-700 disabled:opacity-50"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={bindings.map((b) => b.id)} strategy={verticalListSortingStrategy}>
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
+              <thead><TableHead isAdmin={isAdmin} /></thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-700/50">
+                {bindings.map((b) => (
+                  <SortableRow
+                    key={b.id}
+                    binding={b}
+                    isAdmin={isAdmin}
+                    onEdit={openEdit}
+                    onDelete={handleDelete}
+                    deleteIsPending={deleteBinding.isPending}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </SortableContext>
+        </DndContext>
       )}
 
       {sheetOpen && (
@@ -220,12 +310,15 @@ export function ProjectPagesTab({ projectId, templates, isAdmin }: ProjectPagesT
   )
 }
 
-function TableHead() {
+function TableHead({ isAdmin }: { isAdmin: boolean }) {
+  const cols = isAdmin
+    ? ['', 'Kind', 'Title template', 'Parent page', 'Linked', 'Order', '']
+    : ['Kind', 'Title template', 'Parent page', 'Linked', 'Order']
   return (
     <tr>
-      {['Kind', 'Title template', 'Parent page', 'Linked', 'Order', ''].map((h) => (
+      {cols.map((h, i) => (
         <th
-          key={h}
+          key={i}
           className="pb-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 pr-4"
         >
           {h}
