@@ -4,6 +4,7 @@ import { apiFetch } from '../../../../lib/apiClient'
 import type { components } from '../../../../lib/api'
 import { useWizardStore } from '../store/useWizardStore'
 import { PreparedPageTab } from '../PreparedPageTab'
+import { ReconciliationRefreshBar } from '../ReconciliationRefreshBar'
 
 type PreparedReleaseDto = components['schemas']['PreparedReleaseDto']
 
@@ -107,6 +108,9 @@ export function PreparePagesStep({ releaseId, projectId, onBack, onNext }: Prepa
 
   return (
     <div className="space-y-4">
+      {/* Reconciliation refresh bar */}
+      <ReconciliationRefreshBar releaseId={releaseId} />
+
       {/* Tab navigation */}
       <div className="border-b border-gray-200 dark:border-gray-700">
         <nav className="-mb-px flex gap-4 overflow-x-auto">

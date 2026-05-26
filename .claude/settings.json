@@ -42,7 +42,9 @@
       "PowerShell(Get-ChildItem \"c:\\\\MyWork\\\\release-managare\\\\frontend\\\\src\\\\features\\\\releases\\\\\" -Recurse | ForEach-Object { $_.FullName })",
       "PowerShell(Get-ChildItem \"c:\\\\MyWork\\\\release-managare\\\\specs\\\\007-project-page-templates\\\\\" -Recurse | ForEach-Object { $_.FullName })",
       "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\MyWork\\\\release-managare\\\\frontend\\\\src\\\\features\\\\releases\\\\wizard\\\\store\")",
-      "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\MyWork\\\\release-managare\\\\frontend\\\\src\\\\features\\\\releases\\\\wizard\\\\steps\")"
+      "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\MyWork\\\\release-managare\\\\frontend\\\\src\\\\features\\\\releases\\\\wizard\\\\steps\")",
+      "Bash(grep -v \"obj\\\\\\\\|bin\\\\\\\\|cache\")",
+      "Bash(grep -v \"\\\\\\\\\\\\\\\\obj\\\\\\\\\\\\\\\\\\\\\\\\|\\\\\\\\\\\\\\\\bin\\\\\\\\\\\\\\\\\")"
     ]
   }
 }

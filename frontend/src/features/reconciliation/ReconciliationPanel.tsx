@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiFetch } from '../../lib/apiClient'
 import { useAuthStore } from '../../lib/authStore'
 import type { components } from '../../lib/api'
+import { useWizardStore } from '../releases/wizard/store/useWizardStore'
 
 type ReconciliationResultDto = components['schemas']['ReconciliationResultDto']
 type MatchedTicketDto = components['schemas']['MatchedTicketDto']
@@ -95,6 +96,7 @@ export function ReconciliationPanel({ releaseId, onBack, onNext }: Reconciliatio
   const role = useAuthStore((s) => s.role)
   const isAdmin = role === 'Admin'
   const qc = useQueryClient()
+  const setReconciliationData = useWizardStore((s) => s.setReconciliationData)
 
   const [selectedGitOnly, setSelectedGitOnly] = useState<Set<string>>(new Set())
 
@@ -113,7 +115,16 @@ export function ReconciliationPanel({ releaseId, onBack, onNext }: Reconciliatio
         if (!r.ok) throw new Error('Reconciliation failed')
         return r.json() as Promise<ReconciliationResultDto>
       }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['reconciliation', releaseId] }),
+    onSuccess: (result) => {
+      qc.invalidateQueries({ queryKey: ['reconciliation', releaseId] })
+      setReconciliationData({
+        matchedCount: result.matchedCount,
+        jiraOnlyCount: result.jiraOnlyCount,
+        gitOnlyCount: result.gitOnlyCount,
+        matchRate: result.matchRatePercent / 100,
+        runAt: result.runAt,
+      })
+    },
   })
 
   const addToJiraMutation = useMutation({

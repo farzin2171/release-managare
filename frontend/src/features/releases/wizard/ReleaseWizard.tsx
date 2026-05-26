@@ -73,7 +73,7 @@ export function ReleaseWizard() {
   const [initialNotes, setInitialNotes] = useState('')
 
   // Publish-pages state
-  const { pages, resetWizard } = useWizardStore()
+  const { pages, resetWizard, markReconciliationStale } = useWizardStore()
   const [showConflictDialog, setShowConflictDialog] = useState(false)
   const [showPublishConfirm, setShowPublishConfirm] = useState(false)
   const [publishError, setPublishError] = useState<string | null>(null)
@@ -115,6 +115,7 @@ export function ReleaseWizard() {
         return r.json() as Promise<{ id: string; version: string }>
       }),
     onSuccess: (release) => {
+      markReconciliationStale()
       setReleaseId(release.id)
       setStep(2)
     },

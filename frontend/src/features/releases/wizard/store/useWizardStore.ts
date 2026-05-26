@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 import type { components } from '../../../../lib/api'
 
 type PreparedPageDto = components['schemas']['PreparedPageDto']
+type ReconciliationSummaryDto = components['schemas']['ReconciliationSummaryDto']
 
 export type DraftState =
   | { kind: 'server' }
@@ -18,17 +19,28 @@ export interface PreparedPageSlot {
   draftState: DraftState
 }
 
+interface ReconciliationSlice {
+  ran: boolean
+  stale: boolean
+  data: ReconciliationSummaryDto | null
+}
+
 interface WizardState {
   projectId: string | null
   releaseId: string | null
   pages: PreparedPageSlot[]
+  reconciliation: ReconciliationSlice
 
   initPages(releaseId: string, pages: PreparedPageDto[]): void
   editPage(bindingId: string, title: string, body: string): void
   reRenderPages(freshPages: PreparedPageDto[]): void
   resolveConflict(bindingId: string, resolution: 'keep' | 'discard'): void
+  setReconciliationData(data: ReconciliationSummaryDto): void
+  markReconciliationStale(): void
   resetWizard(): void
 }
+
+const INITIAL_RECONCILIATION: ReconciliationSlice = { ran: false, stale: false, data: null }
 
 export const useWizardStore = create<WizardState>()(
   persist(
@@ -36,6 +48,7 @@ export const useWizardStore = create<WizardState>()(
       projectId: null,
       releaseId: null,
       pages: [],
+      reconciliation: INITIAL_RECONCILIATION,
 
       initPages(releaseId, pages) {
         set({
@@ -141,8 +154,19 @@ export const useWizardStore = create<WizardState>()(
         }))
       },
 
+      setReconciliationData(data) {
+        set({ reconciliation: { ran: true, stale: false, data } })
+      },
+
+      markReconciliationStale() {
+        set((state) => {
+          if (!state.reconciliation.ran) return state
+          return { reconciliation: { ...state.reconciliation, stale: true } }
+        })
+      },
+
       resetWizard() {
-        set({ projectId: null, releaseId: null, pages: [] })
+        set({ projectId: null, releaseId: null, pages: [], reconciliation: INITIAL_RECONCILIATION })
       },
     }),
     {
