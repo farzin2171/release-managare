@@ -44,7 +44,8 @@
       "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\MyWork\\\\release-managare\\\\frontend\\\\src\\\\features\\\\releases\\\\wizard\\\\store\")",
       "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\MyWork\\\\release-managare\\\\frontend\\\\src\\\\features\\\\releases\\\\wizard\\\\steps\")",
       "Bash(grep -v \"obj\\\\\\\\|bin\\\\\\\\|cache\")",
-      "Bash(grep -v \"\\\\\\\\\\\\\\\\obj\\\\\\\\\\\\\\\\\\\\\\\\|\\\\\\\\\\\\\\\\bin\\\\\\\\\\\\\\\\\")"
+      "Bash(grep -v \"\\\\\\\\\\\\\\\\obj\\\\\\\\\\\\\\\\\\\\\\\\|\\\\\\\\\\\\\\\\bin\\\\\\\\\\\\\\\\\")",
+      "PowerShell(cd \"c:\\\\MyWork\\\\release-managare\" && powershell -ExecutionPolicy Bypass -File \".specify/scripts/powershell/check-prerequisites.ps1\" -Json -RequireTasks -IncludeTasks)"
     ]
   }
 }

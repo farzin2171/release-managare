@@ -139,6 +139,75 @@ function CreateProjectModal({ onClose }: { onClose: () => void }) {
   )
 }
 
+// ─── Version bump strategy section ───────────────────────────────────────────
+
+const BUMP_OPTIONS = ['Patch', 'Minor', 'Major'] as const
+type BumpStrategy = (typeof BUMP_OPTIONS)[number]
+
+function VersionBumpStrategySection({
+  projectId,
+  currentStrategy,
+  isAdmin,
+}: {
+  projectId: string
+  currentStrategy: string
+  isAdmin: boolean
+}) {
+  const qc = useQueryClient()
+  const [selected, setSelected] = useState<BumpStrategy>(
+    (currentStrategy as BumpStrategy) ?? 'Minor',
+  )
+
+  const save = useMutation({
+    mutationFn: async (strategy: BumpStrategy) => {
+      const res = await apiFetch(`/api/v1/projects/${projectId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ versionBumpStrategy: strategy }),
+      })
+      if (!res.ok) throw new Error('Failed to save version bump strategy')
+      return res.json()
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['project', projectId] })
+    },
+  })
+
+  return (
+    <section className="rounded-lg border border-gray-200 dark:border-gray-700 p-6 space-y-4">
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Version bump strategy</h3>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+          Controls how the version number is incremented when no snapshot version is available.
+        </p>
+      </div>
+      <div className="flex items-center gap-3">
+        <select
+          value={selected}
+          onChange={(e) => setSelected(e.target.value as BumpStrategy)}
+          disabled={!isAdmin}
+          className="rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60"
+        >
+          {BUMP_OPTIONS.map((o) => (
+            <option key={o} value={o}>{o}</option>
+          ))}
+        </select>
+        {isAdmin && (
+          <button
+            onClick={() => save.mutate(selected)}
+            disabled={save.isPending}
+            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          >
+            {save.isPending ? 'Saving…' : 'Save'}
+          </button>
+        )}
+      </div>
+      {save.isError && (
+        <p className="text-sm text-red-500">{(save.error as Error).message}</p>
+      )}
+    </section>
+  )
+}
+
 // ─── Project detail panel ─────────────────────────────────────────────────────
 
 type ProjectTab = 'settings' | 'pages'
@@ -418,6 +487,9 @@ function ProjectDetail({ projectId }: { projectId: string }) {
           </div>
         </form>
       </section>
+
+      {/* ── Version bump strategy ─────────────────────────────────────────── */}
+      <VersionBumpStrategySection projectId={projectId} currentStrategy={(project as unknown as { versionBumpStrategy?: string }).versionBumpStrategy ?? 'Minor'} isAdmin={isAdmin} />
 
       {/* ── Default release note template ─────────────────────────────────── */}
       <section className="rounded-lg border border-gray-200 dark:border-gray-700 p-6 space-y-4">

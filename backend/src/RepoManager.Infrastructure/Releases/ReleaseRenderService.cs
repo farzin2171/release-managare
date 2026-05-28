@@ -301,13 +301,121 @@ public class ReleaseRenderService : IReleaseRenderService
         return new PublishResultDto(publishedPages);
     }
 
-    public Task<TemplatePreviewDto> PreviewTemplateAsync(
+    public async Task<TemplatePreviewDto> PreviewTemplateAsync(
         Guid templateId,
         TemplatePreviewRequest request,
         CancellationToken ct = default)
-        => throw new NotImplementedException("PreviewTemplateAsync is implemented in Phase 7 (T057).");
+    {
+        var template = await _db.ReleaseNoteTemplates.FindAsync([templateId], ct)
+            ?? throw new NotFoundException("ReleaseNoteTemplate", templateId);
+
+        ReleaseRenderContextDto ctx;
+        string? projectName = null;
+        string? releaseVersion = null;
+
+        if (string.Equals(request.ContextSource, "project", StringComparison.OrdinalIgnoreCase)
+            && request.ProjectId.HasValue)
+        {
+            var project = await _db.Projects
+                .Include(p => p.ProjectRepositories)
+                    .ThenInclude(pr => pr.Repository)
+                .FirstOrDefaultAsync(p => p.Id == request.ProjectId.Value, ct)
+                ?? throw new NotFoundException("Project", request.ProjectId.Value);
+
+            var latestRelease = await _db.Releases
+                .Include(r => r.ReleaseRepositories)
+                    .ThenInclude(rr => rr.Repository)
+                .Include(r => r.RepositoryTags)
+                .Include(r => r.Reconciliation)
+                .Where(r => r.ProjectId == project.Id)
+                .OrderByDescending(r => r.CreatedAt)
+                .FirstOrDefaultAsync(ct);
+
+            var customVars = await _db.CustomVariables
+                .Where(v => v.ProjectId == project.Id)
+                .ToListAsync(ct);
+
+            if (latestRelease is not null)
+            {
+                var primaryRepoId = project.ProjectRepositories.FirstOrDefault(pr => pr.IsPrimary)?.RepositoryId;
+                var snapshot = primaryRepoId.HasValue
+                    ? latestRelease.ReleaseRepositories.FirstOrDefault(rr => rr.RepositoryId == primaryRepoId.Value)
+                    : null;
+                var version = snapshot?.NextVersion ?? latestRelease.Version ?? "0.0.0";
+                ctx = BuildContext(latestRelease, project, version, customVars, null);
+                projectName = project.Name;
+                releaseVersion = version;
+            }
+            else
+            {
+                ctx = BuildSyntheticContext(project.Name, project.Id);
+                projectName = project.Name;
+                releaseVersion = "1.0.0";
+            }
+        }
+        else
+        {
+            ctx = BuildSyntheticContext("Sample Project", Guid.Empty);
+        }
+
+        var customDict = ctx.Custom.ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.Ordinal);
+        var hbsContext = BuildHandlebarsContext(ctx, customDict);
+
+        _recorder.BeginCapture();
+        var pageTitleTemplate = $"{{{{project.name}}}} {{{{version}}}} — {template.Name}";
+        var titleFn = _hbs.Compile(pageTitleTemplate);
+        var bodyFn = _hbs.Compile(template.ContentTemplate);
+        var renderedTitle = titleFn(hbsContext);
+        var renderedBody = bodyFn(hbsContext);
+        var unknownTokens = _recorder.EndCapture();
+
+        return new TemplatePreviewDto(
+            renderedTitle,
+            renderedBody,
+            unknownTokens.ToList(),
+            request.ContextSource ?? "synthetic",
+            projectName,
+            releaseVersion);
+    }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
+
+    private static ReleaseRenderContextDto BuildSyntheticContext(string projectName, Guid projectId)
+    {
+        var tickets = new TicketBucketsDto(
+            [new TicketDto("PRJ-100", "Upgrade core library", "task", false)],
+            [new TicketDto("PRJ-101", "Add export to CSV feature", "story", false)],
+            [new TicketDto("PRJ-102", "Fix null reference in payment flow", "bug", false)],
+            []);
+
+        var repos = new List<RepoContextDto>
+        {
+            new("sample-api", "1.0.0", "1.1.0", 12, 3, "sample-api_1.1.0")
+        };
+
+        var contributors = new List<ContributorDto>
+        {
+            new("Alice Example", "alice@example.com", 7),
+            new("Bob Example", "bob@example.com", 5)
+        };
+
+        var custom = (IReadOnlyDictionary<string, string>)new Dictionary<string, string>
+        {
+            ["slackChannel"] = "#releases"
+        };
+
+        return new ReleaseRenderContextDto(
+            new ProjectInfoDto(projectId, projectName, "Sample project for template preview"),
+            "1.1.0",
+            "1.0.0",
+            DateTimeOffset.UtcNow,
+            repos,
+            tickets,
+            contributors,
+            null,
+            new ConfluenceTargetDto("REL", "123456789"),
+            custom);
+    }
 
     private static ReleaseRenderContextDto BuildContext(
         Domain.Entities.Release release,

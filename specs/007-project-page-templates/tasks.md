@@ -145,8 +145,8 @@
 
 **Independent Test**: Take a snapshot of a database with three projects each holding a different `DefaultReleaseNoteTemplateId`, run the migration, then run the release wizard for each project and confirm the rendered release-notes title and body match what would have been produced before upgrade.
 
-- [ ] T054 [US4] Audit and verify migration `Up()` edge cases: projects with non-null `DefaultReleaseNoteTemplateId` get exactly one `ReleaseNotes` binding (sort order 0, default title template `{{project.name}} {{version}} — Release Notes`); projects with null get no binding; the column drop runs in the same transaction in `backend/src/RepoManager.Infrastructure/Persistence/Migrations/`
-- [ ] T055 [US4] Add integration tests for migration backfill: seed a test database with projects holding `DefaultReleaseNoteTemplateId`, apply migration, assert one `ProjectTemplateBinding` row per project (correct kind, templateId, sortOrder, pageTitleTemplate), assert wizard `PrepareAsync` produces a title matching the pre-upgrade template for each project in `backend/tests/RepoManager.IntegrationTests/Bindings/BindingMigrationTests.cs`
+- [X] T054 [US4] Audit and verify migration `Up()` edge cases: projects with non-null `DefaultReleaseNoteTemplateId` get exactly one `ReleaseNotes` binding (sort order 0, default title template `{{project.name}} {{version}} — Release Notes`); projects with null get no binding; the column drop runs in the same transaction in `backend/src/RepoManager.Infrastructure/Persistence/Migrations/`
+- [X] T055 [US4] Add integration tests for migration backfill: seed a test database with projects holding `DefaultReleaseNoteTemplateId`, apply migration, assert one `ProjectTemplateBinding` row per project (correct kind, templateId, sortOrder, pageTitleTemplate), assert wizard `PrepareAsync` produces a title matching the pre-upgrade template for each project in `backend/tests/RepoManager.IntegrationTests/Bindings/BindingMigrationTests.cs`
 
 **Checkpoint**: User Story 4 complete — upgrade is safe with zero admin intervention and zero regression in release-notes output.
 
@@ -156,12 +156,12 @@
 
 **Purpose**: Capabilities that span multiple user stories or complete the feature's surface area.
 
-- [ ] T056 Extend `PATCH /projects/{projectId}` to accept and persist `versionBumpStrategy` (`Patch | Minor | Major`); add `HasCheckConstraint` validation and update project settings UI to show the bump strategy selector in `backend/src/RepoManager.Api/Controllers/ProjectsController.cs`
-- [ ] T057 [P] Implement `ReleaseRenderService.PreviewTemplateAsync` (synthetic sample context or latest-release context for a project) and add `GET /templates/{templateId}/preview?contextSource=synthetic|project&projectId=` endpoint (Viewer role) in `backend/src/RepoManager.Infrastructure/Services/ReleaseRenderService.cs` and `backend/src/RepoManager.Api/Controllers/TemplatesController.cs`
-- [ ] T058 [P] Add sample-context selector to the Templates settings preview UI: dropdown with "Synthetic sample" and "Latest release of \<project\>" options; passes `contextSource` and `projectId` to `GET /templates/{id}/preview` in `frontend/src/features/settings/templates/`
-- [ ] T059 [P] Add FR-022 admin override version text input in `PreparePagesStep` when server returns `conflict_code: "no_semver_tag"`; re-submits `POST /prepare-pages` with `adminOverrideVersion` in `frontend/src/features/releases/wizard/steps/PreparePagesStep.tsx`
-- [ ] T060 [P] Add FR-018 wizard guard: if project has zero bindings or no `ReleaseNotes` binding, refuse to open the wizard and redirect to Settings → Projects → Pages with explanatory banner in `frontend/src/features/releases/wizard/`
-- [ ] T061 Run the quickstart.md smoke test end-to-end: bind two templates, add custom variable `slackChannel`, open wizard, verify two tabs with correct auto-filled titles, edit checklist body, navigate away and back (edits persist), publish, verify two cross-linked Confluence pages, re-publish (zero duplicates), add typo variable to template and verify unknown-token warning badge appears
+- [X] T056 Extend `PATCH /projects/{projectId}` to accept and persist `versionBumpStrategy` (`Patch | Minor | Major`); add `HasCheckConstraint` validation and update project settings UI to show the bump strategy selector in `backend/src/RepoManager.Api/Controllers/ProjectsController.cs`
+- [X] T057 [P] Implement `ReleaseRenderService.PreviewTemplateAsync` (synthetic sample context or latest-release context for a project) and add `GET /templates/{templateId}/preview?contextSource=synthetic|project&projectId=` endpoint (Viewer role) in `backend/src/RepoManager.Infrastructure/Services/ReleaseRenderService.cs` and `backend/src/RepoManager.Api/Controllers/TemplatesController.cs`
+- [X] T058 [P] Add sample-context selector to the Templates settings preview UI: dropdown with "Synthetic sample" and "Latest release of \<project\>" options; passes `contextSource` and `projectId` to `GET /templates/{id}/preview` in `frontend/src/features/settings/templates/`
+- [X] T059 [P] Add FR-022 admin override version text input in `PreparePagesStep` when server returns `conflict_code: "no_semver_tag"`; re-submits `POST /prepare-pages` with `adminOverrideVersion` in `frontend/src/features/releases/wizard/steps/PreparePagesStep.tsx`
+- [X] T060 [P] Add FR-018 wizard guard: if project has zero bindings or no `ReleaseNotes` binding, refuse to open the wizard and redirect to Settings → Projects → Pages with explanatory banner in `frontend/src/features/releases/wizard/`
+- [X] T061 Run the quickstart.md smoke test end-to-end: bind two templates, add custom variable `slackChannel`, open wizard, verify two tabs with correct auto-filled titles, edit checklist body, navigate away and back (edits persist), publish, verify two cross-linked Confluence pages, re-publish (zero duplicates), add typo variable to template and verify unknown-token warning badge appears
 
 ---
 

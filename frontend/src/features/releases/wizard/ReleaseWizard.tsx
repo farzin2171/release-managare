@@ -13,6 +13,7 @@ import { useWizardStore } from './store/useWizardStore'
 
 type TemplateDto = components['schemas']['TemplateDto']
 type ProjectDetailDto = components['schemas']['ProjectDetailDto']
+type ProjectTemplateBindingDto = components['schemas']['ProjectTemplateBindingDto']
 type PublishPagesRequest = components['schemas']['PublishPagesRequest']
 type PublishResultDto = components['schemas']['PublishResultDto']
 
@@ -85,6 +86,15 @@ export function ReleaseWizard() {
     queryFn: () => apiFetch(`/api/v1/projects/${projectId}`).then((r) => r.json()),
     enabled: !!projectId,
   })
+
+  const { data: bindings, isLoading: bindingsLoading } = useQuery<ProjectTemplateBindingDto[]>({
+    queryKey: ['project-bindings', projectId],
+    queryFn: () => apiFetch(`/api/v1/projects/${projectId}/template-bindings`).then((r) => r.json()),
+    enabled: !!projectId,
+  })
+
+  const hasReleaseNotesBinding = bindings?.some((b) => b.kind === 'ReleaseNotes') ?? false
+  const bindingsReady = !bindingsLoading && bindings !== undefined
 
   const [templateInitialised, setTemplateInitialised] = useState(false)
   if (project && !templateInitialised) {
@@ -238,8 +248,35 @@ export function ReleaseWizard() {
         />
       )}
 
-      {/* Step 5 — Prepare pages */}
-      {step === 5 && releaseId && projectId && (
+      {/* Step 5 — Prepare pages (guard: must have a ReleaseNotes binding) */}
+      {step === 5 && releaseId && projectId && bindingsReady && !hasReleaseNotesBinding && (
+        <div className="space-y-4">
+          <div className="rounded-md bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 px-4 py-4 space-y-2">
+            <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+              No Release Notes binding configured
+            </p>
+            <p className="text-sm text-amber-700 dark:text-amber-400">
+              This project needs at least one template binding of kind <strong>Release Notes</strong> before you can prepare pages.
+              Go to project settings to add one.
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setStep(4)}
+              className="rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+            >
+              Back
+            </button>
+            <button
+              onClick={() => navigate(`/settings/projects?tab=pages&projectId=${projectId}`)}
+              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            >
+              Go to project settings
+            </button>
+          </div>
+        </div>
+      )}
+      {step === 5 && releaseId && projectId && (bindingsLoading || hasReleaseNotesBinding) && (
         <PreparePagesStep
           releaseId={releaseId}
           projectId={projectId}

@@ -8,6 +8,16 @@ import type { components } from '../../../lib/api'
 import { TemplateEditor, VARIABLE_REFERENCE } from './TemplateEditor'
 
 type TemplateDto = components['schemas']['TemplateDto']
+type ProjectDto = components['schemas']['ProjectDto']
+
+interface TemplatePreviewDto {
+  renderedTitle: string
+  renderedBody: string
+  unknownTokens: string[]
+  contextSource: string
+  projectName: string | null
+  releaseVersion: string | null
+}
 
 // ─── Schemas ──────────────────────────────────────────────────────────────────
 
@@ -57,6 +67,106 @@ const DEFAULT_TEMPLATE = `# {{project.name}} Release {{version}}
 - {{this}}
 {{/each}}
 `
+
+// ─── Template preview panel ───────────────────────────────────────────────────
+
+interface TemplatePreviewPanelProps {
+  template: TemplateDto
+  onClose: () => void
+}
+
+function TemplatePreviewPanel({ template, onClose }: TemplatePreviewPanelProps) {
+  const [contextSource, setContextSource] = useState<'synthetic' | 'project'>('synthetic')
+  const [selectedProjectId, setSelectedProjectId] = useState<string>('')
+
+  const { data: projects = [] } = useQuery<ProjectDto[]>({
+    queryKey: ['projects'],
+    queryFn: () => apiFetch('/api/v1/projects').then((r) => r.json()),
+  })
+
+  const previewQuery = useQuery<TemplatePreviewDto>({
+    queryKey: ['template-preview', template.id, contextSource, selectedProjectId],
+    queryFn: () => {
+      const params = new URLSearchParams({ contextSource })
+      if (contextSource === 'project' && selectedProjectId) params.set('projectId', selectedProjectId)
+      return apiFetch(`/api/v1/templates/${template.id}/preview?${params}`).then((r) => r.json())
+    },
+    enabled: contextSource === 'synthetic' || (contextSource === 'project' && !!selectedProjectId),
+  })
+
+  return (
+    <div className="fixed inset-0 z-50 flex">
+      <div className="flex-1 bg-black/40" onClick={onClose} />
+      <div className="w-full max-w-3xl bg-white dark:bg-gray-800 shadow-xl flex flex-col overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-base font-semibold text-gray-900 dark:text-white">
+            Preview: {template.name}
+          </h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xl leading-none" aria-label="Close">×</button>
+        </div>
+
+        <div className="flex items-center gap-3 px-6 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40">
+          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Context:</span>
+          <select
+            value={contextSource}
+            onChange={(e) => setContextSource(e.target.value as 'synthetic' | 'project')}
+            className="rounded-md border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="synthetic">Synthetic sample</option>
+            <option value="project">Latest release of project</option>
+          </select>
+          {contextSource === 'project' && (
+            <select
+              value={selectedProjectId}
+              onChange={(e) => setSelectedProjectId(e.target.value)}
+              className="flex-1 rounded-md border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Select project…</option>
+              {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+          )}
+        </div>
+
+        <div className="flex-1 overflow-auto px-6 py-4 space-y-4">
+          {previewQuery.isLoading && (
+            <p className="text-sm text-gray-400">Rendering preview…</p>
+          )}
+          {previewQuery.isError && (
+            <p className="text-sm text-red-500">Failed to load preview.</p>
+          )}
+          {previewQuery.data && (
+            <>
+              <div>
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Page title</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-900/40 rounded px-3 py-2">
+                  {previewQuery.data.renderedTitle}
+                </p>
+              </div>
+              {previewQuery.data.unknownTokens && previewQuery.data.unknownTokens.length > 0 && (
+                <div className="rounded-md bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 px-3 py-2">
+                  <p className="text-xs font-medium text-amber-800 dark:text-amber-300">Unknown tokens:</p>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {previewQuery.data.unknownTokens.map((t: string) => (
+                      <span key={t} className="inline-flex items-center rounded px-1.5 py-0.5 text-xs bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 font-mono">
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div>
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Body</p>
+                <pre className="text-xs text-gray-700 dark:text-gray-300 whitespace-pre-wrap font-mono bg-gray-50 dark:bg-gray-900/40 rounded p-3 overflow-auto max-h-[60vh]">
+                  {previewQuery.data.renderedBody}
+                </pre>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 // ─── Slide-over form ──────────────────────────────────────────────────────────
 
@@ -223,6 +333,7 @@ function TemplateSlideOver({ template, onClose }: SlideOverProps) {
 export function TemplatesPage() {
   const qc = useQueryClient()
   const [slideOver, setSlideOver] = useState<'new' | TemplateDto | null>(null)
+  const [previewing, setPreviewing] = useState<TemplateDto | null>(null)
 
   const { data: templates = [], isLoading } = useQuery<TemplateDto[]>({
     queryKey: ['templates'],
@@ -300,6 +411,12 @@ export function TemplatesPage() {
                   <td className="px-4 py-3 text-right">
                     <div className="flex justify-end gap-3">
                       <button
+                        onClick={() => setPreviewing(t)}
+                        className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 font-medium"
+                      >
+                        Preview
+                      </button>
+                      <button
                         onClick={() => setSlideOver(t)}
                         className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 font-medium"
                       >
@@ -326,6 +443,14 @@ export function TemplatesPage() {
         <TemplateSlideOver
           template={slideOver === 'new' ? undefined : slideOver}
           onClose={() => setSlideOver(null)}
+        />
+      )}
+
+      {/* Preview panel */}
+      {previewing && (
+        <TemplatePreviewPanel
+          template={previewing}
+          onClose={() => setPreviewing(null)}
         />
       )}
     </div>
