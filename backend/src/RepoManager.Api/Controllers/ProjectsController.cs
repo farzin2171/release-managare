@@ -5,6 +5,8 @@ using RepoManager.Application.Repositories;
 
 namespace RepoManager.Api.Controllers;
 
+public record PatchProjectDto(string? VersionBumpStrategy);
+
 [ApiController]
 [Route("api/v1/projects")]
 public class ProjectsController : ControllerBase
@@ -40,6 +42,15 @@ public class ProjectsController : ControllerBase
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateProjectDto dto, CancellationToken ct)
     {
         var project = await _service.UpdateAsync(id, dto, ct);
+        return Ok(project);
+    }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpPatch("{id:guid}")]
+    public async Task<IActionResult> Patch(Guid id, [FromBody] PatchProjectDto dto, CancellationToken ct)
+    {
+        var update = new UpdateProjectDto(null, null, null, null, null, dto.VersionBumpStrategy);
+        var project = await _service.UpdateAsync(id, update, ct);
         return Ok(project);
     }
 

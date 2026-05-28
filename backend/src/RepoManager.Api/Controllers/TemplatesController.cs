@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RepoManager.Application.DTOs.Releases;
+using RepoManager.Application.Services;
 using RepoManager.Application.Templates;
 
 namespace RepoManager.Api.Controllers;
@@ -9,8 +11,13 @@ namespace RepoManager.Api.Controllers;
 public class TemplatesController : ControllerBase
 {
     private readonly IReleaseNoteTemplateService _service;
+    private readonly IReleaseRenderService _renderService;
 
-    public TemplatesController(IReleaseNoteTemplateService service) => _service = service;
+    public TemplatesController(IReleaseNoteTemplateService service, IReleaseRenderService renderService)
+    {
+        _service = service;
+        _renderService = renderService;
+    }
 
     [HttpGet]
     public async Task<IActionResult> List(CancellationToken ct)
@@ -41,5 +48,20 @@ public class TemplatesController : ControllerBase
     {
         await _service.DeleteAsync(id, ct);
         return NoContent();
+    }
+
+    [HttpGet("{id:guid}/preview")]
+    public async Task<IActionResult> Preview(
+        Guid id,
+        [FromQuery] string contextSource = "synthetic",
+        [FromQuery] Guid? projectId = null,
+        CancellationToken ct = default)
+    {
+        if (string.Equals(contextSource, "project", StringComparison.OrdinalIgnoreCase) && projectId is null)
+            return BadRequest(new { error = "projectId is required when contextSource=project" });
+
+        var request = new TemplatePreviewRequest(contextSource, projectId);
+        var result = await _renderService.PreviewTemplateAsync(id, request, ct);
+        return Ok(result);
     }
 }

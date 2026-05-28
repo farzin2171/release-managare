@@ -501,11 +501,14 @@ namespace RepoManager.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid?>("ReleaseNoteTemplateId")
-                        .HasColumnType("TEXT");
-
                     b.Property<long>("UpdatedAt")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("VersionBumpStrategy")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("Minor");
 
                     b.HasKey("Id");
 
@@ -514,9 +517,46 @@ namespace RepoManager.Infrastructure.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.HasIndex("ReleaseNoteTemplateId");
+                    b.ToTable("Projects", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Project_VersionBumpStrategy", "VersionBumpStrategy IN ('Patch','Minor','Major')");
+                        });
+                });
 
-                    b.ToTable("Projects");
+            modelBuilder.Entity("RepoManager.Domain.Entities.ProjectCustomVariable", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("CreatedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("UpdatedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId", "Key")
+                        .IsUnique();
+
+                    b.ToTable("CustomVariables", t =>
+                        {
+                            t.HasCheckConstraint("CK_CustomVar_Key", "Key GLOB '[a-zA-Z]*'");
+                        });
                 });
 
             modelBuilder.Entity("RepoManager.Domain.Entities.ProjectRepository", b =>
@@ -537,6 +577,60 @@ namespace RepoManager.Infrastructure.Migrations
                     b.HasIndex("RepositoryId");
 
                     b.ToTable("ProjectRepositories");
+                });
+
+            modelBuilder.Entity("RepoManager.Domain.Entities.ProjectTemplateBinding", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("CreatedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("LinkFromReleaseNotes")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("PageTitleTemplate")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ParentPageId")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SortOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(0);
+
+                    b.Property<Guid>("TemplateId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("UpdatedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TemplateId");
+
+                    b.HasIndex("ProjectId", "SortOrder");
+
+                    b.ToTable("TemplateBindings", t =>
+                        {
+                            t.HasCheckConstraint("CK_Binding_Kind", "Kind IN ('ReleaseNotes','Checklist','Custom')");
+                        });
                 });
 
             modelBuilder.Entity("RepoManager.Domain.Entities.Release", b =>
@@ -1105,14 +1199,18 @@ namespace RepoManager.Infrastructure.Migrations
                         .HasForeignKey("JiraConnectionId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("RepoManager.Domain.Entities.ReleaseNoteTemplate", "ReleaseNoteTemplate")
-                        .WithMany("Projects")
-                        .HasForeignKey("ReleaseNoteTemplateId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.Navigation("JiraConnection");
+                });
 
-                    b.Navigation("ReleaseNoteTemplate");
+            modelBuilder.Entity("RepoManager.Domain.Entities.ProjectCustomVariable", b =>
+                {
+                    b.HasOne("RepoManager.Domain.Entities.Project", "Project")
+                        .WithMany("CustomVariables")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
                 });
 
             modelBuilder.Entity("RepoManager.Domain.Entities.ProjectRepository", b =>
@@ -1132,6 +1230,25 @@ namespace RepoManager.Infrastructure.Migrations
                     b.Navigation("Project");
 
                     b.Navigation("Repository");
+                });
+
+            modelBuilder.Entity("RepoManager.Domain.Entities.ProjectTemplateBinding", b =>
+                {
+                    b.HasOne("RepoManager.Domain.Entities.Project", "Project")
+                        .WithMany("TemplateBindings")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("RepoManager.Domain.Entities.ReleaseNoteTemplate", "Template")
+                        .WithMany("TemplateBindings")
+                        .HasForeignKey("TemplateId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+
+                    b.Navigation("Template");
                 });
 
             modelBuilder.Entity("RepoManager.Domain.Entities.Release", b =>
@@ -1274,9 +1391,13 @@ namespace RepoManager.Infrastructure.Migrations
 
             modelBuilder.Entity("RepoManager.Domain.Entities.Project", b =>
                 {
+                    b.Navigation("CustomVariables");
+
                     b.Navigation("ProjectRepositories");
 
                     b.Navigation("Releases");
+
+                    b.Navigation("TemplateBindings");
                 });
 
             modelBuilder.Entity("RepoManager.Domain.Entities.Release", b =>
@@ -1290,7 +1411,7 @@ namespace RepoManager.Infrastructure.Migrations
 
             modelBuilder.Entity("RepoManager.Domain.Entities.ReleaseNoteTemplate", b =>
                 {
-                    b.Navigation("Projects");
+                    b.Navigation("TemplateBindings");
                 });
 
             modelBuilder.Entity("RepoManager.Domain.Entities.Repository", b =>

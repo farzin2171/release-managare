@@ -79,11 +79,16 @@ public class ProjectService : IProjectService
                 throw new ConflictException($"A project named '{dto.Name}' already exists.");
             project.Name = dto.Name;
         }
+
         if (dto.Description is not null) project.Description = dto.Description;
         if (dto.Color is not null) project.Color = dto.Color;
-        if (dto.ReleaseNoteTemplateId.HasValue) project.ReleaseNoteTemplateId = dto.ReleaseNoteTemplateId;
         if (dto.ConfluenceSpaceKey is not null) project.ConfluenceSpaceKey = dto.ConfluenceSpaceKey;
         if (dto.ConfluenceParentPageId is not null) project.ConfluenceParentPageId = dto.ConfluenceParentPageId;
+        if (dto.VersionBumpStrategy is not null
+            && Enum.TryParse<Domain.Enums.VersionBumpStrategy>(dto.VersionBumpStrategy, true, out var bumpStrategy))
+        {
+            project.VersionBumpStrategy = bumpStrategy;
+        }
 
         project.UpdatedAt = DateTimeOffset.UtcNow;
         await _db.SaveChangesAsync(ct);
@@ -319,9 +324,10 @@ public class ProjectService : IProjectService
 
         return new ProjectDto(
             p.Id, p.Name, p.Description, p.Color,
-            p.ReleaseNoteTemplateId, p.ConfluenceSpaceKey, p.ConfluenceParentPageId,
+            p.ConfluenceSpaceKey, p.ConfluenceParentPageId,
             p.JiraConnectionId, keys, p.FixVersionPattern,
             p.AutoCreateFixVersion, p.MatchSubtasksToParents,
-            p.CreatedAt, p.UpdatedAt, repos);
+            p.CreatedAt, p.UpdatedAt, repos,
+            p.VersionBumpStrategy.ToString());
     }
 }

@@ -24,9 +24,9 @@ public record UpdateProjectDto(
     string? Name,
     string? Description,
     string? Color,
-    Guid? ReleaseNoteTemplateId,
     string? ConfluenceSpaceKey,
-    string? ConfluenceParentPageId);
+    string? ConfluenceParentPageId,
+    string? VersionBumpStrategy = null);
 
 public record AssignRepositoryDto(bool IsPrimary);
 
@@ -48,7 +48,6 @@ public record ProjectDto(
     string Name,
     string? Description,
     string Color,
-    Guid? ReleaseNoteTemplateId,
     string? ConfluenceSpaceKey,
     string? ConfluenceParentPageId,
     Guid? JiraConnectionId,
@@ -58,7 +57,8 @@ public record ProjectDto(
     bool MatchSubtasksToParents,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
-    IReadOnlyList<ProjectRepositoryDto> Repositories);
+    IReadOnlyList<ProjectRepositoryDto> Repositories,
+    string VersionBumpStrategy = "Minor");
 
 public record ProjectChangesDto(
     Guid ProjectId,

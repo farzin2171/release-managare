@@ -1,8 +1,10 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RepoManager.Application.DTOs.Releases;
 using RepoManager.Application.Reconciliation;
 using RepoManager.Application.Releases;
+using RepoManager.Application.Services;
 
 namespace RepoManager.Api.Controllers;
 
@@ -14,15 +16,18 @@ public class ReleasesController : ControllerBase
     private readonly IReleaseService _service;
     private readonly IReleaseCompositionService _composition;
     private readonly IReleaseReconciliationService _reconciliation;
+    private readonly IReleaseRenderService _render;
 
     public ReleasesController(
         IReleaseService service,
         IReleaseCompositionService composition,
-        IReleaseReconciliationService reconciliation)
+        IReleaseReconciliationService reconciliation,
+        IReleaseRenderService render)
     {
         _service = service;
         _composition = composition;
         _reconciliation = reconciliation;
+        _render = render;
     }
 
     // ── Composition-based endpoints (US1 + US2) ──────────────────────────────
@@ -162,6 +167,30 @@ public class ReleasesController : ControllerBase
     {
         await _reconciliation.AddGitTicketsToJiraAsync(id, dto.TicketKeys, ct);
         return NoContent();
+    }
+
+    // ── Render / wizard endpoints ────────────────────────────────────────────
+
+    [HttpPost("releases/{id:guid}/prepare-pages")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> PreparePages(
+        Guid id,
+        [FromBody] PreparePageRequest request,
+        CancellationToken ct)
+    {
+        var result = await _render.PrepareAsync(id, request, ct);
+        return Ok(result);
+    }
+
+    [HttpPost("releases/{id:guid}/publish-pages")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> PublishPages(
+        Guid id,
+        [FromBody] PublishPagesRequest request,
+        CancellationToken ct)
+    {
+        var result = await _render.PublishAsync(id, request, ct);
+        return Ok(result);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

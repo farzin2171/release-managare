@@ -6,6 +6,8 @@ import { z } from 'zod'
 import { apiFetch } from '../../../lib/apiClient'
 import { useAuthStore } from '../../../lib/authStore'
 import type { components } from '../../../lib/api'
+import { ProjectPagesTab } from './ProjectPagesTab'
+import { CustomVariablesSection } from './CustomVariablesSection'
 
 type ProjectDto = components['schemas']['ProjectDto']
 type ProjectDetailDto = components['schemas']['ProjectDetailDto']
@@ -137,10 +139,83 @@ function CreateProjectModal({ onClose }: { onClose: () => void }) {
   )
 }
 
+// ─── Version bump strategy section ───────────────────────────────────────────
+
+const BUMP_OPTIONS = ['Patch', 'Minor', 'Major'] as const
+type BumpStrategy = (typeof BUMP_OPTIONS)[number]
+
+function VersionBumpStrategySection({
+  projectId,
+  currentStrategy,
+  isAdmin,
+}: {
+  projectId: string
+  currentStrategy: string
+  isAdmin: boolean
+}) {
+  const qc = useQueryClient()
+  const [selected, setSelected] = useState<BumpStrategy>(
+    (currentStrategy as BumpStrategy) ?? 'Minor',
+  )
+
+  const save = useMutation({
+    mutationFn: async (strategy: BumpStrategy) => {
+      const res = await apiFetch(`/api/v1/projects/${projectId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ versionBumpStrategy: strategy }),
+      })
+      if (!res.ok) throw new Error('Failed to save version bump strategy')
+      return res.json()
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['project', projectId] })
+    },
+  })
+
+  return (
+    <section className="rounded-lg border border-gray-200 dark:border-gray-700 p-6 space-y-4">
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Version bump strategy</h3>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+          Controls how the version number is incremented when no snapshot version is available.
+        </p>
+      </div>
+      <div className="flex items-center gap-3">
+        <select
+          value={selected}
+          onChange={(e) => setSelected(e.target.value as BumpStrategy)}
+          disabled={!isAdmin}
+          className="rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60"
+        >
+          {BUMP_OPTIONS.map((o) => (
+            <option key={o} value={o}>{o}</option>
+          ))}
+        </select>
+        {isAdmin && (
+          <button
+            onClick={() => save.mutate(selected)}
+            disabled={save.isPending}
+            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          >
+            {save.isPending ? 'Saving…' : 'Save'}
+          </button>
+        )}
+      </div>
+      {save.isError && (
+        <p className="text-sm text-red-500">{(save.error as Error).message}</p>
+      )}
+    </section>
+  )
+}
+
 // ─── Project detail panel ─────────────────────────────────────────────────────
+
+type ProjectTab = 'settings' | 'pages'
 
 function ProjectDetail({ projectId }: { projectId: string }) {
   const qc = useQueryClient()
+  const isAdmin = useAuthStore((s) => s.role === 'Admin')
+  const [activeTab, setActiveTab] = useState<ProjectTab>('settings')
   const [assigningRepoId, setAssigningRepoId] = useState('')
 
   const { data: project, isLoading } = useQuery<ProjectDetailDto>({
@@ -321,8 +396,45 @@ function ProjectDetail({ projectId }: { projectId: string }) {
   const assignedRepoIds = new Set(project.repositories.map((r) => r.repositoryId))
   const unassignedRepos = allRepos.filter((r) => !assignedRepoIds.has(r.id))
 
+  const tabs: { id: ProjectTab; label: string }[] = [
+    { id: 'settings', label: 'Settings' },
+    { id: 'pages', label: 'Pages' },
+  ]
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
+      {/* ── Tab navigation ──────────────────────────────────────────────── */}
+      <div className="border-b border-gray-200 dark:border-gray-700">
+        <nav className="-mb-px flex gap-6">
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setActiveTab(t.id)}
+              className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === t.id
+                  ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      {activeTab === 'pages' && (
+        <div className="space-y-8">
+          <section className="rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Page bindings</h3>
+            <ProjectPagesTab projectId={projectId} templates={templates} isAdmin={isAdmin} />
+          </section>
+          <section className="rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <CustomVariablesSection projectId={projectId} isAdmin={isAdmin} />
+          </section>
+        </div>
+      )}
+
+      {activeTab === 'settings' && <div className="space-y-8">
       {/* ── Project meta ──────────────────────────────────────────────────── */}
       <section className="rounded-lg border border-gray-200 dark:border-gray-700 p-6 space-y-4">
         <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Project details</h3>
@@ -375,6 +487,9 @@ function ProjectDetail({ projectId }: { projectId: string }) {
           </div>
         </form>
       </section>
+
+      {/* ── Version bump strategy ─────────────────────────────────────────── */}
+      <VersionBumpStrategySection projectId={projectId} currentStrategy={(project as unknown as { versionBumpStrategy?: string }).versionBumpStrategy ?? 'Minor'} isAdmin={isAdmin} />
 
       {/* ── Default release note template ─────────────────────────────────── */}
       <section className="rounded-lg border border-gray-200 dark:border-gray-700 p-6 space-y-4">
@@ -625,6 +740,7 @@ function ProjectDetail({ projectId }: { projectId: string }) {
           </div>
         )}
       </section>
+      </div>}
     </div>
   )
 }

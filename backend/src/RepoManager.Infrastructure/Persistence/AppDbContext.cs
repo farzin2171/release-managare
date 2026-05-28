@@ -29,6 +29,8 @@ public class AppDbContext : DbContext
     public DbSet<RepositorySync> RepositorySyncs => Set<RepositorySync>();
     public DbSet<ProjectSync> ProjectSyncs => Set<ProjectSync>();
     public DbSet<RepoJiraComparisonSnapshot> RepoJiraComparisonSnapshots => Set<RepoJiraComparisonSnapshot>();
+    public DbSet<ProjectTemplateBinding> TemplateBindings => Set<ProjectTemplateBinding>();
+    public DbSet<ProjectCustomVariable> CustomVariables => Set<ProjectCustomVariable>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -48,6 +50,8 @@ public class AppDbContext : DbContext
         modelBuilder.ApplyConfiguration(new ProjectSyncConfiguration());
         modelBuilder.ApplyConfiguration(new RepoJiraComparisonSnapshotConfiguration());
         modelBuilder.ApplyConfiguration(new ReleaseRepositoryConfiguration());
+        modelBuilder.ApplyConfiguration(new ProjectTemplateBindingConfiguration());
+        modelBuilder.ApplyConfiguration(new ProjectCustomVariableConfiguration());
 
         // Users
         modelBuilder.Entity<User>(e =>
@@ -117,12 +121,14 @@ public class AppDbContext : DbContext
             e.Property(p => p.FixVersionPattern).HasMaxLength(200);
             e.Property(p => p.AutoCreateFixVersion).HasDefaultValue(false).IsRequired();
             e.Property(p => p.MatchSubtasksToParents).HasDefaultValue(false).IsRequired();
+            e.Property(p => p.VersionBumpStrategy)
+             .IsRequired()
+             .HasConversion<string>()
+             .HasDefaultValue(Domain.Enums.VersionBumpStrategy.Minor);
+            e.ToTable("Projects", t => t.HasCheckConstraint("CK_Project_VersionBumpStrategy",
+                "VersionBumpStrategy IN ('Patch','Minor','Major')"));
             e.Property(p => p.CreatedAt).IsRequired();
             e.Property(p => p.UpdatedAt).IsRequired();
-            e.HasOne(p => p.ReleaseNoteTemplate)
-             .WithMany(t => t.Projects)
-             .HasForeignKey(p => p.ReleaseNoteTemplateId)
-             .OnDelete(DeleteBehavior.SetNull);
             e.HasOne(p => p.JiraConnection)
              .WithMany(j => j.Projects)
              .HasForeignKey(p => p.JiraConnectionId)

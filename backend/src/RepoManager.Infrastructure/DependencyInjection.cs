@@ -30,6 +30,7 @@ using RepoManager.Infrastructure.Reconciliation;
 using RepoManager.Infrastructure.Repositories;
 using RepoManager.Infrastructure.Sync;
 using RepoManager.Infrastructure.Templates;
+using RepoManager.Infrastructure.Services.Handlebars;
 
 namespace RepoManager.Infrastructure;
 
@@ -86,6 +87,17 @@ public static class DependencyInjection
         services.AddScoped<IProjectSyncSnapshotService, ProjectSyncSnapshotService>();
 
         services.AddScoped<IDatabaseMaintenanceService, DatabaseMaintenanceService>();
+
+        services.AddSingleton<MissingTokenRecorder>();
+        services.AddSingleton<HandlebarsDotNet.IHandlebars>(sp =>
+            HandlebarsFactory.Create(sp.GetRequiredService<MissingTokenRecorder>()));
+
+        services.AddScoped<IValidator<Application.DTOs.Bindings.CreateBindingRequest>, CreateBindingRequestValidator>();
+        services.AddScoped<IValidator<Application.DTOs.Bindings.UpdateBindingRequest>, UpdateBindingRequestValidator>();
+        services.AddScoped<ProjectCustomVariableUpsertValidator>();
+        services.AddScoped<IProjectTemplateBindingService, ProjectTemplateBindingService>();
+        services.AddScoped<IProjectCustomVariableService, ProjectCustomVariableService>();
+        services.AddScoped<IReleaseRenderService, ReleaseRenderService>();
 
         return services;
     }
