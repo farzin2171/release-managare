@@ -14,8 +14,8 @@ services:
         host: containerapp
         language: dotnet
         docker:
-            context: backend
-            path: backend/src/RepoManager.Api/Dockerfile
+            context: ../..
+            path: Dockerfile
 resources:
     frontend:
         type: host.containerapp
