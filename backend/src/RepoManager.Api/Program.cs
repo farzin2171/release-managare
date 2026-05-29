@@ -119,6 +119,17 @@ try
     app.UseSwagger();
     app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "RepoManager API v1"));
 
+    var connStr = app.Configuration.GetConnectionString("DefaultConnection") ?? "";
+    var dataSource = connStr.Split(';')
+        .Select(p => p.Trim())
+        .FirstOrDefault(p => p.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase))
+        ?["Data Source=".Length..];
+    if (!string.IsNullOrEmpty(dataSource) && dataSource != ":memory:")
+    {
+        var dbDir = Path.GetDirectoryName(Path.GetFullPath(dataSource));
+        if (!string.IsNullOrEmpty(dbDir)) Directory.CreateDirectory(dbDir);
+    }
+
     using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
