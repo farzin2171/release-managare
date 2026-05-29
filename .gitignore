@@ -54,6 +54,7 @@ backend/data/*.db-wal
 .env.*
 !.env.example
 !.env.development
+!.env.production
 appsettings.*.json
 !appsettings.Development.json
 
