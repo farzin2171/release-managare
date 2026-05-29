@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+name: release-managare
+metadata:
+    template: azd-init@1.25.1
+services:
+    frontend:
+        project: frontend
+        host: containerapp
+        language: ts
+        dist: dist
+    repomanager-api:
+        project: backend/src/RepoManager.Api
+        host: containerapp
+        language: dotnet
+resources:
+    frontend:
+        type: host.containerapp
+        uses:
+            - repomanager-api
+        port: 80
+    repomanager-api:
+        type: host.containerapp
+        port: 8080
