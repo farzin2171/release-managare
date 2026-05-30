@@ -5,7 +5,7 @@ public record ReleaseRenderContextDto(
     string Version,
     string PreviousVersion,
     DateTimeOffset ReleaseDate,
-    IReadOnlyList<RepoContextDto> Repositories,
+    IReadOnlyList<RepoSummaryContext> Repositories,
     TicketBucketsDto Tickets,
     IReadOnlyList<ContributorDto> Contributors,
     ReconciliationSummaryDto? Reconciliation,

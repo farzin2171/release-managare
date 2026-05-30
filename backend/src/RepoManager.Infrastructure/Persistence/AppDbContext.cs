@@ -90,6 +90,7 @@ public class AppDbContext : DbContext
             e.Property(r => r.WebUrl).HasMaxLength(500).IsRequired();
             e.Property(r => r.AzureProjectName).HasMaxLength(200).IsRequired();
             e.Property(r => r.IsTracked).HasDefaultValue(false).IsRequired();
+            e.Property(r => r.ServiceOwner).HasMaxLength(120).IsRequired(false);
             e.Property(r => r.LatestTag).HasMaxLength(255);
             e.Property(r => r.LatestTagCommitSha).HasMaxLength(64);
             e.Property(r => r.LastViewedAt);
@@ -239,6 +240,7 @@ public class AppDbContext : DbContext
             e.HasIndex(t => t.Name).IsUnique();
             e.Property(t => t.ContentTemplate).IsRequired();
             e.Property(t => t.IsDefault).HasDefaultValue(false).IsRequired();
+            e.Property(t => t.IsSystem).HasDefaultValue(false).IsRequired();
         });
 
         // ConfluenceConnections

@@ -30,11 +30,14 @@ public record RepositoryDto(
     string WebUrl,
     string AzureProjectName,
     bool IsTracked,
+    string? ServiceOwner,
     DateTimeOffset? LastSyncedAt,
     string? LatestTag,
     string? LatestTagCommitSha,
     DateTime? LatestTagSetAt,
     UserSummaryDto? LatestTagSetBy);
+
+public record UpdateRepositoryRequest(string? ServiceOwner);
 
 public record GetChangesQuery(
     string GroupBy = "ticket",

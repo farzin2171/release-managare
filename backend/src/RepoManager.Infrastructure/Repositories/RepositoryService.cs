@@ -231,7 +231,7 @@ public class RepositoryService : IRepositoryService
 
     private static RepositoryDto ToDto(Repository r) =>
         new(r.Id, r.GitProviderConnectionId, r.ExternalId, r.Name,
-            r.DefaultBranch, r.WebUrl, r.AzureProjectName, r.IsTracked, r.LastSyncedAt,
-            r.LatestTag, r.LatestTagCommitSha, r.LatestTagSetAt,
+            r.DefaultBranch, r.WebUrl, r.AzureProjectName, r.IsTracked, r.ServiceOwner,
+            r.LastSyncedAt, r.LatestTag, r.LatestTagCommitSha, r.LatestTagSetAt,
             r.LatestTagSetBy is { } u ? new UserSummaryDto(u.Id, u.Email) : null);
 }

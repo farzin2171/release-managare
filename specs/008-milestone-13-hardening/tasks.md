@@ -34,19 +34,19 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T005 [P] Add `public string? ServiceOwner { get; set; }` to `backend/src/RepoManager.Domain/Entities/Repository.cs`
-- [ ] T006 [P] Add `public bool IsSystem { get; set; }` to `backend/src/RepoManager.Domain/Entities/ReleaseNoteTemplate.cs`
-- [ ] T007 [P] Add `string? ServiceOwner` field to `RepositoryDto` and `UpdateRepositoryRequest` in `backend/src/RepoManager.Application/DTOs/`
-- [ ] T008 [P] Add `bool IsSystem` field to `ReleaseNoteTemplateDto` in `backend/src/RepoManager.Application/DTOs/Templates/ReleaseNoteTemplateDto.cs`
-- [ ] T009 Create `RepoSummaryContext` record in `backend/src/RepoManager.Application/DTOs/Releases/RepoSummaryContext.cs` — fields: `Name`, `ServiceOwner` (string, never null), `PreviousVersion`, `NextVersion`, `CommitCount`, `TicketCount`
-- [ ] T010 Extend `ReleaseRenderContext` with `IReadOnlyList<RepoSummaryContext> Repositories { get; init; }` in `backend/src/RepoManager.Application/DTOs/Releases/ReleaseRenderContext.cs`
-- [ ] T011 Add `ServiceOwner` max-length validator rule (`MaximumLength(120).When(x => x.ServiceOwner is not null)`) to `backend/src/RepoManager.Application/Validators/UpdateRepositoryRequestValidator.cs`
-- [ ] T012 [P] Add `Task<ReleaseNoteTemplateDto> CloneAsync(int templateId, CancellationToken ct = default)` to `backend/src/RepoManager.Application/Services/ITemplateService.cs`
-- [ ] T013 Configure `ServiceOwner` column (nullable, maxLength 120) in `backend/src/RepoManager.Infrastructure/Persistence/EntityConfigurations/RepositoryConfiguration.cs`
-- [ ] T014 Configure `IsSystem` column (non-nullable, default `false`) in `backend/src/RepoManager.Infrastructure/Persistence/EntityConfigurations/ReleaseNoteTemplateConfiguration.cs`
-- [ ] T015 Create `ReleaseSummaryTemplateBody` static class with `const string Default` in `backend/src/RepoManager.Infrastructure/Persistence/SeedData/ReleaseSummaryTemplateBody.cs` — paste the full Handlebars body from `contracts/service-interfaces.md`
-- [ ] T016 Generate and apply first migration: `dotnet ef migrations add AddColumn_Repositories_ServiceOwner --project backend/src/RepoManager.Infrastructure --startup-project backend/src/RepoManager.Api` then `dotnet ef database update ...`
-- [ ] T017 Generate second migration: `dotnet ef migrations add AddColumn_Templates_IsSystem --project backend/src/RepoManager.Infrastructure --startup-project backend/src/RepoManager.Api` — then manually add `migrationBuilder.InsertData(...)` call inside the generated `Up` method using `ReleaseSummaryTemplateBody.Default`, then apply: `dotnet ef database update ...`
+- [X] T005 [P] Add `public string? ServiceOwner { get; set; }` to `backend/src/RepoManager.Domain/Entities/Repository.cs`
+- [X] T006 [P] Add `public bool IsSystem { get; set; }` to `backend/src/RepoManager.Domain/Entities/ReleaseNoteTemplate.cs`
+- [X] T007 [P] Add `string? ServiceOwner` field to `RepositoryDto` and `UpdateRepositoryRequest` in `backend/src/RepoManager.Application/Repositories/IRepositoryService.cs`
+- [X] T008 [P] Add `bool IsSystem` field to `TemplateDto` in `backend/src/RepoManager.Application/Templates/IReleaseNoteTemplateService.cs`
+- [X] T009 Create `RepoSummaryContext` record in `backend/src/RepoManager.Application/DTOs/Releases/RepoSummaryContext.cs` — fields: `Name`, `ServiceOwner` (string, never null), `PreviousVersion`, `NextVersion`, `CommitCount`, `TicketCount`
+- [X] T010 Extend `ReleaseRenderContext` with `IReadOnlyList<RepoSummaryContext> Repositories { get; init; }` in `backend/src/RepoManager.Application/DTOs/Releases/RenderContextDtos.cs` — replaced `RepoContextDto`; updated `ReleaseRenderService.cs` accordingly
+- [X] T011 Add `ServiceOwner` max-length validator rule (`MaximumLength(120).When(x => x.ServiceOwner is not null)`) to `backend/src/RepoManager.Application/Validators/UpdateRepositoryRequestValidator.cs`
+- [X] T012 [P] Add `Task<TemplateDto> CloneAsync(Guid id, CancellationToken ct = default)` to `backend/src/RepoManager.Application/Templates/IReleaseNoteTemplateService.cs`
+- [X] T013 Configure `ServiceOwner` column (nullable, maxLength 120) in `AppDbContext.cs` Repository entity section
+- [X] T014 Configure `IsSystem` column (non-nullable, default `false`) in `AppDbContext.cs` ReleaseNoteTemplate entity section
+- [X] T015 Create `ReleaseSummaryTemplateBody` static class with `const string Default` in `backend/src/RepoManager.Infrastructure/Persistence/SeedData/ReleaseSummaryTemplateBody.cs`
+- [X] T016 Generated and applied migration `AddColumn_Repositories_ServiceOwner` (also captured `IsSystem` column addition)
+- [X] T017 Generated migration `AddColumn_Templates_IsSystem` — manually added `migrationBuilder.InsertData(...)` for "Release Summary (Default)" seed row; applied both migrations successfully
 
 **Checkpoint**: `dotnet build backend/src` succeeds with zero errors. Two migrations applied. Seed row for "Release Summary (Default)" exists in the database.
 

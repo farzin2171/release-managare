@@ -388,9 +388,9 @@ public class ReleaseRenderService : IReleaseRenderService
             [new TicketDto("PRJ-102", "Fix null reference in payment flow", "bug", false)],
             []);
 
-        var repos = new List<RepoContextDto>
+        var repos = new List<RepoSummaryContext>
         {
-            new("sample-api", "1.0.0", "1.1.0", 12, 3, "sample-api_1.1.0")
+            new("sample-api", "", "1.0.0", "1.1.0", 12, 3)
         };
 
         var contributors = new List<ContributorDto>
@@ -433,17 +433,14 @@ public class ReleaseRenderService : IReleaseRenderService
         var previousVersion = primarySnapshot?.PreviousVersion ?? string.Empty;
 
         // Repos context
-        var repos = release.ReleaseRepositories.Select(rr =>
-        {
-            var tag = release.RepositoryTags.FirstOrDefault(t => t.RepositoryId == rr.RepositoryId);
-            return new RepoContextDto(
-                rr.Repository?.Name ?? string.Empty,
-                tag?.FromTag ?? rr.PreviousVersion,
-                tag?.ToTag ?? rr.NextVersion,
-                rr.CommitCount,
-                rr.TicketCount,
-                $"{rr.Repository?.Name ?? "repo"}_{version}");
-        }).ToList();
+        var repos = release.ReleaseRepositories.Select(rr => new RepoSummaryContext(
+            rr.Repository?.Name ?? string.Empty,
+            rr.Repository?.ServiceOwner ?? string.Empty,
+            rr.PreviousVersion,
+            rr.NextVersion,
+            rr.CommitCount,
+            rr.TicketCount
+        )).ToList();
 
         // Contributors and tickets are empty unless loaded separately (Phase 3 scope: templates + bindings)
         var tickets = new TicketBucketsDto([], [], [], []);
@@ -500,11 +497,11 @@ public class ReleaseRenderService : IReleaseRenderService
             repositories = ctx.Repositories.Select(r => new
             {
                 name = r.Name,
-                previousTag = r.PreviousTag,
-                nextTag = r.NextTag,
+                serviceOwner = r.ServiceOwner,
+                previousVersion = r.PreviousVersion,
+                nextVersion = r.NextVersion,
                 commitCount = r.CommitCount,
-                ticketCount = r.TicketCount,
-                jiraFixVersion = r.JiraFixVersion
+                ticketCount = r.TicketCount
             }).ToList(),
             tickets = new
             {

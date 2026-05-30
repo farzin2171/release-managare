@@ -95,6 +95,9 @@ public class ReleaseNoteTemplateService : IReleaseNoteTemplateService
         _logger.LogInformation("Release note template {TemplateId} deleted", id);
     }
 
+    public Task<TemplateDto> CloneAsync(Guid id, CancellationToken ct = default)
+        => throw new NotImplementedException("CloneAsync implemented in Phase 5");
+
     private static void ValidateHandlebars(string content)
     {
         try { Handlebars.Compile(content); }
@@ -106,5 +109,5 @@ public class ReleaseNoteTemplateService : IReleaseNoteTemplateService
     }
 
     private static TemplateDto ToDto(ReleaseNoteTemplate t) =>
-        new(t.Id, t.Name, t.ContentTemplate, t.IsDefault);
+        new(t.Id, t.Name, t.ContentTemplate, t.IsDefault, t.IsSystem);
 }
