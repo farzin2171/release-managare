@@ -45,7 +45,12 @@
       "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\MyWork\\\\release-managare\\\\frontend\\\\src\\\\features\\\\releases\\\\wizard\\\\steps\")",
       "Bash(grep -v \"obj\\\\\\\\|bin\\\\\\\\|cache\")",
       "Bash(grep -v \"\\\\\\\\\\\\\\\\obj\\\\\\\\\\\\\\\\\\\\\\\\|\\\\\\\\\\\\\\\\bin\\\\\\\\\\\\\\\\\")",
-      "PowerShell(cd \"c:\\\\MyWork\\\\release-managare\" && powershell -ExecutionPolicy Bypass -File \".specify/scripts/powershell/check-prerequisites.ps1\" -Json -RequireTasks -IncludeTasks)"
+      "PowerShell(cd \"c:\\\\MyWork\\\\release-managare\" && powershell -ExecutionPolicy Bypass -File \".specify/scripts/powershell/check-prerequisites.ps1\" -Json -RequireTasks -IncludeTasks)",
+      "PowerShell(& \".specify\\\\extensions\\\\git\\\\scripts\\\\powershell\\\\create-new-feature.ps1\" -Json -ShortName \"milestone-13-hardening\" \"Milestone 13: Security, Service Ownership & UX Hardening - API key protection for setup endpoint, service_owner field on Repository, Release Summary system template, JWT refresh token frontend flow, and Delete Draft Releases UI\")",
+      "PowerShell(& \".specify\\\\scripts\\\\powershell\\\\check-prerequisites.ps1\" -Json -PathsOnly)",
+      "PowerShell(& \".specify\\\\extensions\\\\git\\\\scripts\\\\powershell\\\\create-new-feature.ps1\" -Json -ShortName \"milestone-13-hardening\" \"Milestone 13: Security, Service Ownership & UX Hardening\")",
+      "PowerShell(& \".specify\\\\scripts\\\\powershell\\\\setup-plan.ps1\" -Json)",
+      "PowerShell(& \".specify\\\\scripts\\\\powershell\\\\setup-tasks.ps1\" -Json)"
     ]
   }
 }
