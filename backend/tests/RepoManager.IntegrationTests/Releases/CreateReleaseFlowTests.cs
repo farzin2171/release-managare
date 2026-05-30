@@ -27,7 +27,7 @@ public class CreateReleaseFlowTests : IDisposable
     public CreateReleaseFlowTests()
     {
         _factory = new ReleaseFlowFactory();
-        _client = _factory.CreateClient();
+        _client = _factory.CreateClientWithSetupKey();
     }
 
     public void Dispose()
@@ -148,7 +148,7 @@ public class CreateReleaseFlowTests : IDisposable
     {
         var resp = await _client.PostAsJsonAsync("/api/v1/auth/setup",
             new { email = AdminEmail, password = AdminPassword });
-        resp.StatusCode.Should().BeOneOf(HttpStatusCode.Created, HttpStatusCode.Gone);
+        resp.StatusCode.Should().BeOneOf(HttpStatusCode.Created, HttpStatusCode.Conflict);
 
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();

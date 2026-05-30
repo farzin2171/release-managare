@@ -27,7 +27,7 @@ public class JiraCoverageTests : IDisposable
     public JiraCoverageTests()
     {
         _factory = new JiraCoverageTestFactory();
-        _adminClient = _factory.CreateClient();
+        _adminClient = _factory.CreateClientWithSetupKey();
         _viewerClient = _factory.CreateClient();
     }
 

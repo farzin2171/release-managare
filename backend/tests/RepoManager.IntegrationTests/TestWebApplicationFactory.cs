@@ -14,12 +14,21 @@ namespace RepoManager.IntegrationTests;
 
 public class TestWebApplicationFactory : WebApplicationFactory<Program>
 {
+    public const string TestSetupKey = "test-setup-key-for-integration-tests-32c";
+
     private readonly SqliteConnection _connection;
 
     public TestWebApplicationFactory()
     {
         _connection = new SqliteConnection("Data Source=:memory:");
         _connection.Open();
+    }
+
+    public HttpClient CreateClientWithSetupKey()
+    {
+        var client = CreateClient();
+        client.DefaultRequestHeaders.Add("X-Setup-Key", TestSetupKey);
+        return client;
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -34,7 +43,8 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
                 ["Jwt:Issuer"] = "test-issuer",
                 ["Jwt:Audience"] = "test-audience",
                 ["DataProtection:Key"] = "test-data-protection-key-32chars!",
-                ["ConnectionStrings:DefaultConnection"] = "Data Source=:memory:"
+                ["ConnectionStrings:DefaultConnection"] = "Data Source=:memory:",
+                ["RELEASE_MANAGER_SETUP_KEY"] = TestSetupKey
             });
         });
 
@@ -54,14 +64,14 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
             services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlite(_connection));
 
-            // Create the schema now (ConfigureServices runs before background services start).
+            // Apply all migrations now so Program.cs's Migrate() call finds nothing pending.
             // Avoid BuildServiceProvider() here — it triggers Serilog's ReloadableLogger.Freeze()
             // prematurely, causing a double-freeze error when the host later resolves ILoggerFactory.
             var dbOptions = new DbContextOptionsBuilder<AppDbContext>()
                 .UseSqlite(_connection)
                 .Options;
             using var db = new AppDbContext(dbOptions);
-            db.Database.EnsureCreated();
+            db.Database.Migrate();
 
             // Program.cs reads Jwt:Secret from builder.Configuration before ConfigureAppConfiguration
             // adds test values. PostConfigure ensures the validation key matches the generation key

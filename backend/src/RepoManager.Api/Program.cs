@@ -5,7 +5,9 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using RepoManager.Api.Filters;
 using RepoManager.Api.Middleware;
+using RepoManager.Api.StartupValidators;
 using RepoManager.Infrastructure;
 using RepoManager.Infrastructure.BackgroundServices;
 using RepoManager.Infrastructure.Persistence;
@@ -31,6 +33,8 @@ try
     builder.Services.AddInfrastructure(builder.Configuration);
     builder.Services.AddHostedService<SyncBackgroundService>();
     builder.Services.AddHostedService<JiraCoverageRefreshService>();
+    builder.Services.AddHostedService<SetupKeyStartupValidator>();
+    builder.Services.AddScoped<SetupKeyAuthorizationFilter>();
 
     var jwtSecret = builder.Configuration["Jwt:Secret"]
         ?? throw new InvalidOperationException("Jwt:Secret is required.");
@@ -113,6 +117,9 @@ try
             var userId = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (userId is not null)
                 diagnosticContext.Set("UserId", userId);
+
+            // Never log the setup key value
+            context.Request.Headers.Remove("X-Setup-Key");
         };
     });
 

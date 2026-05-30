@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RepoManager.Api.Filters;
 using RepoManager.Application.Auth;
 using RepoManager.Application.Common.Exceptions;
 
@@ -15,10 +16,11 @@ public class AuthController : ControllerBase
 
     [AllowAnonymous]
     [HttpPost("setup")]
+    [ServiceFilter(typeof(SetupKeyAuthorizationFilter))]
     public async Task<IActionResult> Setup([FromBody] SetupDto dto, CancellationToken ct)
     {
         if (await _auth.AdminExistsAsync(ct))
-            return StatusCode(410, new { title = "Setup already completed." });
+            return StatusCode(409, new { code = "setup_already_complete" });
 
         var user = await _auth.SetupAsync(dto, ct);
         return StatusCode(201, user);
