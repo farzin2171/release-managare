@@ -19,10 +19,10 @@
 
 **Purpose**: Write failing unit tests for the two TDD-required components before any implementation begins. Confirm they are red. This gate must pass before Phase 3 begins.
 
-- [ ] T001 Write failing unit tests for `SetupKeyAuthorizationFilter` in `backend/tests/RepoManager.UnitTests/Filters/SetupKeyAuthorizationFilterTests.cs` — covers: missing header → 401; wrong key → 401; correct key → next() called; constant-time comparison used
-- [ ] T002 Write failing unit tests for `SetupKeyStartupValidator` in `backend/tests/RepoManager.UnitTests/StartupValidators/SetupKeyStartupValidatorTests.cs` — covers: key absent + no users → StopApplication called + Fatal logged; key absent + users exist → no stop; key present (any) → no stop
-- [ ] T003 [P] Confirm test runner sees the new test files and they fail: `dotnet test backend/tests --filter "FullyQualifiedName~SetupKey"` — expect all new tests red
-- [ ] T004 [P] Create directory stubs: `backend/src/RepoManager.Api/Filters/` and `backend/src/RepoManager.Api/StartupValidators/` (add `.gitkeep` placeholders so directories are tracked)
+- [X] T001 Write failing unit tests for `SetupKeyAuthorizationFilter` in `backend/tests/RepoManager.UnitTests/Filters/SetupKeyAuthorizationFilterTests.cs` — covers: missing header → 401; wrong key → 401; correct key → next() called; constant-time comparison used
+- [X] T002 Write failing unit tests for `SetupKeyStartupValidator` in `backend/tests/RepoManager.UnitTests/StartupValidators/SetupKeyStartupValidatorTests.cs` — covers: key absent + no users → StopApplication called + Fatal logged; key absent + users exist → no stop; key present (any) → no stop
+- [X] T003 [P] Confirm test runner sees the new test files and they fail: `dotnet test backend/tests --filter "FullyQualifiedName~SetupKey"` — expect all new tests red
+- [X] T004 [P] Create directory stubs: `backend/src/RepoManager.Api/Filters/` and `backend/src/RepoManager.Api/StartupValidators/` (add `.gitkeep` placeholders so directories are tracked)
 
 **Checkpoint**: All new tests fail (red). TDD gate open for Phase 3.
 

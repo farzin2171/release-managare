@@ -17,6 +17,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\RepoManager.Api\RepoManager.Api.csproj" />
     <ProjectReference Include="..\..\src\RepoManager.Infrastructure\RepoManager.Infrastructure.csproj" />
   </ItemGroup>
 

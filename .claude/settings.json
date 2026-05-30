@@ -50,7 +50,8 @@
       "PowerShell(& \".specify\\\\scripts\\\\powershell\\\\check-prerequisites.ps1\" -Json -PathsOnly)",
       "PowerShell(& \".specify\\\\extensions\\\\git\\\\scripts\\\\powershell\\\\create-new-feature.ps1\" -Json -ShortName \"milestone-13-hardening\" \"Milestone 13: Security, Service Ownership & UX Hardening\")",
       "PowerShell(& \".specify\\\\scripts\\\\powershell\\\\setup-plan.ps1\" -Json)",
-      "PowerShell(& \".specify\\\\scripts\\\\powershell\\\\setup-tasks.ps1\" -Json)"
+      "PowerShell(& \".specify\\\\scripts\\\\powershell\\\\setup-tasks.ps1\" -Json)",
+      "Bash(findstr /C:\"test\" /C:\"Test\")"
     ]
   }
 }
