@@ -79,11 +79,11 @@
 
 ### Implementation for User Story 2
 
-- [ ] T024 [US2] Update `RepositoryService.cs` in `backend/src/RepoManager.Infrastructure/Services/RepositoryService.cs` to pass `ServiceOwner` through `MapToDto` projection and `UpdateAsync` persistence
-- [ ] T025 [US2] Verify `RepositoriesController` in `backend/src/RepoManager.Api/Controllers/RepositoriesController.cs` flows `ServiceOwner` through `PUT` and `GET` responses (Mapster auto-maps if DTO fields match; confirm no manual exclusion)
-- [ ] T026 [P] [US2] Write integration test in `backend/tests/RepoManager.IntegrationTests/Repositories/ServiceOwnerTests.cs` — set value via PUT → GET returns it; clear via PUT (null) → GET returns null; length 121 → 400
-- [ ] T027 [US2] Add "Service Owner" `Input` field to `frontend/src/features/settings/repositories/RepositoryEditPanel.tsx` — label "Service Owner", placeholder "e.g. Platform Team", `maxLength={120}`; render as read-only `<p>` for Viewer role; show "—" when null
-- [ ] T028 [P] [US2] Add ServiceOwner column to `frontend/src/features/settings/repositories/RepositoriesTable.tsx` — display value or "—" when null
+- [X] T024 [US2] Update `RepositoryService.cs` in `backend/src/RepoManager.Infrastructure/Services/RepositoryService.cs` to pass `ServiceOwner` through `MapToDto` projection and `UpdateAsync` persistence
+- [X] T025 [US2] Verify `RepositoriesController` in `backend/src/RepoManager.Api/Controllers/RepositoriesController.cs` flows `ServiceOwner` through `PUT` and `GET` responses (Mapster auto-maps if DTO fields match; confirm no manual exclusion)
+- [X] T026 [P] [US2] Write integration test in `backend/tests/RepoManager.IntegrationTests/Repositories/ServiceOwnerTests.cs` — set value via PUT → GET returns it; clear via PUT (null) → GET returns null; length 121 → 400
+- [X] T027 [US2] Add "Service Owner" `Input` field to `frontend/src/features/settings/repositories/RepositoryEditPanel.tsx` — label "Service Owner", placeholder "e.g. Platform Team", `maxLength={120}`; render as read-only `<p>` for Viewer role; show "—" when null
+- [X] T028 [P] [US2] Add ServiceOwner column to `frontend/src/features/settings/repositories/RepositoriesTable.tsx` — display value or "—" when null
 
 **Checkpoint**: Admin edits ServiceOwner in the UI, saves, refreshes — value persists. Viewer sees it read-only. GET endpoint returns correct value.
 

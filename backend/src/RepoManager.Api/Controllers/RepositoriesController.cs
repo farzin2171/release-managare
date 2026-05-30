@@ -14,11 +14,16 @@ public class RepositoriesController : ControllerBase
 {
     private readonly IRepositoryService _service;
     private readonly IValidator<SetLatestTagDto> _setTagValidator;
+    private readonly IValidator<UpdateRepositoryRequest> _updateValidator;
 
-    public RepositoriesController(IRepositoryService service, IValidator<SetLatestTagDto> setTagValidator)
+    public RepositoriesController(
+        IRepositoryService service,
+        IValidator<SetLatestTagDto> setTagValidator,
+        IValidator<UpdateRepositoryRequest> updateValidator)
     {
         _service = service;
         _setTagValidator = setTagValidator;
+        _updateValidator = updateValidator;
     }
 
     [HttpGet]
@@ -39,6 +44,25 @@ public class RepositoriesController : ControllerBase
     {
         var repo = await _service.SetTrackedAsync(id, dto, ct);
         return Ok(repo);
+    }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateRepositoryRequest dto, CancellationToken ct)
+    {
+        var validation = await _updateValidator.ValidateAsync(dto, ct);
+        if (!validation.IsValid)
+            return UnprocessableEntity(validation.ToDictionary());
+
+        try
+        {
+            var repo = await _service.UpdateAsync(id, dto, ct);
+            return Ok(repo);
+        }
+        catch (NotFoundException)
+        {
+            return NotFound();
+        }
     }
 
     [HttpGet("{id:guid}/changes")]

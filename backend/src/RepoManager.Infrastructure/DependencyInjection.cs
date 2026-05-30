@@ -57,6 +57,7 @@ public static class DependencyInjection
         services.AddScoped<IGitProviderService, GitProviderService>();
         services.AddScoped<IRepositoryService, RepositoryService>();
         services.AddScoped<IValidator<SetLatestTagDto>, SetLatestTagDtoValidator>();
+        services.AddScoped<IValidator<UpdateRepositoryRequest>, UpdateRepositoryRequestValidator>();
         services.AddScoped<IValidator<CreateReleaseRequest>, CreateReleaseRequestValidator>();
         services.AddScoped<IProjectService, ProjectService>();
         services.AddSingleton<IConventionalCommitParser, ConventionalCommitParser>();

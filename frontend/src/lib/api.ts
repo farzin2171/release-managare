@@ -556,6 +556,7 @@ export interface components {
       webUrl: string
       azureProjectName: string
       isTracked: boolean
+      serviceOwner: string | null
       lastSyncedAt: string | null
       latestTag: string | null
       latestTagCommitSha: string | null

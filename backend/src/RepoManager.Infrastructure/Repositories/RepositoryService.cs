@@ -54,6 +54,19 @@ public class RepositoryService : IRepositoryService
         return ToDto(repo);
     }
 
+    public async Task<RepositoryDto> UpdateAsync(Guid id, UpdateRepositoryRequest dto, CancellationToken ct = default)
+    {
+        var repo = await _db.Repositories
+            .Include(r => r.LatestTagSetBy)
+            .FirstOrDefaultAsync(r => r.Id == id, ct)
+            ?? throw new NotFoundException("Repository", id);
+
+        repo.ServiceOwner = dto.ServiceOwner;
+        await _db.SaveChangesAsync(ct);
+        _logger.LogInformation("Repository {RepositoryId} serviceOwner updated", id);
+        return ToDto(repo);
+    }
+
     public async Task<RepositoryChangesDto> GetChangesAsync(
         Guid repositoryId, GetChangesQuery query, CancellationToken ct = default)
     {
