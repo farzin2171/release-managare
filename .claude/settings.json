@@ -74,7 +74,8 @@
       "PowerShell(Set-Location c:\\\\MyWork\\\\release-managare; dotnet test backend\\\\RepoManager.sln --no-build --logger \"console;verbosity=normal\" 2>&1 | Where-Object { $_ -match \"Error Message:|Stack Trace:|FAIL|Failed\" } | Select-Object -First 30)",
       "PowerShell(Set-Location c:\\\\MyWork\\\\release-managare; dotnet test backend\\\\RepoManager.sln --no-build --logger \"console;verbosity=normal\" --filter \"FullyQualifiedName~SetupEndpointTests\" 2>&1 | Where-Object { $_ -match \"Error Message:|Stack Trace|InvalidOperation|server|started\" } | Select-Object -First 20)",
       "PowerShell(Set-Location c:\\\\MyWork\\\\release-managare; dotnet test backend\\\\RepoManager.sln --no-build --filter \"FullyQualifiedName~CreateReleaseFlow\" --logger \"console;verbosity=minimal\" 2>&1 | Where-Object { $_ -match \"Passed!|Failed!|Total\" })",
-      "PowerShell(Set-Location c:\\\\MyWork\\\\release-managare; dotnet test backend\\\\RepoManager.sln --no-build --filter \"FullyQualifiedName~RepositoryLatestTag\" --logger \"console;verbosity=minimal\" 2>&1 | Where-Object { $_ -match \"Passed!|Failed!|Total\" })"
+      "PowerShell(Set-Location c:\\\\MyWork\\\\release-managare; dotnet test backend\\\\RepoManager.sln --no-build --filter \"FullyQualifiedName~RepositoryLatestTag\" --logger \"console;verbosity=minimal\" 2>&1 | Where-Object { $_ -match \"Passed!|Failed!|Total\" })",
+      "Bash(dir \"c:\\\\MyWork\\\\release-managare\\\\backend\" /B)"
     ]
   }
 }

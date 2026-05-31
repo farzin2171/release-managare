@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using FluentValidation.Results;
 using HandlebarsDotNet;
 using Microsoft.EntityFrameworkCore;
@@ -60,6 +61,9 @@ public class ReleaseNoteTemplateService : IReleaseNoteTemplateService
         var template = await _db.ReleaseNoteTemplates.FindAsync([id], ct)
             ?? throw new NotFoundException("Template", id);
 
+        if (template.IsSystem)
+            throw new ForbiddenException("System templates are read-only.", "system_template_readonly");
+
         if (dto.ContentTemplate is not null)
             ValidateHandlebars(dto.ContentTemplate);
 
@@ -90,13 +94,66 @@ public class ReleaseNoteTemplateService : IReleaseNoteTemplateService
     {
         var template = await _db.ReleaseNoteTemplates.FindAsync([id], ct)
             ?? throw new NotFoundException("Template", id);
+
+        if (template.IsSystem)
+            throw new ForbiddenException("System templates are read-only.", "system_template_readonly");
+
         _db.ReleaseNoteTemplates.Remove(template);
         await _db.SaveChangesAsync(ct);
         _logger.LogInformation("Release note template {TemplateId} deleted", id);
     }
 
-    public Task<TemplateDto> CloneAsync(Guid id, CancellationToken ct = default)
-        => throw new NotImplementedException("CloneAsync implemented in Phase 5");
+    public async Task<TemplateDto> CloneAsync(Guid id, CancellationToken ct = default)
+    {
+        var sw = Stopwatch.StartNew();
+        var source = await _db.ReleaseNoteTemplates.FindAsync([id], ct)
+            ?? throw new NotFoundException("Template", id);
+
+        var baseName = $"{source.Name} (copy)";
+
+        await using var tx = await _db.Database.BeginTransactionAsync(ct);
+
+        var existingNames = await _db.ReleaseNoteTemplates
+            .Where(t => t.Name.StartsWith(baseName))
+            .Select(t => t.Name)
+            .ToListAsync(ct);
+
+        var cloneName = baseName;
+        if (existingNames.Contains(cloneName, StringComparer.OrdinalIgnoreCase))
+        {
+            cloneName = null;
+            for (var i = 2; i <= 100; i++)
+            {
+                var candidate = $"{baseName} {i}";
+                if (!existingNames.Contains(candidate, StringComparer.OrdinalIgnoreCase))
+                {
+                    cloneName = candidate;
+                    break;
+                }
+            }
+            if (cloneName is null)
+                throw new ConflictException("All clone name slots are taken.", "clone_name_exhausted");
+        }
+
+        var clone = new ReleaseNoteTemplate
+        {
+            Id = Guid.NewGuid(),
+            Name = cloneName,
+            ContentTemplate = source.ContentTemplate,
+            IsDefault = false,
+            IsSystem = false
+        };
+        _db.ReleaseNoteTemplates.Add(clone);
+        await _db.SaveChangesAsync(ct);
+        await tx.CommitAsync(ct);
+
+        sw.Stop();
+        _logger.LogInformation(
+            "Cloned template {SourceId} → {CloneId} ('{Name}') in {ElapsedMs}ms",
+            id, clone.Id, clone.Name, sw.ElapsedMilliseconds);
+
+        return ToDto(clone);
+    }
 
     private static void ValidateHandlebars(string content)
     {

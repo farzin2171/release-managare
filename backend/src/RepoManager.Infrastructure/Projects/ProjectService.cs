@@ -5,6 +5,7 @@ using RepoManager.Application.Common.Exceptions;
 using RepoManager.Application.Projects;
 using RepoManager.Application.Repositories;
 using RepoManager.Domain.Entities;
+using RepoManager.Domain.Enums;
 using RepoManager.Infrastructure.Persistence;
 
 namespace RepoManager.Infrastructure.Projects;
@@ -28,6 +29,8 @@ public class ProjectService : IProjectService
         if (nameExists)
             throw new ConflictException($"A project named '{dto.Name}' already exists.");
 
+        await using var tx = await _db.Database.BeginTransactionAsync(ct);
+
         var project = new Project
         {
             Id = Guid.NewGuid(),
@@ -40,6 +43,27 @@ public class ProjectService : IProjectService
         };
         _db.Projects.Add(project);
         await _db.SaveChangesAsync(ct);
+
+        var systemTemplate = await _db.ReleaseNoteTemplates
+            .FirstOrDefaultAsync(t => t.IsSystem && t.Name == "Release Summary (Default)", ct);
+
+        if (systemTemplate is not null)
+        {
+            _db.TemplateBindings.Add(new ProjectTemplateBinding
+            {
+                Id = Guid.NewGuid(),
+                ProjectId = project.Id,
+                TemplateId = systemTemplate.Id,
+                Kind = TemplateBindingKind.ReleaseSummary,
+                PageTitleTemplate = "{{project.name}} {{version}} — Release Summary",
+                SortOrder = 1,
+                CreatedAt = DateTimeOffset.UtcNow,
+                UpdatedAt = DateTimeOffset.UtcNow
+            });
+            await _db.SaveChangesAsync(ct);
+        }
+
+        await tx.CommitAsync(ct);
         _logger.LogInformation("Project {ProjectId} created with name '{Name}'", project.Id, project.Name);
         return ToDto(project, []);
     }

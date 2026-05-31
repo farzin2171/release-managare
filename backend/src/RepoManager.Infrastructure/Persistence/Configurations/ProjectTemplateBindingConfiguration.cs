@@ -15,7 +15,7 @@ public class ProjectTemplateBindingConfiguration : IEntityTypeConfiguration<Proj
             .HasMaxLength(20)
             .HasConversion<string>();
 
-        builder.ToTable(t => t.HasCheckConstraint("CK_Binding_Kind", "Kind IN ('ReleaseNotes','Checklist','Custom')"));
+        builder.ToTable(t => t.HasCheckConstraint("CK_Binding_Kind", "Kind IN ('ReleaseNotes','Checklist','Custom','ReleaseSummary')"));
 
         builder.Property(b => b.PageTitleTemplate)
             .IsRequired()

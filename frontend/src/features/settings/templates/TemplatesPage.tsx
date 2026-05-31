@@ -334,6 +334,7 @@ export function TemplatesPage() {
   const qc = useQueryClient()
   const [slideOver, setSlideOver] = useState<'new' | TemplateDto | null>(null)
   const [previewing, setPreviewing] = useState<TemplateDto | null>(null)
+  const [cloneError, setCloneError] = useState<string | null>(null)
 
   const { data: templates = [], isLoading } = useQuery<TemplateDto[]>({
     queryKey: ['templates'],
@@ -346,6 +347,19 @@ export function TemplatesPage() {
       if (!res.ok) throw new Error('Failed to delete template')
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['templates'] }),
+  })
+
+  const cloneTemplate = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiFetch(`/api/v1/templates/${id}/clone`, { method: 'POST' })
+      if (!res.ok) throw new Error('Failed to clone template')
+      return res.json() as Promise<TemplateDto>
+    },
+    onSuccess: () => {
+      setCloneError(null)
+      qc.invalidateQueries({ queryKey: ['templates'] })
+    },
+    onError: (err: Error) => setCloneError(err.message),
   })
 
   const handleDelete = (t: TemplateDto) => {
@@ -403,7 +417,14 @@ export function TemplatesPage() {
               {templates.map((t) => (
                 <tr key={t.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
                   <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">
-                    {t.name}
+                    <span className="flex items-center gap-2">
+                      {t.name}
+                      {t.isSystem && (
+                        <span className="inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300 ring-1 ring-inset ring-violet-300 dark:ring-violet-700">
+                          System
+                        </span>
+                      )}
+                    </span>
                   </td>
                   <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">
                     {new Date(t.createdAt).toLocaleDateString()}
@@ -416,19 +437,31 @@ export function TemplatesPage() {
                       >
                         Preview
                       </button>
-                      <button
-                        onClick={() => setSlideOver(t)}
-                        className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 font-medium"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(t)}
-                        disabled={deleteTemplate.isPending}
-                        className="text-xs text-red-500 hover:text-red-700 disabled:opacity-50"
-                      >
-                        Delete
-                      </button>
+                      {t.isSystem ? (
+                        <button
+                          onClick={() => cloneTemplate.mutate(t.id)}
+                          disabled={cloneTemplate.isPending}
+                          className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 font-medium disabled:opacity-50"
+                        >
+                          {cloneTemplate.isPending ? 'Cloning…' : 'Clone'}
+                        </button>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => setSlideOver(t)}
+                            className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 font-medium"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(t)}
+                            disabled={deleteTemplate.isPending}
+                            className="text-xs text-red-500 hover:text-red-700 disabled:opacity-50"
+                          >
+                            Delete
+                          </button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -436,6 +469,10 @@ export function TemplatesPage() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {cloneError && (
+        <p className="text-sm text-red-500">{cloneError}</p>
       )}
 
       {/* Slide-over */}
