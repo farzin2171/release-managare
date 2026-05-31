@@ -139,12 +139,12 @@
 
 ### Implementation for User Story 5
 
-- [ ] T046 [US5] Add `DropdownMenu` kebab trigger to Draft release rows in `frontend/src/features/releases/ReleasesTable.tsx` — render only when `release.status === "Draft"` AND `currentUser.role === "Admin"`; single menu item "Delete draft"
-- [ ] T047 [US5] Wire "Delete draft" to `AlertDialog` confirmation in `frontend/src/features/releases/ReleasesTable.tsx` — dialog text: `"Delete draft release '<name>'? This cannot be undone."`; Cancel + Delete (destructive red) buttons
-- [ ] T048 [US5] Handle DELETE outcomes in `frontend/src/features/releases/ReleasesTable.tsx` — success: fade-out row animation + toast `"Draft release '<name>' deleted."`; 409 conflict: toast `"This release has been published and can no longer be deleted."` + refresh row status; no blank screen on any error
-- [ ] T049 [US5] Add "Delete draft" `Button` (destructive variant) to the header area of `frontend/src/features/releases/ReleaseDetailPage.tsx` — visible only when `release.status === "Draft"` AND `currentUser.role === "Admin"`; placed adjacent to the existing "Edit" button
-- [ ] T050 [US5] Wire confirmation dialog and navigate-on-success in `frontend/src/features/releases/ReleaseDetailPage.tsx` — same dialog text as list view; on success: `navigate(`/projects/${release.projectId}/releases`)` with toast
-- [ ] T051 [US5] Add 404 fallback to `frontend/src/features/releases/ReleaseDetailPage.tsx` — when the detail fetch returns 404 (or any DELETE/POST call returns 404), render "Release not found" message with a `Link` to `/projects/${projectId}/releases`
+- [X] T046 [US5] Add `DropdownMenu` kebab trigger to Draft release rows in `frontend/src/features/releases/ReleasesTable.tsx` — render only when `release.status === "Draft"` AND `currentUser.role === "Admin"`; single menu item "Delete draft"
+- [X] T047 [US5] Wire "Delete draft" to `AlertDialog` confirmation in `frontend/src/features/releases/ReleasesTable.tsx` — dialog text: `"Delete draft release '<name>'? This cannot be undone."`; Cancel + Delete (destructive red) buttons
+- [X] T048 [US5] Handle DELETE outcomes in `frontend/src/features/releases/ReleasesTable.tsx` — success: fade-out row animation + toast `"Draft release '<name>' deleted."`; 409 conflict: toast `"This release has been published and can no longer be deleted."` + refresh row status; no blank screen on any error
+- [X] T049 [US5] Add "Delete draft" `Button` (destructive variant) to the header area of `frontend/src/features/releases/ReleaseDetailPage.tsx` — visible only when `release.status === "Draft"` AND `currentUser.role === "Admin"`; placed adjacent to the existing "Edit" button
+- [X] T050 [US5] Wire confirmation dialog and navigate-on-success in `frontend/src/features/releases/ReleaseDetailPage.tsx` — same dialog text as list view; on success: `navigate(`/projects/${release.projectId}/releases`)` with toast
+- [X] T051 [US5] Add 404 fallback to `frontend/src/features/releases/ReleaseDetailPage.tsx` — when the detail fetch returns 404 (or any DELETE/POST call returns 404), render "Release not found" message with a `Link` to `/projects/${projectId}/releases`
 
 **Checkpoint**: Viewer sees no delete option anywhere. Admin sees kebab on Draft rows and header button on Draft detail page. Confirming deletion removes the release. 409 race and 404 stale-page both handled without crash.
 

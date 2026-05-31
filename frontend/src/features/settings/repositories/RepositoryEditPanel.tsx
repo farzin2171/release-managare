@@ -1,14 +1,27 @@
 import { useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiFetch } from '../../../lib/apiClient'
+import { clearLatestTag } from '../../repositories/api/repositoriesApi'
 import { useAuthStore } from '../../../lib/authStore'
+import { TagPickerDialog } from '../../repositories/components/TagPickerDialog'
 import type { components } from '../../../lib/api'
 
 type RepositoryDto = components['schemas']['RepositoryDto']
+type RepositoryTagDto = components['schemas']['RepositoryTagDto']
 
 interface RepositoryEditPanelProps {
   repository: RepositoryDto
   onClose: () => void
+}
+
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime()
+  const minutes = Math.floor(diff / 60_000)
+  if (minutes < 1) return 'just now'
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  return `${Math.floor(hours / 24)}d ago`
 }
 
 export function RepositoryEditPanel({ repository, onClose }: RepositoryEditPanelProps) {
@@ -18,6 +31,26 @@ export function RepositoryEditPanel({ repository, onClose }: RepositoryEditPanel
   const [serviceOwner, setServiceOwner] = useState(repository.serviceOwner ?? '')
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [showTagPicker, setShowTagPicker] = useState(false)
+  const [showClearConfirm, setShowClearConfirm] = useState(false)
+
+  // Keep a fresh copy of the repo by watching the repositories list cache
+  const { data: repo = repository } = useQuery<RepositoryDto>({
+    queryKey: ['repository', repository.id],
+    queryFn: async () => {
+      const resp = await apiFetch('/api/v1/repositories')
+      const list = await resp.json() as RepositoryDto[]
+      return list.find((r) => r.id === repository.id) ?? repository
+    },
+    initialData: repository,
+    staleTime: 30_000,
+  })
+
+  const cachedTags = qc.getQueryData<RepositoryTagDto[]>(['repository', repo.id, 'tags'])
+  const pinnedTagStale =
+    !!repo.latestTag &&
+    Array.isArray(cachedTags) &&
+    !cachedTags.some((t) => t.name === repo.latestTag)
 
   const { mutate: save, isPending } = useMutation({
     mutationFn: () =>
@@ -38,9 +71,25 @@ export function RepositoryEditPanel({ repository, onClose }: RepositoryEditPanel
     },
   })
 
+  const { mutate: clearTag, isPending: isClearing } = useMutation({
+    mutationFn: () => clearLatestTag(repo.id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['repository', repo.id] })
+      qc.invalidateQueries({ queryKey: ['repositories'] })
+      setShowClearConfirm(false)
+      flash('Latest tag cleared.')
+    },
+  })
+
   function flash(msg: string) {
     setSuccessMsg(msg)
     setTimeout(() => setSuccessMsg(null), 3000)
+  }
+
+  function handleTagSet() {
+    qc.invalidateQueries({ queryKey: ['repository', repo.id] })
+    qc.invalidateQueries({ queryKey: ['repositories'] })
+    flash('Latest tag updated.')
   }
 
   return (
@@ -72,6 +121,64 @@ export function RepositoryEditPanel({ repository, onClose }: RepositoryEditPanel
             </div>
           )}
 
+          {/* Latest tag section */}
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3">
+              Latest tag
+            </p>
+
+            {repo.latestTag ? (
+              <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-4 space-y-1.5">
+                <span className="inline-block font-mono font-semibold text-gray-900 dark:text-white text-sm bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">
+                  {repo.latestTag}
+                </span>
+                {repo.latestTagCommitSha && (
+                  <p className="font-mono text-xs text-gray-500 dark:text-gray-400">
+                    {repo.latestTagCommitSha.slice(0, 7)}
+                  </p>
+                )}
+                {repo.latestTagSetAt && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Last set {timeAgo(repo.latestTagSetAt)}
+                    {repo.latestTagSetBy
+                      ? ` by ${repo.latestTagSetBy.email}`
+                      : repo.latestTagSetAt
+                        ? ' by Unknown user'
+                        : ''}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500 dark:text-gray-400 italic">Not set</p>
+            )}
+
+            {pinnedTagStale && (
+              <div className="mt-3 rounded-md border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/30 px-4 py-3 text-sm text-amber-800 dark:text-amber-300">
+                The pinned tag is no longer present in the remote repository. Please select a new one.
+              </div>
+            )}
+
+            {isAdmin && (
+              <div className="mt-3 flex gap-2">
+                <button
+                  onClick={() => setShowTagPicker(true)}
+                  className="px-3 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  {repo.latestTag ? 'Change tag' : 'Set latest tag'}
+                </button>
+                {repo.latestTag && (
+                  <button
+                    onClick={() => setShowClearConfirm(true)}
+                    className="px-3 py-1.5 text-sm font-medium text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Ownership section */}
           <div>
             <p className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3">
               Ownership
@@ -103,6 +210,7 @@ export function RepositoryEditPanel({ repository, onClose }: RepositoryEditPanel
             </div>
           </div>
 
+          {/* Details section */}
           <div>
             <p className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3">
               Details
@@ -157,6 +265,43 @@ export function RepositoryEditPanel({ repository, onClose }: RepositoryEditPanel
           </div>
         )}
       </div>
+
+      {/* Tag picker dialog */}
+      {showTagPicker && (
+        <TagPickerDialog
+          repositoryId={repo.id}
+          onClose={() => setShowTagPicker(false)}
+          onSuccess={handleTagSet}
+        />
+      )}
+
+      {/* Clear confirmation */}
+      {showClearConfirm && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setShowClearConfirm(false)} />
+          <div className="relative z-10 w-full max-w-sm mx-4 bg-white dark:bg-gray-900 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 p-6">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Clear latest tag?</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
+              This will remove the pinned tag from this repository. You can always set a new one later.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowClearConfirm(false)}
+                className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => clearTag()}
+                disabled={isClearing}
+                className="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 transition-colors"
+              >
+                {isClearing ? 'Clearing…' : 'Clear tag'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

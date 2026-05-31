@@ -47,11 +47,21 @@ export function ReleaseDetail() {
 
   const [editing, setEditing] = useState(false)
   const [editedNotes, setEditedNotes] = useState('')
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
-  const { data: release, isLoading, isError } = useQuery<ReleaseDetailDto>({
+  const { data: release, isLoading, isError, error } = useQuery<ReleaseDetailDto, Error>({
     queryKey: ['release', id],
-    queryFn: () => apiFetch(`/api/v1/releases/${id}`).then((r) => r.json()),
+    queryFn: async () => {
+      const res = await apiFetch(`/api/v1/releases/${id}`)
+      if (res.status === 404) throw Object.assign(new Error('not_found'), { status: 404 })
+      if (!res.ok) throw new Error('fetch_failed')
+      return res.json() as Promise<ReleaseDetailDto>
+    },
     enabled: !!id,
+    retry: (failureCount, err) => {
+      if ((err as Error & { status?: number }).status === 404) return false
+      return failureCount < 2
+    },
   })
 
   const saveNotesMutation = useMutation({
@@ -69,8 +79,49 @@ export function ReleaseDetail() {
     },
   })
 
+  const deleteReleaseMutation = useMutation({
+    mutationFn: async (rel: ReleaseDetailDto) => {
+      const res = await apiFetch(`/api/v1/projects/${rel.projectId}/releases/${rel.id}`, { method: 'DELETE' })
+      if (res.status === 404) throw Object.assign(new Error('not_found'), { status: 404 })
+      if (res.status === 409) throw Object.assign(new Error('conflict'), { status: 409 })
+      if (!res.ok) throw new Error('delete_failed')
+    },
+    onSuccess: (_, rel) => {
+      navigate(`/projects/${rel.projectId}`)
+    },
+    onError: (err: Error, rel) => {
+      const status = (err as Error & { status?: number }).status
+      if (status === 404) {
+        // Release already gone — navigate away
+        navigate(`/projects/${rel.projectId}`)
+      } else if (status === 409) {
+        // Race condition: release was published concurrently — refresh to show current state
+        qc.invalidateQueries({ queryKey: ['release', rel.id] })
+      }
+    },
+  })
+
+  const handleDeleteConfirm = () => {
+    if (!release) return
+    setShowDeleteConfirm(false)
+    deleteReleaseMutation.mutate(release)
+  }
+
   if (isLoading) {
     return <div className="p-8"><p className="text-sm text-gray-500">Loading release…</p></div>
+  }
+
+  const is404 = isError && (error as Error & { status?: number })?.status === 404
+
+  if (is404) {
+    return (
+      <div className="p-8 space-y-3">
+        <p className="text-sm text-gray-600 dark:text-gray-400">Release not found.</p>
+        <Link to="/projects" className="text-sm text-blue-600 hover:underline dark:text-blue-400">
+          ← Back to projects
+        </Link>
+      </div>
+    )
   }
 
   if (isError || !release) {
@@ -78,6 +129,7 @@ export function ReleaseDetail() {
   }
 
   const isPublished = release.status === 'Published'
+  const isDraft = release.status === 'Draft'
   const activeNotes = release.editedNotesMarkdown ?? release.generatedNotesMarkdown
 
   const startEditing = () => {
@@ -114,7 +166,7 @@ export function ReleaseDetail() {
 
         {/* Actions — hidden when published; write actions hidden for Viewers */}
         {!isPublished && !editing && isAdmin && (
-          <div className="flex gap-2 shrink-0">
+          <div className="flex gap-2 shrink-0 flex-wrap">
             <button
               onClick={startEditing}
               className="px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
@@ -127,9 +179,27 @@ export function ReleaseDetail() {
             >
               Publish
             </button>
+            {isDraft && (
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={deleteReleaseMutation.isPending}
+                className="px-4 py-2 rounded-md bg-red-600 text-white text-sm font-medium hover:bg-red-700 disabled:opacity-50 transition-colors"
+              >
+                {deleteReleaseMutation.isPending ? 'Deleting…' : 'Delete draft'}
+              </button>
+            )}
           </div>
         )}
       </div>
+
+      {deleteReleaseMutation.isError &&
+        (deleteReleaseMutation.error as Error & { status?: number }).status === 409 && (
+        <div className="rounded-md bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 px-4 py-3">
+          <p className="text-sm text-amber-800 dark:text-amber-300">
+            This release has been published and can no longer be deleted.
+          </p>
+        </div>
+      )}
 
       {/* Confluence URL (published only) */}
       {isPublished && release.confluencePageUrl && (
@@ -201,7 +271,7 @@ export function ReleaseDetail() {
               <textarea
                 value={editedNotes}
                 onChange={(e) => setEditedNotes(e.target.value)}
-                className="flex-1 min-h-[380px] rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white font-mono text-sm p-3 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 min-h-95 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white font-mono text-sm p-3 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                 spellCheck={false}
               />
               <div className="flex gap-2 mt-3 justify-end">
@@ -226,7 +296,7 @@ export function ReleaseDetail() {
             <div className="flex flex-col">
               <p className="text-xs text-gray-400 mb-1.5">Preview</p>
               <div
-                className="flex-1 min-h-[380px] rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 overflow-auto text-sm text-gray-800 dark:text-gray-200"
+                className="flex-1 min-h-95 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 overflow-auto text-sm text-gray-800 dark:text-gray-200"
                 dangerouslySetInnerHTML={{ __html: `<p class="mb-2">${renderMarkdownPreview(editedNotes)}</p>` }}
               />
             </div>
@@ -238,6 +308,38 @@ export function ReleaseDetail() {
           />
         )}
       </div>
+
+      {/* Delete confirmation dialog */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setShowDeleteConfirm(false)}
+          />
+          <div className="relative z-10 rounded-lg bg-white dark:bg-gray-800 shadow-xl p-6 max-w-sm w-full mx-4">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-2">
+              Delete draft release?
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+              Delete draft release &apos;{release.version}&apos;? This cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="rounded-md px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                className="rounded-md px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
