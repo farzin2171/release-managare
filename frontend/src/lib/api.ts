@@ -823,7 +823,7 @@ export interface components {
       projectId: string
       templateId: string
       templateName: string
-      kind: "ReleaseNotes" | "Checklist" | "Custom"
+      kind: "ReleaseNotes" | "Checklist" | "Custom" | "ReleaseSummary"
       pageTitleTemplate: string
       parentPageId: string | null
       linkFromReleaseNotes: boolean
@@ -831,7 +831,7 @@ export interface components {
     }
     CreateBindingRequest: {
       templateId: string
-      kind: "ReleaseNotes" | "Checklist" | "Custom"
+      kind: "ReleaseNotes" | "Checklist" | "Custom" | "ReleaseSummary"
       pageTitleTemplate: string
       parentPageId?: string | null
       linkFromReleaseNotes: boolean
@@ -839,7 +839,7 @@ export interface components {
     }
     UpdateBindingRequest: {
       templateId?: string | null
-      kind?: "ReleaseNotes" | "Checklist" | "Custom" | null
+      kind?: "ReleaseNotes" | "Checklist" | "Custom" | "ReleaseSummary" | null
       pageTitleTemplate?: string | null
       parentPageId?: string | null
       linkFromReleaseNotes?: boolean | null

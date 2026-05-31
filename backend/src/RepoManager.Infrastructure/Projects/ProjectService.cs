@@ -44,24 +44,43 @@ public class ProjectService : IProjectService
         _db.Projects.Add(project);
         await _db.SaveChangesAsync(ct);
 
-        var systemTemplate = await _db.ReleaseNoteTemplates
-            .FirstOrDefaultAsync(t => t.IsSystem && t.Name == "Release Summary (Default)", ct);
+        var releaseNotesTemplate = await _db.ReleaseNoteTemplates
+            .FirstOrDefaultAsync(t => t.IsSystem && t.Name == "Release Notes (Default)", ct);
 
-        if (systemTemplate is not null)
+        if (releaseNotesTemplate is not null)
         {
             _db.TemplateBindings.Add(new ProjectTemplateBinding
             {
                 Id = Guid.NewGuid(),
                 ProjectId = project.Id,
-                TemplateId = systemTemplate.Id,
+                TemplateId = releaseNotesTemplate.Id,
+                Kind = TemplateBindingKind.ReleaseNotes,
+                PageTitleTemplate = "{{project.name}} {{version}} — Release Notes",
+                SortOrder = 0,
+                CreatedAt = DateTimeOffset.UtcNow,
+                UpdatedAt = DateTimeOffset.UtcNow
+            });
+        }
+
+        var releaseSummaryTemplate = await _db.ReleaseNoteTemplates
+            .FirstOrDefaultAsync(t => t.IsSystem && t.Name == "Release Summary (Default)", ct);
+
+        if (releaseSummaryTemplate is not null)
+        {
+            _db.TemplateBindings.Add(new ProjectTemplateBinding
+            {
+                Id = Guid.NewGuid(),
+                ProjectId = project.Id,
+                TemplateId = releaseSummaryTemplate.Id,
                 Kind = TemplateBindingKind.ReleaseSummary,
                 PageTitleTemplate = "{{project.name}} {{version}} — Release Summary",
                 SortOrder = 1,
                 CreatedAt = DateTimeOffset.UtcNow,
                 UpdatedAt = DateTimeOffset.UtcNow
             });
-            await _db.SaveChangesAsync(ct);
         }
+
+        await _db.SaveChangesAsync(ct);
 
         await tx.CommitAsync(ct);
         _logger.LogInformation("Project {ProjectId} created with name '{Name}'", project.Id, project.Name);
