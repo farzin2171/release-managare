@@ -10,7 +10,7 @@ type TemplateDto = components['schemas']['TemplateDto']
 
 const bindingSchema = z.object({
   templateId: z.string().uuid('Must be a valid template'),
-  kind: z.enum(['ReleaseNotes', 'Checklist', 'Custom']),
+  kind: z.enum(['ReleaseNotes', 'Checklist', 'Custom', 'ReleaseSummary']),
   pageTitleTemplate: z.string().min(1).max(500),
   parentPageId: z.string().max(100).optional().nullable(),
   linkFromReleaseNotes: z.boolean(),
@@ -130,6 +130,7 @@ export function BindingFormSheet({
               <option value="ReleaseNotes">Release Notes</option>
               <option value="Checklist">Checklist</option>
               <option value="Custom">Custom</option>
+              <option value="ReleaseSummary">Release Summary</option>
             </select>
             {errors.kind && (
               <p className="mt-1 text-xs text-red-600">{errors.kind.message}</p>
