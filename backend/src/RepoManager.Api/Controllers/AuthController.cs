@@ -33,7 +33,8 @@ public class AuthController : ControllerBase
         try
         {
             var tokens = await _auth.LoginAsync(dto, ct);
-            return Ok(tokens);
+            AppendRefreshCookie(tokens.RefreshToken);
+            return Ok(new { accessToken = tokens.AccessToken });
         }
         catch (NotFoundException)
         {
@@ -47,9 +48,26 @@ public class AuthController : ControllerBase
 
     [AllowAnonymous]
     [HttpPost("refresh")]
-    public async Task<IActionResult> Refresh([FromBody] RefreshTokenDto dto, CancellationToken ct)
+    public async Task<IActionResult> Refresh(CancellationToken ct)
     {
-        var tokens = await _auth.RefreshAsync(dto, ct);
-        return Ok(tokens);
+        var rawToken = Request.Cookies["refreshToken"];
+        if (string.IsNullOrEmpty(rawToken))
+            return Unauthorized(new { code = "refresh_token_missing" });
+
+        var tokens = await _auth.RefreshAsync(new RefreshTokenDto(rawToken), ct);
+        AppendRefreshCookie(tokens.RefreshToken);
+        return Ok(new { accessToken = tokens.AccessToken });
+    }
+
+    private void AppendRefreshCookie(string refreshToken)
+    {
+        Response.Cookies.Append("refreshToken", refreshToken, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Strict,
+            Path = "/api/v1/auth",
+            MaxAge = TimeSpan.FromDays(30),
+        });
     }
 }

@@ -120,12 +120,12 @@
 
 ### Implementation for User Story 6
 
-- [ ] T039 [US4] Update `backend/src/RepoManager.Api/Controllers/AuthController.cs` — in the `Refresh` action: append `refreshToken` httpOnly cookie (`Secure`, `SameSite=Strict`, `Path=/api/v1/auth`, `MaxAge=30d`); read token from `Request.Cookies["refreshToken"]` instead of request body
-- [ ] T040 [US4] Update `Login` action in `backend/src/RepoManager.Api/Controllers/AuthController.cs` — set the same httpOnly cookie on successful login response
-- [ ] T041 [US4] Add `scheduleRefresh(accessToken: string)` action to `frontend/src/features/auth/authStore.ts` — decodes `exp` from JWT payload using `atob`; cancels existing timer; sets new `setTimeout` at `exp * 1000 - Date.now() - 120_000` ms; calls `POST /api/v1/auth/refresh` on fire
-- [ ] T042 [US4] Call `scheduleRefresh(accessToken)` inside the `login()` action and inside the `onRehydrateStorage` hydration callback in `frontend/src/features/auth/authStore.ts`
-- [ ] T043 [US4] Implement 401-intercept → refresh → retry-once interceptor with shared module-level `refreshPromise` in `frontend/src/lib/apiClient.ts` — flag `_retried` prevents loops; on refresh failure clear auth store, navigate to `/login`, show toast `"Your session has expired. Please log in again."`
-- [ ] T044 [P] [US4] Write Playwright E2E test in `frontend/tests/e2e/session-renewal.spec.ts` — configure backend JWT lifetime to 30 s via env override; log in; wait 28 s; trigger API call; assert no redirect to `/login` and call succeeds
+- [X] T039 [US4] Update `backend/src/RepoManager.Api/Controllers/AuthController.cs` — in the `Refresh` action: append `refreshToken` httpOnly cookie (`Secure`, `SameSite=Strict`, `Path=/api/v1/auth`, `MaxAge=30d`); read token from `Request.Cookies["refreshToken"]` instead of request body
+- [X] T040 [US4] Update `Login` action in `backend/src/RepoManager.Api/Controllers/AuthController.cs` — set the same httpOnly cookie on successful login response
+- [X] T041 [US4] Add `scheduleRefresh(accessToken: string)` action to `frontend/src/lib/authStore.ts` — decodes `exp` from JWT payload using `atob`; cancels existing timer; sets new `setTimeout` at `exp * 1000 - Date.now() - 120_000` ms; calls `POST /api/v1/auth/refresh` on fire
+- [X] T042 [US4] Call `scheduleRefresh(accessToken)` inside the `setTokens()` action and inside the `onRehydrateStorage` hydration callback in `frontend/src/lib/authStore.ts`
+- [X] T043 [US4] Implement 401-intercept → refresh → retry-once interceptor with shared module-level `refreshPromise` in `frontend/src/lib/apiClient.ts` — flag `_retried` prevents loops; on refresh failure clear auth store, navigate to `/login`, show toast `"Your session has expired. Please log in again."`
+- [X] T044 [P] [US4] Write Playwright E2E test in `frontend/tests/e2e/session-renewal.spec.ts` — configure backend JWT lifetime to 30 s via env override; log in; wait 28 s; trigger API call; assert no redirect to `/login` and call succeeds
 
 **Checkpoint**: `document.cookie` does not contain `refreshToken`. Near-expiry API call succeeds silently. Two simultaneous near-expiry calls produce exactly one `POST /auth/refresh` network request.
 
