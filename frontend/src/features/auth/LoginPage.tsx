@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -14,6 +15,16 @@ type FormData = z.infer<typeof schema>
 export function LoginPage() {
   const navigate = useNavigate()
   const setTokens = useAuthStore((s) => s.setTokens)
+  const flashMessage = useAuthStore((s) => s.flashMessage)
+  const setFlashMessage = useAuthStore((s) => s.setFlashMessage)
+  const [sessionBanner, setSessionBanner] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (flashMessage) {
+      setSessionBanner(flashMessage)
+      setFlashMessage(null)
+    }
+  }, [flashMessage, setFlashMessage])
 
   const {
     register,
@@ -33,14 +44,19 @@ export function LoginPage() {
       return
     }
 
-    const { accessToken, refreshToken } = await res.json()
-    setTokens(accessToken, refreshToken)
+    const { accessToken } = await res.json()
+    setTokens(accessToken)
     navigate('/dashboard')
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
       <div className="w-full max-w-sm space-y-6 p-8 bg-white dark:bg-gray-800 rounded-xl shadow">
+        {sessionBanner && (
+          <p className="text-sm text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950 rounded px-3 py-2">
+            {sessionBanner}
+          </p>
+        )}
         <div>
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Sign in</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Repository Release Manager</p>

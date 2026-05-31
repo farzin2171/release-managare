@@ -409,6 +409,14 @@ export interface paths {
       responses: { 204: { content: never } }
     }
   }
+  "/api/v1/templates/{id}/clone": {
+    post: {
+      parameters: { path: { id: string } }
+      responses: {
+        201: { content: { "application/json": components["schemas"]["TemplateDto"] } }
+      }
+    }
+  }
 
   "/api/v1/projects/{projectId}/template-bindings": {
     get: {
@@ -556,6 +564,7 @@ export interface components {
       webUrl: string
       azureProjectName: string
       isTracked: boolean
+      serviceOwner: string | null
       lastSyncedAt: string | null
       latestTag: string | null
       latestTagCommitSha: string | null
@@ -734,6 +743,7 @@ export interface components {
       id: string
       name: string
       contentTemplate: string
+      isSystem: boolean
       createdAt: string
     }
     CreateTemplateDto: { name: string; contentTemplate: string }

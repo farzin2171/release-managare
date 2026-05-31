@@ -15,7 +15,7 @@ public class AuthTests : IDisposable
     public AuthTests()
     {
         _factory = new TestWebApplicationFactory();
-        _client = _factory.CreateClient();
+        _client = _factory.CreateClientWithSetupKey();
     }
 
     public void Dispose()
@@ -25,7 +25,7 @@ public class AuthTests : IDisposable
     }
 
     [Fact]
-    public async Task Setup_CreatesAdmin_And_Returns410OnSecondCall()
+    public async Task Setup_CreatesAdmin_And_Returns409OnSecondCall()
     {
         var payload = new { email = AdminEmail, password = AdminPassword };
 
@@ -33,7 +33,7 @@ public class AuthTests : IDisposable
         firstResponse.StatusCode.Should().Be(HttpStatusCode.Created);
 
         var secondResponse = await _client.PostAsJsonAsync("/api/v1/auth/setup", payload);
-        secondResponse.StatusCode.Should().Be(HttpStatusCode.Gone);
+        secondResponse.StatusCode.Should().Be(HttpStatusCode.Conflict);
     }
 
     [Fact]
@@ -91,8 +91,8 @@ public class AuthTests : IDisposable
     {
         var payload = new { email = AdminEmail, password = AdminPassword };
         var response = await _client.PostAsJsonAsync("/api/v1/auth/setup", payload);
-        // Accept 201 (created) or 410 (already exists)
-        response.StatusCode.Should().BeOneOf(HttpStatusCode.Created, HttpStatusCode.Gone);
+        // Accept 201 (created) or 409 (already exists)
+        response.StatusCode.Should().BeOneOf(HttpStatusCode.Created, HttpStatusCode.Conflict);
     }
 
     private sealed record TokenResponse(string AccessToken, string RefreshToken, string TokenType);

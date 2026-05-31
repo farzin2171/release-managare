@@ -629,7 +629,7 @@ namespace RepoManager.Infrastructure.Migrations
 
                     b.ToTable("TemplateBindings", t =>
                         {
-                            t.HasCheckConstraint("CK_Binding_Kind", "Kind IN ('ReleaseNotes','Checklist','Custom')");
+                            t.HasCheckConstraint("CK_Binding_Kind", "Kind IN ('ReleaseNotes','Checklist','Custom','ReleaseSummary')");
                         });
                 });
 
@@ -711,6 +711,11 @@ namespace RepoManager.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsDefault")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsSystem")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER")
                         .HasDefaultValue(false);
@@ -998,6 +1003,10 @@ namespace RepoManager.Infrastructure.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ServiceOwner")
+                        .HasMaxLength(120)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("WebUrl")

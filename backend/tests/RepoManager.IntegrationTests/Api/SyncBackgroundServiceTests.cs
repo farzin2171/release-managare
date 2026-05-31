@@ -22,7 +22,7 @@ public class SyncBackgroundServiceTests : IDisposable
     public SyncBackgroundServiceTests()
     {
         _factory = new SyncTestFactory();
-        _client = _factory.CreateClient();
+        _client = _factory.CreateClientWithSetupKey();
     }
 
     public void Dispose()

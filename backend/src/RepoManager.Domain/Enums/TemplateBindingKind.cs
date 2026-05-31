@@ -4,5 +4,6 @@ public enum TemplateBindingKind
 {
     ReleaseNotes,
     Checklist,
-    Custom
+    Custom,
+    ReleaseSummary
 }

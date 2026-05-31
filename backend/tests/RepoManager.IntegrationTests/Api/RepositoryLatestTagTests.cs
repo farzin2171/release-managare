@@ -24,7 +24,7 @@ public class RepositoryLatestTagTests : IDisposable
     public RepositoryLatestTagTests()
     {
         _factory = new TagTestFactory();
-        _adminClient = _factory.CreateClient();
+        _adminClient = _factory.CreateClientWithSetupKey();
         _viewerClient = _factory.CreateClient();
     }
 

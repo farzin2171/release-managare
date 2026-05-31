@@ -23,7 +23,7 @@ public class ProjectSyncIntegrationTests : IDisposable
     public ProjectSyncIntegrationTests()
     {
         _factory = new ProjectSyncSseTestFactory();
-        _client = _factory.CreateClient();
+        _client = _factory.CreateClientWithSetupKey();
     }
 
     public void Dispose()

@@ -147,11 +147,12 @@ public class AuthService : IAuthService
             new Claim(JwtRegisteredClaimNames.Email, user.Email)
         };
 
+        var expirySeconds = _config.GetValue<int?>("Jwt:ExpirySeconds") ?? 28_800; // 8 hours default
         var token = new JwtSecurityToken(
             issuer: _config["Jwt:Issuer"],
             audience: _config["Jwt:Audience"],
             claims: claims,
-            expires: DateTime.UtcNow.AddHours(8),
+            expires: DateTime.UtcNow.AddSeconds(expirySeconds),
             signingCredentials: creds);
 
         var accessToken = new JwtSecurityTokenHandler().WriteToken(token);

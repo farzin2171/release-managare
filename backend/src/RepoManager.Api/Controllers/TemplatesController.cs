@@ -50,6 +50,14 @@ public class TemplatesController : ControllerBase
         return NoContent();
     }
 
+    [Authorize(Policy = "AdminOnly")]
+    [HttpPost("{id:guid}/clone")]
+    public async Task<IActionResult> Clone(Guid id, CancellationToken ct)
+    {
+        var clone = await _service.CloneAsync(id, ct);
+        return StatusCode(201, clone);
+    }
+
     [HttpGet("{id:guid}/preview")]
     public async Task<IActionResult> Preview(
         Guid id,

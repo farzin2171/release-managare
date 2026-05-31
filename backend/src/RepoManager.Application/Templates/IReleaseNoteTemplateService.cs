@@ -6,6 +6,7 @@ public interface IReleaseNoteTemplateService
     Task<IReadOnlyList<TemplateDto>> ListAsync(CancellationToken ct = default);
     Task<TemplateDto> UpdateAsync(Guid id, UpdateTemplateDto dto, CancellationToken ct = default);
     Task DeleteAsync(Guid id, CancellationToken ct = default);
+    Task<TemplateDto> CloneAsync(Guid id, CancellationToken ct = default);
 }
 
 public record CreateTemplateDto(
@@ -22,4 +23,5 @@ public record TemplateDto(
     Guid Id,
     string Name,
     string ContentTemplate,
-    bool IsDefault);
+    bool IsDefault,
+    bool IsSystem);

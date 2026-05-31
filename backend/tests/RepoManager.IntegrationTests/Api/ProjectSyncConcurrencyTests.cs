@@ -23,7 +23,7 @@ public class ProjectSyncConcurrencyTests : IDisposable
     public ProjectSyncConcurrencyTests()
     {
         _factory = new ProjectSyncTestFactory();
-        _client = _factory.CreateClient();
+        _client = _factory.CreateClientWithSetupKey();
     }
 
     public void Dispose()

@@ -17,6 +17,7 @@ public class GlobalExceptionHandler : IExceptionHandler
         {
             NotFoundException => (404, "Not Found"),
             ConflictException => (409, "Conflict"),
+            ForbiddenException => (403, "Forbidden"),
             ValidationException => (400, "Validation Failed"),
             ExternalServiceException => (502, "External Service Error"),
             _ => (500, "An unexpected error occurred")
@@ -38,6 +39,9 @@ public class GlobalExceptionHandler : IExceptionHandler
         {
             case ConflictException { Code: not null } ce:
                 problem.Extensions["code"] = ce.Code;
+                break;
+            case ForbiddenException { Code: not null } fe:
+                problem.Extensions["code"] = fe.Code;
                 break;
             case ValidationException ve:
                 problem.Extensions["errors"] = ve.Failures

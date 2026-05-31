@@ -23,7 +23,7 @@ public class RepositorySyncIntegrationTests : IDisposable
     public RepositorySyncIntegrationTests()
     {
         _factory = new RepoSyncTestFactory();
-        _adminClient = _factory.CreateClient();
+        _adminClient = _factory.CreateClientWithSetupKey();
     }
 
     public void Dispose()
@@ -274,7 +274,7 @@ public class SnapshotIntegrationTests : IDisposable
     public SnapshotIntegrationTests()
     {
         _factory = new RepoSyncTestFactory();
-        _client = _factory.CreateClient();
+        _client = _factory.CreateClientWithSetupKey();
     }
 
     public void Dispose()

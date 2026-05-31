@@ -6,6 +6,7 @@ public interface IRepositoryService
 {
     Task<IReadOnlyList<RepositoryDto>> ListAsync(ListRepositoriesQuery query, CancellationToken ct = default);
     Task<RepositoryDto> SetTrackedAsync(Guid id, SetTrackedDto dto, CancellationToken ct = default);
+    Task<RepositoryDto> UpdateAsync(Guid id, UpdateRepositoryRequest dto, CancellationToken ct = default);
     Task<RepositoryChangesDto> GetChangesAsync(Guid repositoryId, GetChangesQuery query, CancellationToken ct = default);
     Task<IReadOnlyList<RepositoryTag>> GetTagsAsync(Guid repositoryId, CancellationToken ct = default);
     Task<RepositoryDto> SetLatestTagAsync(Guid repositoryId, string tagName, Guid actingUserId, CancellationToken ct = default);
@@ -30,11 +31,14 @@ public record RepositoryDto(
     string WebUrl,
     string AzureProjectName,
     bool IsTracked,
+    string? ServiceOwner,
     DateTimeOffset? LastSyncedAt,
     string? LatestTag,
     string? LatestTagCommitSha,
     DateTime? LatestTagSetAt,
     UserSummaryDto? LatestTagSetBy);
+
+public record UpdateRepositoryRequest(string? ServiceOwner);
 
 public record GetChangesQuery(
     string GroupBy = "ticket",

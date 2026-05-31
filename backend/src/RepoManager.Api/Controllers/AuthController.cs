@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RepoManager.Api.Filters;
 using RepoManager.Application.Auth;
 using RepoManager.Application.Common.Exceptions;
 
@@ -15,10 +16,11 @@ public class AuthController : ControllerBase
 
     [AllowAnonymous]
     [HttpPost("setup")]
+    [ServiceFilter(typeof(SetupKeyAuthorizationFilter))]
     public async Task<IActionResult> Setup([FromBody] SetupDto dto, CancellationToken ct)
     {
         if (await _auth.AdminExistsAsync(ct))
-            return StatusCode(410, new { title = "Setup already completed." });
+            return StatusCode(409, new { code = "setup_already_complete" });
 
         var user = await _auth.SetupAsync(dto, ct);
         return StatusCode(201, user);
@@ -31,7 +33,8 @@ public class AuthController : ControllerBase
         try
         {
             var tokens = await _auth.LoginAsync(dto, ct);
-            return Ok(tokens);
+            AppendRefreshCookie(tokens.RefreshToken);
+            return Ok(new { accessToken = tokens.AccessToken });
         }
         catch (NotFoundException)
         {
@@ -45,9 +48,26 @@ public class AuthController : ControllerBase
 
     [AllowAnonymous]
     [HttpPost("refresh")]
-    public async Task<IActionResult> Refresh([FromBody] RefreshTokenDto dto, CancellationToken ct)
+    public async Task<IActionResult> Refresh(CancellationToken ct)
     {
-        var tokens = await _auth.RefreshAsync(dto, ct);
-        return Ok(tokens);
+        var rawToken = Request.Cookies["refreshToken"];
+        if (string.IsNullOrEmpty(rawToken))
+            return Unauthorized(new { code = "refresh_token_missing" });
+
+        var tokens = await _auth.RefreshAsync(new RefreshTokenDto(rawToken), ct);
+        AppendRefreshCookie(tokens.RefreshToken);
+        return Ok(new { accessToken = tokens.AccessToken });
+    }
+
+    private void AppendRefreshCookie(string refreshToken)
+    {
+        Response.Cookies.Append("refreshToken", refreshToken, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Strict,
+            Path = "/api/v1/auth",
+            MaxAge = TimeSpan.FromDays(30),
+        });
     }
 }

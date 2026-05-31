@@ -10,6 +10,7 @@ public class Repository
     public string WebUrl { get; set; } = string.Empty;
     public string AzureProjectName { get; set; } = string.Empty;
     public bool IsTracked { get; set; } = false;
+    public string? ServiceOwner { get; set; }
     public DateTimeOffset? LastSyncedAt { get; set; }
 
     public string? LatestTag { get; set; }
